@@ -259,7 +259,16 @@
         "hide_bar": {
           "title": "Nascondi barra nel redattore",
           "desc": "Nascondi automaticamente la barra durante la modifica dei widget in modalità redattore"
-        }
+        },
+        "hide_presets": "Nascondi predefiniti",
+        "choose_preset": "Scegli un predefinito",
+        "presets": {
+          "title": "Predefiniti widget"
+        },
+        "save_preset": {
+          "title": "Salva preset"
+        },
+        "preset_name_placeholder": "Inserisci il nome del preset..."
       }
     },
     "bar": {
@@ -968,7 +977,8 @@
       "click_to_add": "Clicca un widget nella barra in basso per aggiungerlo",
       "done": "Fatto",
       "widget_singular": "widget",
-      "widgets_plural": "widgets"
+      "widgets_plural": "widgets",
+      "widgets_short": "w"
     },
     "types": {
       "clock": "Orologio",
@@ -992,6 +1002,20 @@
       "bars": "Barre",
       "continuous": "Continuo",
       "default": "Predefinito"
+    },
+    "presets": {
+      "minimal": {
+        "name": "Minimale",
+        "desc": "Layout pulito e discreto con orologio digitale minimale e meteo compatto."
+      },
+      "media_station": {
+        "name": "Stazione Multimediale",
+        "desc": "Configurazione multimediale con visualizzatore audio centrato e controller musicale circolare."
+      },
+      "dashboard": {
+        "name": "Cruscotto",
+        "desc": "Monitor di sistema completo con orologio digitale, utilizzo hardware e stato della batteria."
+      }
     }
   },
   "cli": {

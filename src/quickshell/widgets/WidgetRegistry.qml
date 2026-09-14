@@ -53,11 +53,11 @@ QtObject {
         }
     }
 
-    readonly property var types: ({
+    property var types: ({
         "visualizer": {
             name: I18n.t("widgets.types.visualizer"),
-            icon: "󰎈",
-            iconOffsetX: 0,
+            icon: "󱑽",
+            iconOffsetX: -2,
             defaultWidth: Math.round((Quickshell.screens && Quickshell.screens.length > 0 ? Quickshell.screens[0].width : 1920) / 2),
             defaultHeight: 180,
             defaultVariant: "bars",
@@ -192,15 +192,48 @@ QtObject {
                 "default": { file: "faces/UserFace.qml", icon: "1", label: I18n.t("widgets.variants.default") }
             }
         },
-        "usage": {
-            name: I18n.t("widgets.types.usage"),
-            icon: "󰍛",
-            iconOffsetX: -1,
-            defaultWidth: 400,
-            defaultHeight: 350,
+        "cpu": {
+            name: I18n.t("quickactions.systemusage.cpu"),
+            icon: "\uF2DB",
+            iconOffsetX: 0,
+            defaultWidth: 180,
+            defaultHeight: 130,
             defaultVariant: "default",
             variants: {
-                "default": { file: "faces/UsageFace.qml", icon: "1", label: I18n.t("widgets.variants.default") }
+                "default": { file: "faces/usage/CpuFace.qml", icon: "1", label: I18n.t("widgets.variants.default") }
+            }
+        },
+        "ram": {
+            name: I18n.t("quickactions.systemusage.ram"),
+            icon: "\uF538",
+            iconOffsetX: 0,
+            defaultWidth: 180,
+            defaultHeight: 130,
+            defaultVariant: "default",
+            variants: {
+                "default": { file: "faces/usage/RamFace.qml", icon: "1", label: I18n.t("widgets.variants.default") }
+            }
+        },
+        "temp": {
+            name: I18n.t("quickactions.systemusage.temp"),
+            icon: "\uF2C9",
+            iconOffsetX: 0,
+            defaultWidth: 180,
+            defaultHeight: 130,
+            defaultVariant: "default",
+            variants: {
+                "default": { file: "faces/usage/TempFace.qml", icon: "1", label: I18n.t("widgets.variants.default") }
+            }
+        },
+        "disk": {
+            name: I18n.t("quickactions.systemusage.disk"),
+            icon: "\uF0A0",
+            iconOffsetX: 0,
+            defaultWidth: 180,
+            defaultHeight: 130,
+            defaultVariant: "default",
+            variants: {
+                "default": { file: "faces/usage/DiskFace.qml", icon: "1", label: I18n.t("widgets.variants.default") }
             }
         },
         "battery": {
@@ -215,6 +248,186 @@ QtObject {
             }
         }
     })
+
+    function parseAnchors(item) {
+        let rawAnchor = item ? (item.anchor || item.anchors) : null;
+        let h = null;
+        let v = null;
+
+        if (typeof rawAnchor === "string") {
+            let s = rawAnchor.toLowerCase().trim().replace(/[-_]/g, " ");
+            let parts = s.split(/\s+/);
+
+            if (parts.length === 1) {
+                let single = parts[0];
+                if (single === "top") {
+                    v = "top";
+                    h = "center";
+                } else if (single === "bottom") {
+                    v = "bottom";
+                    h = "center";
+                } else if (single === "left") {
+                    h = "left";
+                    v = "center";
+                } else if (single === "right") {
+                    h = "right";
+                    v = "center";
+                } else if (single === "center" || single === "middle") {
+                    h = "center";
+                    v = "center";
+                }
+            } else {
+                for (let i = 0; i < parts.length; i++) {
+                    let p = parts[i];
+                    if (p === "top" || p === "bottom") {
+                        v = p;
+                    } else if (p === "left" || p === "right") {
+                        h = p;
+                    } else if (p === "center" || p === "middle") {
+                        if (!h && !v) {
+                            h = "center";
+                            v = "center";
+                        } else if (!h) {
+                            h = "center";
+                        } else if (!v) {
+                            v = "center";
+                        }
+                    }
+                }
+            }
+        }
+
+        let rawH = item ? (item.anchorH || item.anchorX || item.horizontalAnchor || item.hAnchor || item.anchorHorizontal) : null;
+        if (rawH && typeof rawH === "string") {
+            let sh = rawH.toLowerCase().trim();
+            if (sh === "middle") h = "center";
+            else if (sh === "left" || sh === "center" || sh === "right") h = sh;
+        }
+
+        let rawV = item ? (item.anchorV || item.anchorY || item.verticalAnchor || item.vAnchor || item.anchorVertical) : null;
+        if (rawV && typeof rawV === "string") {
+            let sv = rawV.toLowerCase().trim();
+            if (sv === "middle") v = "center";
+            else if (sv === "top" || sv === "center" || sv === "bottom") v = sv;
+        }
+
+        if (!h) h = "left";
+        if (!v) v = "top";
+
+        return { h: h, v: v };
+    }
+
+    function getBarOffsets() {
+        let pos = "top";
+        let autohide = false;
+        let isFill = false;
+
+        if (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar) {
+            let b = Config.rawSettings.bar;
+            if (b.position !== undefined) pos = String(b.position).toLowerCase().trim();
+            if (b.autohide !== undefined) autohide = !!b.autohide;
+            let s = b.style;
+            if (typeof s === "string" && s === "fill") isFill = true;
+            else if (s && typeof s === "object" && (s.fill || s.mode === "fill")) isFill = true;
+        }
+
+        if (autohide) {
+            return { top: 0, bottom: 0, left: 0, right: 0 };
+        }
+
+        let margin = isFill ? 0 : Scaler.s(4);
+        let barSize = Scaler.s(40) + margin;
+
+        let offsets = { top: 0, bottom: 0, left: 0, right: 0 };
+        if (pos === "top") offsets.top = barSize;
+        else if (pos === "bottom") offsets.bottom = barSize;
+        else if (pos === "left") offsets.left = barSize;
+        else if (pos === "right") offsets.right = barSize;
+
+        return offsets;
+    }
+
+    function resolveDimension(val, maxVal, defaultVal) {
+        if (val === undefined || val === null) return defaultVal;
+        if (typeof val === "string" && val.trim().endsWith("%")) {
+            let pct = parseFloat(val);
+            if (!isNaN(pct)) {
+                return Math.round((pct / 100) * maxVal);
+            }
+        }
+        let num = parseFloat(val);
+        return (!isNaN(num) && num > 0) ? num : defaultVal;
+    }
+
+    function resolvePosition(item, screenWidth, screenHeight, widgetWidth, widgetHeight) {
+        let sw = (screenWidth && screenWidth > 0) ? screenWidth : 1920;
+        let sh = (screenHeight && screenHeight > 0) ? screenHeight : 1080;
+        let w = (widgetWidth !== undefined && !isNaN(widgetWidth)) ? widgetWidth : 250;
+        let h = (widgetHeight !== undefined && !isNaN(widgetHeight)) ? widgetHeight : 120;
+
+        let offsets = getBarOffsets();
+
+        let usableX = offsets.left;
+        let usableY = offsets.top;
+        let usableW = sw - offsets.left - offsets.right;
+        let usableH = sh - offsets.top - offsets.bottom;
+
+        let anchors = parseAnchors(item || {});
+
+        let ox = 0;
+        if (item) {
+            if (item.offsetX !== undefined) ox = parseFloat(item.offsetX);
+            else if (item.x !== undefined) ox = parseFloat(item.x);
+            else if (item.wX !== undefined) ox = parseFloat(item.wX);
+        }
+
+        let oy = 0;
+        if (item) {
+            if (item.offsetY !== undefined) oy = parseFloat(item.offsetY);
+            else if (item.y !== undefined) oy = parseFloat(item.y);
+            else if (item.wY !== undefined) oy = parseFloat(item.wY);
+        }
+
+        if (isNaN(ox)) ox = 0;
+        if (isNaN(oy)) oy = 0;
+
+        let posX = 0;
+        if (anchors.h === "right") {
+            posX = usableX + usableW - w - ox;
+        } else if (anchors.h === "center") {
+            posX = usableX + Math.round((usableW - w) / 2) + ox;
+        } else {
+            posX = usableX + ox;
+        }
+
+        let posY = 0;
+        if (anchors.v === "bottom") {
+            posY = usableY + usableH - h - oy;
+        } else if (anchors.v === "center") {
+            posY = usableY + Math.round((usableH - h) / 2) + oy;
+        } else {
+            posY = usableY + oy;
+        }
+
+        return {
+            x: Math.round(posX),
+            y: Math.round(posY)
+        };
+    }
+
+    function registerType(typeId, def) {
+        if (!typeId || !def) return;
+        let updated = Object.assign({}, types);
+        updated[typeId] = def;
+        types = updated;
+    }
+
+    function unregisterType(typeId) {
+        if (!types[typeId]) return;
+        let updated = Object.assign({}, types);
+        delete updated[typeId];
+        types = updated;
+    }
 
     function toolbarComponent(type) {
         let t = types[type];

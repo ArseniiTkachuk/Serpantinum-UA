@@ -259,7 +259,16 @@
         "hide_bar": {
           "title": "Ocultar a barra no editor",
           "desc": "Oculta a barra automaticamente ao editar widgets no modo editor"
-        }
+        },
+        "hide_presets": "Ocultar predefinições",
+        "choose_preset": "Escolher predefinição",
+        "presets": {
+          "title": "Predefinições de widgets"
+        },
+        "save_preset": {
+          "title": "Salvar predefinição"
+        },
+        "preset_name_placeholder": "Digite o nome da predefinição..."
       }
     },
     "bar": {
@@ -969,7 +978,8 @@
       "click_to_add": "Clique num ícone na barra inferior para adicionar",
       "done": "Concluir",
       "widget_singular": "widget",
-      "widgets_plural": "widgets"
+      "widgets_plural": "widgets",
+      "widgets_short": "w"
     },
     "types": {
       "clock": "Relógio",
@@ -993,6 +1003,20 @@
       "bars": "Barras",
       "continuous": "Contínuo",
       "default": "Padrão"
+    },
+    "presets": {
+      "minimal": {
+        "name": "Minimalista",
+        "desc": "Layout limpo e sutil com relógio digital minimalista e clima compacto."
+      },
+      "media_station": {
+        "name": "Estação Multimídia",
+        "desc": "Configuração multimídia com barras de visualizador centralizadas e controle de música circular."
+      },
+      "dashboard": {
+        "name": "Painel",
+        "desc": "Monitor de sistema completo com relógio digital, uso de hardware e nível de bateria."
+      }
     }
   },
   "cli": {

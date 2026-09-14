@@ -259,7 +259,16 @@
         "hide_bar": {
           "title": "Hide the bar in the redactor",
           "desc": "Automatically hide the bar when editing widgets in redactor mode"
-        }
+        },
+        "hide_presets": "Hide Presets",
+        "choose_preset": "Choose a preset",
+        "presets": {
+          "title": "Widget Presets"
+        },
+        "save_preset": {
+          "title": "Save Preset"
+        },
+        "preset_name_placeholder": "Enter preset name..."
       }
     },
     "bar": {
@@ -969,7 +978,8 @@
       "click_to_add": "Click a widget icon in the bottom toolbar to add it",
       "done": "Done",
       "widget_singular": "widget",
-      "widgets_plural": "widgets"
+      "widgets_plural": "widgets",
+      "widgets_short": "w"
     },
     "types": {
       "clock": "Clock",
@@ -993,6 +1003,17 @@
       "bars": "Bars",
       "continuous": "Continuous",
       "default": "Default"
+    },
+    "presets": {
+      "minimal": {
+        "name": "Minimal"
+      },
+      "media_station": {
+        "name": "Media station"
+      },
+      "dashboard": {
+        "name": "Dashboard"
+      }
     }
   },
   "cli": {

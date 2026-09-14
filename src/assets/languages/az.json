@@ -257,7 +257,16 @@
         "hide_bar": {
           "title": "Düzəliş alətində zolağı gizlət",
           "desc": "Vidcetlərə düzəliş edərkən zolağı avtomatik gizlət"
-        }
+        },
+        "hide_presets": "Hazır şablonları gizlət",
+        "choose_preset": "Şablon seçin",
+        "presets": {
+          "title": "Vidcet şablonları"
+        },
+        "save_preset": {
+          "title": "Preseti yadda saxla"
+        },
+        "preset_name_placeholder": "Presetin adını daxil edin..."
       }
     },
     "bar": {
@@ -963,7 +972,8 @@
       "click_to_add": "Vidcet əlavə etmək üçün aşağıdakı alətlər zolağında onun nişanına klikləyin",
       "done": "Hazırdır",
       "widget_singular": "vidcet",
-      "widgets_plural": "vidcet"
+      "widgets_plural": "vidcet",
+      "widgets_short": "v"
     },
     "types": {
       "clock": "Saat",
@@ -987,6 +997,20 @@
       "bars": "Zolaqlar",
       "continuous": "Fasiləsiz",
       "default": "Standart"
+    },
+    "presets": {
+      "minimal": {
+        "name": "Minimal",
+        "desc": "Minimal rəqəmsal saat və yığcam hava məlumatı olan sadə tərtibat."
+      },
+      "media_station": {
+        "name": "Media Stansiyası",
+        "desc": "Mərkəzləşdirilmiş audio vizualizator və dairəvi musiqi pleyeri olan media quraşdırması."
+      },
+      "dashboard": {
+        "name": "İdarəetmə Paneli",
+        "desc": "Rəqəmsal saat, sistem resursları və batareya vəziyyətini göstərən tam iş paneli."
+      }
     }
   },
   "cli": {

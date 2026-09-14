@@ -260,7 +260,16 @@
         "hide_bar": {
           "title": "Leiste im Redaktor ausblenden",
           "desc": "Die Leiste beim Bearbeiten von Widgets im Redaktormodus automatisch ausblenden"
-        }
+        },
+        "hide_presets": "Vorlagen verbergen",
+        "choose_preset": "Vorlage wählen",
+        "presets": {
+          "title": "Widget-Vorlagen"
+        },
+        "save_preset": {
+          "title": "Voreinstellung speichern"
+        },
+        "preset_name_placeholder": "Namen der Voreinstellung eingeben..."
       }
     },
     "bar": {
@@ -1013,7 +1022,8 @@
       "click_to_add": "Auf ein widget-symbol in der unteren leiste klicken, um es hinzuzufügen",
       "done": "Fertig",
       "widget_singular": "Widget",
-      "widgets_plural": "Widgets"
+      "widgets_plural": "Widgets",
+      "widgets_short": "W"
     },
     "types": {
       "clock": "Uhr",
@@ -1037,6 +1047,20 @@
       "bars": "Balken",
       "continuous": "Kontinuierlich",
       "default": "Standard"
+    },
+    "presets": {
+      "minimal": {
+        "name": "Minimal",
+        "desc": "Klares und dezentes Layout mit minimaler Digitaluhr und kompaktem Wetter."
+      },
+      "media_station": {
+        "name": "Medienstation",
+        "desc": "Dediziertes Medien-Setup mit zentriertem Audio-Visualisierer und rundem Musik-Player."
+      },
+      "dashboard": {
+        "name": "Dashboard",
+        "desc": "Umfassender Systemmonitor mit Digitaluhr, Hardware-Auslastung und Akkustand."
+      }
     }
   },
   "cli": {
