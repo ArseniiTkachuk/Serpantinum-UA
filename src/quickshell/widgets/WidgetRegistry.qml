@@ -254,7 +254,7 @@ QtObject {
         let h = null;
         let v = null;
 
-        if (typeof rawAnchor === "string") {
+        if (typeof rawAnchor === "string" && rawAnchor.trim() !== "") {
             let s = rawAnchor.toLowerCase().trim().replace(/[-_]/g, " ");
             let parts = s.split(/\s+/);
 
@@ -298,19 +298,20 @@ QtObject {
         }
 
         let rawH = item ? (item.anchorH || item.anchorX || item.horizontalAnchor || item.hAnchor || item.anchorHorizontal) : null;
-        if (rawH && typeof rawH === "string") {
+        if (rawH && typeof rawH === "string" && rawH.trim() !== "") {
             let sh = rawH.toLowerCase().trim();
             if (sh === "middle") h = "center";
             else if (sh === "left" || sh === "center" || sh === "right") h = sh;
         }
 
         let rawV = item ? (item.anchorV || item.anchorY || item.verticalAnchor || item.vAnchor || item.anchorVertical) : null;
-        if (rawV && typeof rawV === "string") {
+        if (rawV && typeof rawV === "string" && rawV.trim() !== "") {
             let sv = rawV.toLowerCase().trim();
             if (sv === "middle") v = "center";
             else if (sv === "top" || sv === "center" || sv === "bottom") v = sv;
         }
 
+        if (!h && !v) return null;
         if (!h) h = "left";
         if (!v) v = "top";
 
@@ -365,34 +366,48 @@ QtObject {
         let w = (widgetWidth !== undefined && !isNaN(widgetWidth)) ? widgetWidth : 250;
         let h = (widgetHeight !== undefined && !isNaN(widgetHeight)) ? widgetHeight : 120;
 
-        let offsets = getBarOffsets();
+        let isStretchW = !!(item && (item.stretchWidth || item.wStretchWidth));
+        let isStretchH = !!(item && (item.stretchHeight || item.wStretchHeight));
 
-        let usableX = offsets.left;
-        let usableY = offsets.top;
-        let usableW = sw - offsets.left - offsets.right;
-        let usableH = sh - offsets.top - offsets.bottom;
-
-        let anchors = parseAnchors(item || {});
-
-        let ox = 0;
+        let rawX = 0;
         if (item) {
-            if (item.offsetX !== undefined) ox = parseFloat(item.offsetX);
-            else if (item.x !== undefined) ox = parseFloat(item.x);
-            else if (item.wX !== undefined) ox = parseFloat(item.wX);
+            if (item.offsetX !== undefined) rawX = item.offsetX;
+            else if (item.x !== undefined) rawX = item.x;
+            else if (item.wX !== undefined) rawX = item.wX;
         }
 
-        let oy = 0;
+        let rawY = 0;
         if (item) {
-            if (item.offsetY !== undefined) oy = parseFloat(item.offsetY);
-            else if (item.y !== undefined) oy = parseFloat(item.y);
-            else if (item.wY !== undefined) oy = parseFloat(item.wY);
+            if (item.offsetY !== undefined) rawY = item.offsetY;
+            else if (item.y !== undefined) rawY = item.y;
+            else if (item.wY !== undefined) rawY = item.wY;
         }
+
+        let ox = (typeof rawX === "string" && rawX.trim().endsWith("%")) ? Math.round((parseFloat(rawX) / 100) * sw) : parseFloat(rawX);
+        let oy = (typeof rawY === "string" && rawY.trim().endsWith("%")) ? Math.round((parseFloat(rawY) / 100) * sh) : parseFloat(rawY);
 
         if (isNaN(ox)) ox = 0;
         if (isNaN(oy)) oy = 0;
 
+        let anchors = parseAnchors(item || {});
+        if (!anchors) {
+            return {
+                x: isStretchW ? 0 : Math.round(ox),
+                y: isStretchH ? 0 : Math.round(oy)
+            };
+        }
+
+        let offsets = getBarOffsets();
+
+        let usableX = isStretchW ? 0 : offsets.left;
+        let usableY = isStretchH ? 0 : offsets.top;
+        let usableW = isStretchW ? sw : (sw - offsets.left - offsets.right);
+        let usableH = isStretchH ? sh : (sh - offsets.top - offsets.bottom);
+
         let posX = 0;
-        if (anchors.h === "right") {
+        if (isStretchW) {
+            posX = 0;
+        } else if (anchors.h === "right") {
             posX = usableX + usableW - w - ox;
         } else if (anchors.h === "center") {
             posX = usableX + Math.round((usableW - w) / 2) + ox;
@@ -401,7 +416,9 @@ QtObject {
         }
 
         let posY = 0;
-        if (anchors.v === "bottom") {
+        if (isStretchH) {
+            posY = 0;
+        } else if (anchors.v === "bottom") {
             posY = usableY + usableH - h - oy;
         } else if (anchors.v === "center") {
             posY = usableY + Math.round((usableH - h) / 2) + oy;

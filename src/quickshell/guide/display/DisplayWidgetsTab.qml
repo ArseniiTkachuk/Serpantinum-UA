@@ -143,23 +143,36 @@ Item {
         if (typeof WidgetRegistry !== "undefined" && typeof WidgetRegistry.resolvePosition === "function") {
             return WidgetRegistry.resolvePosition(cfg, sw, sh, w, h);
         }
-        let anchor = (cfg.anchor || "").toLowerCase();
+        let isStretchW = !!(cfg.stretchWidth || cfg.wStretchWidth);
+        let isStretchH = !!(cfg.stretchHeight || cfg.wStretchHeight);
+        let anchor = (cfg.anchor || "").toLowerCase().trim();
         let rawX = cfg.x !== undefined ? cfg.x : (cfg.wX !== undefined ? cfg.wX : 0);
         let rawY = cfg.y !== undefined ? cfg.y : (cfg.wY !== undefined ? cfg.wY : 0);
         let x = resolveDimension(rawX, sw, 0);
         let y = resolveDimension(rawY, sh, 0);
 
-        let resX = x;
-        let resY = y;
-        if (anchor.indexOf("right") !== -1) {
-            resX = sw - w - x;
-        } else if (anchor.indexOf("center") !== -1 && anchor.indexOf("left") === -1) {
-            resX = (sw - w) / 2 + x;
+        if (isStretchW) x = 0;
+        if (isStretchH) y = 0;
+
+        if (!anchor) {
+            return { x: x, y: y };
         }
-        if (anchor.indexOf("bottom") !== -1) {
-            resY = sh - h - y;
-        } else if (anchor.indexOf("vcenter") !== -1 || (anchor.indexOf("center") !== -1 && anchor.indexOf("top") === -1 && anchor.indexOf("bottom") === -1)) {
-            resY = (sh - h) / 2 + y;
+
+        let resX = isStretchW ? 0 : x;
+        let resY = isStretchH ? 0 : y;
+        if (!isStretchW) {
+            if (anchor.indexOf("right") !== -1) {
+                resX = sw - w - x;
+            } else if (anchor.indexOf("center") !== -1 && anchor.indexOf("left") === -1) {
+                resX = (sw - w) / 2 + x;
+            }
+        }
+        if (!isStretchH) {
+            if (anchor.indexOf("bottom") !== -1) {
+                resY = sh - h - y;
+            } else if (anchor.indexOf("vcenter") !== -1 || (anchor.indexOf("center") !== -1 && anchor.indexOf("top") === -1 && anchor.indexOf("bottom") === -1)) {
+                resY = (sh - h) / 2 + y;
+            }
         }
         return { x: resX, y: resY };
     }
@@ -268,6 +281,9 @@ Item {
 
         let len = widgetsList.length !== undefined ? widgetsList.length : 0;
         let safeM = (monName || "default").replace(/[^a-zA-Z0-9_-]/g, "_");
+        let screenDims = displayWidgetsRoot.getScreenDimensions(monName);
+        let sw = screenDims.w > 0 ? screenDims.w : 1920;
+        let sh = screenDims.h > 0 ? screenDims.h : 1080;
         let formattedList = [];
 
         for (let i = 0; i < len; i++) {
@@ -280,15 +296,36 @@ Item {
                 ? WidgetRegistry.defaultVariant(type)
                 : "default";
 
+            let isStretchW = !!(w.stretchWidth || w.wStretchWidth);
+            let isStretchH = !!(w.stretchHeight || w.wStretchHeight);
+
+            let rawW = w.w !== undefined ? w.w : (w.width !== undefined ? w.width : (w.wWidth !== undefined ? w.wWidth : defSize.w));
+            let rawH = w.h !== undefined ? w.h : (w.height !== undefined ? w.height : (w.wHeight !== undefined ? w.wHeight : defSize.h));
+            let resW = isStretchW ? sw : displayWidgetsRoot.resolveDimension(rawW, sw, defSize.w);
+            let resH = isStretchH ? sh : displayWidgetsRoot.resolveDimension(rawH, sh, defSize.h);
+
+            let rawX = w.x !== undefined ? w.x : (w.wX !== undefined ? w.wX : 100);
+            let rawY = w.y !== undefined ? w.y : (w.wY !== undefined ? w.wY : 100);
+
+            let hasAnchor = !!(w.anchor || w.anchors || w.anchorH || w.anchorV || w.anchorX || w.anchorY || w.horizontalAnchor || w.verticalAnchor || w.hAnchor || w.vAnchor);
+            let resPos = hasAnchor
+                ? displayWidgetsRoot.resolvePosition(w, sw, sh, resW, resH)
+                : { x: displayWidgetsRoot.resolveDimension(rawX, sw, 100), y: displayWidgetsRoot.resolveDimension(rawY, sh, 100) };
+
+            if (isStretchW) resPos.x = 0;
+            if (isStretchH) resPos.y = 0;
+
             formattedList.push({
                 type: type,
                 wType: type,
                 wVariant: w.variant || w.wVariant || defVariant,
-                anchor: w.anchor || "",
-                wX: w.x !== undefined ? w.x : (w.wX !== undefined ? w.wX : 100),
-                wY: w.y !== undefined ? w.y : (w.wY !== undefined ? w.wY : 100),
-                wWidth: w.w !== undefined ? w.w : (w.width !== undefined ? w.width : (w.wWidth !== undefined ? w.wWidth : defSize.w)),
-                wHeight: w.h !== undefined ? w.h : (w.height !== undefined ? w.height : (w.wHeight !== undefined ? w.wHeight : defSize.h)),
+                anchor: "",
+                wX: resPos.x,
+                wY: resPos.y,
+                wWidth: resW,
+                wHeight: resH,
+                stretchWidth: isStretchW,
+                stretchHeight: isStretchH,
                 wOpacity: w.opacity !== undefined ? w.opacity : (w.wOpacity !== undefined ? w.wOpacity : 1.0),
                 wRotation: w.rotation !== undefined ? w.rotation : (w.wRotation !== undefined ? w.wRotation : 0),
                 wImagePath: w.imagePath || w.wImagePath || "",
@@ -349,11 +386,13 @@ Item {
             cleanWidgets.push({
                 type: item.type || item.wType || "time",
                 variant: item.variant || item.wVariant || "default",
-                anchor: item.anchor || "",
-                x: item.x !== undefined ? item.x : (item.wX !== undefined ? item.wX : 0),
-                y: item.y !== undefined ? item.y : (item.wY !== undefined ? item.wY : 0),
-                width: item.w !== undefined ? item.w : (item.width !== undefined ? item.width : (item.wWidth !== undefined ? item.wWidth : 250)),
-                height: item.h !== undefined ? item.h : (item.height !== undefined ? item.height : (item.wHeight !== undefined ? item.wHeight : 120)),
+                anchor: "",
+                x: item.wX !== undefined ? item.wX : (item.x !== undefined ? item.x : 0),
+                y: item.wY !== undefined ? item.wY : (item.y !== undefined ? item.y : 0),
+                width: item.wWidth !== undefined ? item.wWidth : (item.width !== undefined ? item.width : (item.w !== undefined ? item.w : 250)),
+                height: item.wHeight !== undefined ? item.wHeight : (item.height !== undefined ? item.height : (item.h !== undefined ? item.h : 120)),
+                stretchWidth: !!(item.stretchWidth || item.wStretchWidth),
+                stretchHeight: !!(item.stretchHeight || item.wStretchHeight),
                 opacity: item.opacity !== undefined ? item.opacity : (item.wOpacity !== undefined ? item.wOpacity : 1.0),
                 rotation: item.rotation !== undefined ? item.rotation : (item.wRotation !== undefined ? item.wRotation : 0),
                 imagePath: item.imagePath || item.wImagePath || ""
@@ -509,6 +548,50 @@ Item {
                 let safe = mon.replace(/[^a-zA-Z0-9_-]/g, "_");
                 if (safe === monitor || mon === monitor) {
                     m[mon] = widgetsList;
+                }
+            }
+            displayWidgetsRoot.monitorWidgetsMap = m;
+        }
+
+        function onPositionChanged(monitor, widgetId, x, y) {
+            let m = Object.assign({}, displayWidgetsRoot.monitorWidgetsMap);
+            let targetId = String(widgetId).trim();
+            for (let mon in m) {
+                let safe = mon.replace(/[^a-zA-Z0-9_-]/g, "_");
+                if (safe === monitor || mon === monitor) {
+                    m[mon] = m[mon].map(item => {
+                        if (String(item.wId || item.id).trim() === targetId) {
+                            let updated = Object.assign({}, item);
+                            updated.wX = x;
+                            updated.wY = y;
+                            return updated;
+                        }
+                        return item;
+                    });
+                }
+            }
+            displayWidgetsRoot.monitorWidgetsMap = m;
+        }
+
+        function onGeometryChanged(monitor, widgetId, x, y, w, h, opacity, rotation) {
+            let m = Object.assign({}, displayWidgetsRoot.monitorWidgetsMap);
+            let targetId = String(widgetId).trim();
+            for (let mon in m) {
+                let safe = mon.replace(/[^a-zA-Z0-9_-]/g, "_");
+                if (safe === monitor || mon === monitor) {
+                    m[mon] = m[mon].map(item => {
+                        if (String(item.wId || item.id).trim() === targetId) {
+                            let updated = Object.assign({}, item);
+                            updated.wX = x;
+                            updated.wY = y;
+                            updated.wWidth = w;
+                            updated.wHeight = h;
+                            if (opacity !== undefined) updated.wOpacity = opacity;
+                            if (rotation !== undefined && !isNaN(rotation)) updated.wRotation = rotation;
+                            return updated;
+                        }
+                        return item;
+                    });
                 }
             }
             displayWidgetsRoot.monitorWidgetsMap = m;
@@ -915,18 +998,22 @@ Item {
                                                                         readonly property string defVariant: (typeof WidgetRegistry !== "undefined" && typeof WidgetRegistry.defaultVariant === "function")
                                                                             ? WidgetRegistry.defaultVariant(typeStr)
                                                                             : "default"
+
                                                                         readonly property string variantStr: modelData.variant || modelData.wVariant || miniWidgetContainer.defVariant
+
+                                                                        readonly property bool isStretchW: !!(modelData.stretchWidth || modelData.wStretchWidth)
+                                                                        readonly property bool isStretchH: !!(modelData.stretchHeight || modelData.wStretchHeight)
 
                                                                         readonly property real rawW: modelData.w !== undefined ? modelData.w : (modelData.width !== undefined ? modelData.width : (modelData.wWidth !== undefined ? modelData.wWidth : defSize.w))
                                                                         readonly property real rawH: modelData.h !== undefined ? modelData.h : (modelData.height !== undefined ? modelData.height : (modelData.wHeight !== undefined ? modelData.wHeight : defSize.h))
 
-                                                                        readonly property real resolvedW: (modelData.stretchWidth || modelData.wStretchWidth) ? presetPreviewBox.sWidth : displayWidgetsRoot.resolveDimension(rawW, presetPreviewBox.sWidth, defSize.w)
-                                                                        readonly property real resolvedH: (modelData.stretchHeight || modelData.wStretchHeight) ? presetPreviewBox.sHeight : displayWidgetsRoot.resolveDimension(rawH, presetPreviewBox.sHeight, defSize.h)
+                                                                        readonly property real resolvedW: isStretchW ? presetPreviewBox.sWidth : displayWidgetsRoot.resolveDimension(rawW, presetPreviewBox.sWidth, defSize.w)
+                                                                        readonly property real resolvedH: isStretchH ? presetPreviewBox.sHeight : displayWidgetsRoot.resolveDimension(rawH, presetPreviewBox.sHeight, defSize.h)
 
                                                                         readonly property var resolvedPos: displayWidgetsRoot.resolvePosition(modelData, presetPreviewBox.sWidth, presetPreviewBox.sHeight, resolvedW, resolvedH)
 
-                                                                        x: resolvedPos.x
-                                                                        y: resolvedPos.y
+                                                                        x: isStretchW ? 0 : resolvedPos.x
+                                                                        y: isStretchH ? 0 : resolvedPos.y
                                                                         width: resolvedW
                                                                         height: resolvedH
                                                                         opacity: modelData.opacity !== undefined ? modelData.opacity : 1.0

@@ -117,7 +117,9 @@ Item {
                 wRotation: normRot,
                 wImagePath: item.wImagePath || "",
                 imagePath: item.wImagePath || "",
-                wId: item.wId
+                wId: item.wId,
+                stretchWidth: !!item.stretchWidth,
+                stretchHeight: !!item.stretchHeight
             });
         }
         let jsonStr = JSON.stringify(data);
@@ -164,14 +166,18 @@ Item {
                         let variant = item.wVariant || item.variant || WidgetRegistry.defaultVariant(type);
                         let defSize = WidgetRegistry.defaultSize(type);
 
+                        let isStretchW = !!(item.stretchWidth || item.wStretchWidth);
+                        let isStretchH = !!(item.stretchHeight || item.wStretchHeight);
+
                         let rawW = item.wWidth !== undefined ? item.wWidth : (item.w !== undefined ? item.w : (item.width !== undefined ? item.width : defSize.w));
                         let rawH = item.wHeight !== undefined ? item.wHeight : (item.h !== undefined ? item.h : (item.height !== undefined ? item.height : defSize.h));
-                        let w = (item.stretchWidth || item.wStretchWidth) ? sw : WidgetRegistry.resolveDimension(rawW, sw, defSize.w);
-                        let h = (item.stretchHeight || item.wStretchHeight) ? sh : WidgetRegistry.resolveDimension(rawH, sh, defSize.h);
+                        let w = isStretchW ? sw : WidgetRegistry.resolveDimension(rawW, sw, defSize.w);
+                        let h = isStretchH ? sh : WidgetRegistry.resolveDimension(rawH, sh, defSize.h);
 
                         let x = 100;
                         let y = 100;
-                        if (item.anchor || item.anchors || item.anchorH || item.anchorV || item.anchorX || item.anchorY || item.horizontalAnchor || item.verticalAnchor || item.hAnchor || item.vAnchor) {
+                        let hasAnchor = !!(item.anchor || item.anchors || item.anchorH || item.anchorV || item.anchorX || item.anchorY || item.horizontalAnchor || item.verticalAnchor || item.hAnchor || item.vAnchor);
+                        if (hasAnchor) {
                             let pos = WidgetRegistry.resolvePosition(item, sw, sh, w, h);
                             x = pos.x;
                             y = pos.y;
@@ -179,6 +185,9 @@ Item {
                             x = item.wX !== undefined ? parseFloat(item.wX) : (item.x !== undefined ? parseFloat(item.x) : 100);
                             y = item.wY !== undefined ? parseFloat(item.wY) : (item.y !== undefined ? parseFloat(item.y) : 100);
                         }
+
+                        if (isStretchW) x = 0;
+                        if (isStretchH) y = 0;
 
                         let op = item.wOpacity !== undefined ? parseFloat(item.wOpacity) : 1.0;
                         let rot = (item.wRotation !== undefined) ? parseFloat(item.wRotation) : (item.rotation !== undefined ? parseFloat(item.rotation) : 0);
@@ -197,6 +206,8 @@ Item {
                             wRotation: rot,
                             wImagePath: imgPath,
                             wId: String(itemId),
+                            stretchWidth: isStretchW,
+                            stretchHeight: isStretchH,
                             isRemoving: false
                         });
                     }
@@ -231,14 +242,31 @@ Item {
                 let variant = item.wVariant || item.variant || WidgetRegistry.defaultVariant(type);
                 let defSize = WidgetRegistry.defaultSize(type);
 
+                let isStretchW = !!(item.stretchWidth || item.wStretchWidth);
+                let isStretchH = !!(item.stretchHeight || item.wStretchHeight);
+
                 let rawW = item.wWidth !== undefined ? item.wWidth : (item.w !== undefined ? item.w : (item.width !== undefined ? item.width : defSize.w));
                 let rawH = item.wHeight !== undefined ? item.wHeight : (item.h !== undefined ? item.h : (item.height !== undefined ? item.height : defSize.h));
-                let w = (item.stretchWidth || item.wStretchWidth) ? sw : WidgetRegistry.resolveDimension(rawW, sw, defSize.w);
-                let h = (item.stretchHeight || item.wStretchHeight) ? sh : WidgetRegistry.resolveDimension(rawH, sh, defSize.h);
+                let w = isStretchW ? sw : WidgetRegistry.resolveDimension(rawW, sw, defSize.w);
+                let h = isStretchH ? sh : WidgetRegistry.resolveDimension(rawH, sh, defSize.h);
 
-                let pos = WidgetRegistry.resolvePosition(item, sw, sh, w, h);
-                let x = pos.x;
-                let y = pos.y;
+                let x = 100;
+                let y = 100;
+                let hasAnchor = !!(item.anchor || item.anchors || item.anchorH || item.anchorV || item.anchorX || item.anchorY || item.horizontalAnchor || item.verticalAnchor || item.hAnchor || item.vAnchor);
+                if (hasAnchor) {
+                    let pos = WidgetRegistry.resolvePosition(item, sw, sh, w, h);
+                    x = pos.x;
+                    y = pos.y;
+                } else {
+                    x = item.wX !== undefined ? parseFloat(item.wX) : (item.x !== undefined ? parseFloat(item.x) : 100);
+                    y = item.wY !== undefined ? parseFloat(item.wY) : (item.y !== undefined ? parseFloat(item.y) : 100);
+                }
+
+                if (isStretchW) x = 0;
+                if (isStretchH) y = 0;
+
+                if (isNaN(x)) x = 100;
+                if (isNaN(y)) y = 100;
 
                 let op = item.wOpacity !== undefined ? parseFloat(item.wOpacity) : (item.opacity !== undefined ? parseFloat(item.opacity) : 1.0);
                 let rot = (item.wRotation !== undefined) ? parseFloat(item.wRotation) : (item.rotation !== undefined ? parseFloat(item.rotation) : 0);
@@ -258,6 +286,8 @@ Item {
                     wRotation: rot,
                     wImagePath: imgPath,
                     wId: String(itemId),
+                    stretchWidth: isStretchW,
+                    stretchHeight: isStretchH,
                     isRemoving: false
                 });
             }
@@ -363,6 +393,8 @@ Item {
                 wRotation: rotation !== undefined ? rotation : 0,
                 wImagePath: imagePath || "",
                 wId: target,
+                stretchWidth: false,
+                stretchHeight: false,
                 isRemoving: false
             });
             loaderRoot.saveNow();
@@ -423,6 +455,8 @@ Item {
                             wImagePath: item.wImagePath || "",
                             imagePath: item.wImagePath || "",
                             wId: item.wId,
+                            stretchWidth: !!item.stretchWidth,
+                            stretchHeight: !!item.stretchHeight,
                             isRemoving: false
                         };
                         widgetsModel.remove(i, 1);
@@ -485,6 +519,8 @@ Item {
                 wRotation: rotVal,
                 wImagePath: imgPath !== undefined ? imgPath : "",
                 wId: String(id).trim(),
+                stretchWidth: false,
+                stretchHeight: false,
                 isRemoving: false
             });
             loaderRoot.saveNow();
@@ -627,6 +663,8 @@ Item {
                             wImagePath: item.wImagePath || "",
                             imagePath: item.wImagePath || "",
                             wId: item.wId,
+                            stretchWidth: !!item.stretchWidth,
+                            stretchHeight: !!item.stretchHeight,
                             isRemoving: false
                         };
                         widgetsModel.remove(i, 1);
@@ -665,7 +703,9 @@ Item {
                     wRotation: rotVal,
                     wImagePath: item.wImagePath || "",
                     imagePath: item.wImagePath || "",
-                    wId: item.wId
+                    wId: item.wId,
+                    stretchWidth: !!item.stretchWidth,
+                    stretchHeight: !!item.stretchHeight
                 });
             }
             return JSON.stringify(data);
