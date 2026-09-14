@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
@@ -44,9 +45,15 @@ ShellRoot {
                 property bool isVideoB: false
                 property bool playbackPaused: false
 
-                readonly property int transitionDuration: 1000
+                readonly property int fadeDuration: 1000
+                readonly property int maskDuration: 1600
                 property real transitionProgress: 1.0
                 property bool isPreloading: false
+                property int activeTransitionType: 0
+                property bool wipeIsVertical: false
+                property real transitionOriginX: 0.5
+                property real transitionOriginY: 0.5
+                property bool isInitialLoad: true
 
                 Component.onCompleted: restorePoller.running = true
 
@@ -204,6 +211,25 @@ ShellRoot {
                         barWindow.originalFileName = filename;
                     }
 
+                    if (barWindow.isInitialLoad) {
+                        barWindow.isInitialLoad = false;
+                        barWindow.transitionProgress = 1.0;
+                        barWindow.isPreloading = false;
+                        if (barWindow.activeLayer === 1) {
+                            barWindow.pathA = cleanPath;
+                            barWindow.isVideoA = vid;
+                            barWindow.activeLayer = 0;
+                            if (vid) barWindow.playA();
+                        } else {
+                            barWindow.pathB = cleanPath;
+                            barWindow.isVideoB = vid;
+                            barWindow.activeLayer = 1;
+                            if (vid) barWindow.playB();
+                        }
+                        barWindow.currentWallpaperPath = cleanPath;
+                        return;
+                    }
+
                     transitionAnim.stop();
                     videoWarmUpTimer.stop();
                     barWindow.transitionProgress = 0.0;
@@ -237,6 +263,12 @@ ShellRoot {
                 function changeWallpaper(path, ttype) {
                     if (!path) return;
 
+                    barWindow.isInitialLoad = false;
+                    barWindow.activeTransitionType = Math.floor(Math.random() * 3);
+                    barWindow.wipeIsVertical = Math.random() < 0.5;
+                    barWindow.transitionOriginX = 0.15 + Math.random() * 0.70;
+                    barWindow.transitionOriginY = 0.15 + Math.random() * 0.70;
+
                     let cleanPath = String(path).trim();
                     let slash = cleanPath.lastIndexOf("/");
                     let origName = cleanPath.substring(slash + 1);
@@ -254,7 +286,7 @@ ShellRoot {
                         " && printf '%s' '" + origName + "' > '" + wpStatePath + "_name'" +
                         " && cp -f '" + cleanPath + "' '" + dest + "'" +
                         (vid ? "" : " && cp -f '" + cleanPath + "' '" + snapshotPath + "' && cp -f '" + cleanPath + "' '" + monSnapshotPath + "'") +
-                        " && ( HIST='" + histFile + "'; if [ -f \"$HIST\" ]; then grep -v -F -x '" + origName + "' \"$HIST\" > \"$HIST.tmp\" 2>/dev/null || true; printf '%s\n' '" + origName + "' | cat - \"$HIST.tmp\" > \"$HIST\" 2>/dev/null; rm -f \"$HIST.tmp\"; else printf '%s\n' '" + origName + "' > \"$HIST\"; fi )"
+                        " && ( HIST='" + histFile + "'; if [ -f \"$HIST\" ]; then grep -v -F -x '" + origName + "' \"$HIST\" > \"$HIST.tmp\" 2>/dev/null || true; printf '%s\n' '" + origName + "' | cat - \"$HIST.tmp\" > \"$HIST\"; rm -f \"$HIST.tmp\"; else printf '%s\n' '" + origName + "' > \"$HIST\"; fi )"
                     ]);
 
                     if (vid) {
@@ -272,7 +304,7 @@ ShellRoot {
                     property: "transitionProgress"
                     from: 0.0
                     to: 1.0
-                    duration: barWindow.transitionDuration
+                    duration: barWindow.activeTransitionType === 0 ? barWindow.fadeDuration : barWindow.maskDuration
                     easing.type: Easing.InOutCubic
 
                     onFinished: {
@@ -360,7 +392,84 @@ ShellRoot {
 
                         opacity: {
                             if (barWindow.isPreloading && isIncoming) return 0.0;
+                            if (barWindow.activeTransitionType !== 0 && isIncoming) return 1.0;
                             return isIncoming ? p : 1.0 - p;
+                        }
+
+                        layer.enabled: barWindow.activeTransitionType !== 0 && isIncoming && !barWindow.isPreloading && p < 1.0
+                        layer.effect: MultiEffect {
+                            maskEnabled: true
+                            maskSource: maskItemA
+                            maskThresholdMin: 0.0
+                            maskSpreadAtMin: 0.0
+                        }
+
+                        Item {
+                            id: maskItemA
+                            width: layerA.width
+                            height: layerA.height
+                            visible: false
+                            layer.enabled: true
+
+                            Rectangle {
+                                color: "white"
+
+                                readonly property real p: layerA.p
+                                readonly property real cx: barWindow.transitionOriginX * parent.width
+                                readonly property real cy: barWindow.transitionOriginY * parent.height
+                                readonly property real maxR: {
+                                    let w = parent.width;
+                                    let h = parent.height;
+                                    let d1 = Math.sqrt(cx * cx + cy * cy);
+                                    let d2 = Math.sqrt((w - cx) * (w - cx) + cy * cy);
+                                    let d3 = Math.sqrt(cx * cx + (h - cy) * (h - cy));
+                                    let d4 = Math.sqrt((w - cx) * (w - cx) + (h - cy) * (h - cy));
+                                    return Math.max(d1, d2, d3, d4);
+                                }
+                                readonly property real diam: p * maxR * 2
+
+                                width: {
+                                    if (barWindow.activeTransitionType === 1) {
+                                        return barWindow.wipeIsVertical ? parent.width : p * parent.width;
+                                    }
+                                    if (barWindow.activeTransitionType === 2) {
+                                        return diam;
+                                    }
+                                    return parent.width;
+                                }
+
+                                height: {
+                                    if (barWindow.activeTransitionType === 1) {
+                                        return barWindow.wipeIsVertical ? p * parent.height : parent.height;
+                                    }
+                                    if (barWindow.activeTransitionType === 2) {
+                                        return diam;
+                                    }
+                                    return parent.height;
+                                }
+
+                                x: {
+                                    if (barWindow.activeTransitionType === 1) {
+                                        return barWindow.wipeIsVertical ? 0 : (parent.width - width) / 2;
+                                    }
+                                    if (barWindow.activeTransitionType === 2) {
+                                        return cx - width / 2;
+                                    }
+                                    return 0;
+                                }
+
+                                y: {
+                                    if (barWindow.activeTransitionType === 1) {
+                                        return barWindow.wipeIsVertical ? (parent.height - height) / 2 : 0;
+                                    }
+                                    if (barWindow.activeTransitionType === 2) {
+                                        return cy - height / 2;
+                                    }
+                                    return 0;
+                                }
+
+                                radius: barWindow.activeTransitionType === 2 ? width / 2 : 0
+                            }
                         }
 
                         Image {
@@ -403,7 +512,84 @@ ShellRoot {
 
                         opacity: {
                             if (barWindow.isPreloading && isIncoming) return 0.0;
+                            if (barWindow.activeTransitionType !== 0 && isIncoming) return 1.0;
                             return isIncoming ? p : 1.0 - p;
+                        }
+
+                        layer.enabled: barWindow.activeTransitionType !== 0 && isIncoming && !barWindow.isPreloading && p < 1.0
+                        layer.effect: MultiEffect {
+                            maskEnabled: true
+                            maskSource: maskItemB
+                            maskThresholdMin: 0.0
+                            maskSpreadAtMin: 0.0
+                        }
+
+                        Item {
+                            id: maskItemB
+                            width: layerB.width
+                            height: layerB.height
+                            visible: false
+                            layer.enabled: true
+
+                            Rectangle {
+                                color: "white"
+
+                                readonly property real p: layerB.p
+                                readonly property real cx: barWindow.transitionOriginX * parent.width
+                                readonly property real cy: barWindow.transitionOriginY * parent.height
+                                readonly property real maxR: {
+                                    let w = parent.width;
+                                    let h = parent.height;
+                                    let d1 = Math.sqrt(cx * cx + cy * cy);
+                                    let d2 = Math.sqrt((w - cx) * (w - cx) + cy * cy);
+                                    let d3 = Math.sqrt(cx * cx + (h - cy) * (h - cy));
+                                    let d4 = Math.sqrt((w - cx) * (w - cx) + (h - cy) * (h - cy));
+                                    return Math.max(d1, d2, d3, d4);
+                                }
+                                readonly property real diam: p * maxR * 2
+
+                                width: {
+                                    if (barWindow.activeTransitionType === 1) {
+                                        return barWindow.wipeIsVertical ? parent.width : p * parent.width;
+                                    }
+                                    if (barWindow.activeTransitionType === 2) {
+                                        return diam;
+                                    }
+                                    return parent.width;
+                                }
+
+                                height: {
+                                    if (barWindow.activeTransitionType === 1) {
+                                        return barWindow.wipeIsVertical ? p * parent.height : parent.height;
+                                    }
+                                    if (barWindow.activeTransitionType === 2) {
+                                        return diam;
+                                    }
+                                    return parent.height;
+                                }
+
+                                x: {
+                                    if (barWindow.activeTransitionType === 1) {
+                                        return barWindow.wipeIsVertical ? 0 : (parent.width - width) / 2;
+                                    }
+                                    if (barWindow.activeTransitionType === 2) {
+                                        return cx - width / 2;
+                                    }
+                                    return 0;
+                                }
+
+                                y: {
+                                    if (barWindow.activeTransitionType === 1) {
+                                        return barWindow.wipeIsVertical ? (parent.height - height) / 2 : 0;
+                                    }
+                                    if (barWindow.activeTransitionType === 2) {
+                                        return cy - height / 2;
+                                    }
+                                    return 0;
+                                }
+
+                                radius: barWindow.activeTransitionType === 2 ? width / 2 : 0
+                            }
                         }
 
                         Image {
