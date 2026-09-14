@@ -54,13 +54,26 @@ PanelWindow {
     }
 
     function reportWidgetState() {
-        if (!Caching.runDir) return;
+        if (typeof Caching === "undefined" || !Caching.runDir) return;
         let sName = (masterWindow.currentActive === "hidden" || !masterWindow.screen) ? "" : (masterWindow.screen.name || "");
         let payload = JSON.stringify({
             widget: masterWindow.currentActive,
             screen: sName
         });
         Quickshell.execDetached(["bash", "-c", "echo '" + payload + "' > " + Caching.runDir + "/current_widget"]);
+    }
+
+    Process {
+        id: startupResetProcess
+        command: ["bash", "-c", `[ -n "${Caching.runDir}" ] && echo '{"widget":"hidden","screen":""}' > "${Caching.runDir}/current_widget"`]
+        running: true
+    }
+
+    Connections {
+        target: (typeof Caching !== "undefined") ? Caching : null
+        function onRunDirChanged() {
+            masterWindow.reportWidgetState();
+        }
     }
 
     IpcHandler {
@@ -341,7 +354,14 @@ PanelWindow {
     }
 
     Component.onCompleted: {
+        reportWidgetState();
         preloadStaggerTimer.start();
+    }
+
+    Component.onDestruction: {
+        if (typeof Caching !== "undefined" && Caching.runDir) {
+            Quickshell.execDetached(["bash", "-c", "echo '{\"widget\":\"hidden\",\"screen\":\"\"}' > " + Caching.runDir + "/current_widget"]);
+        }
     }
 
     Timer {
