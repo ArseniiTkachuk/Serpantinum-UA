@@ -330,6 +330,8 @@ PanelWindow {
         } else {
             clipList.currentIndex = -1;
         }
+
+        clipList.resetScroll();
     }
 
     function filterClips(query) {
@@ -452,6 +454,7 @@ PanelWindow {
     function clearAllClips() {
         clipboardWindow.allFetchedClips = [];
         clipBoxModel.clear();
+        clipList.resetScroll();
         clipActionProc.command = ["python3", Caching.qsDir + "/clipboard/clip_fetcher.py", "wipe", Caching.getCacheDir("clipboard")];
         clipActionProc.running = true;
     }
@@ -592,6 +595,7 @@ PanelWindow {
             focusRetryTimer.restart();
             focusFinalTimer.restart();
         } else {
+            clipList.resetScroll();
             clipboardWindow.expandedClipId = "";
             filterDebounceTimer.stop();
             focusTimer.stop();
@@ -1029,6 +1033,14 @@ PanelWindow {
                     height: Math.max(0, parent.height - searchRow.height - clipboardWindow.s(10))
                     clip: true
 
+                    NumberAnimation {
+                        id: scrollAnim
+                        target: clipList
+                        property: "contentY"
+                        duration: 260
+                        easing.type: Easing.OutCubic
+                    }
+
                     ListView {
                         id: clipList
                         anchors.fill: parent
@@ -1037,13 +1049,103 @@ PanelWindow {
                         spacing: clipboardWindow.s(4)
                         currentIndex: 0
                         boundsBehavior: Flickable.StopAtBounds
+                        cacheBuffer: clipboardWindow.s(600)
                         interactive: !clipboardWindow.isClearingClips && (contentHeight > height)
 
                         highlightFollowsCurrentItem: false
 
+                        function resetScroll() {
+                            scrollAnim.stop();
+                            contentY = 0;
+                        }
+
+                        function getItemBounds(idx) {
+                            if (idx < 0 || idx >= clipBoxModel.count) return null;
+                            let secH = clipboardWindow.s(22);
+                            let defaultH = clipboardWindow.s(52);
+                            let itemObj = itemAtIndex(idx);
+                            let isFirstInSection = false;
+                            let curItem = clipBoxModel.get(idx);
+                            if (curItem) {
+                                if (idx === 0) {
+                                    isFirstInSection = (curItem.sectionCategory !== undefined && curItem.sectionCategory !== "");
+                                } else {
+                                    let prevItem = clipBoxModel.get(idx - 1);
+                                    if (prevItem && curItem.sectionCategory !== prevItem.sectionCategory) {
+                                        isFirstInSection = true;
+                                    }
+                                }
+                            }
+
+                            if (itemObj) {
+                                let topY = itemObj.y - (isFirstInSection ? secH : 0);
+                                let botY = itemObj.y + itemObj.height;
+                                return { top: topY, bottom: botY };
+                            }
+
+                            let curY = 0;
+                            let prevSec = "";
+                            for (let i = 0; i <= idx; i++) {
+                                let m = clipBoxModel.get(i);
+                                if (!m) break;
+                                let sec = m.sectionCategory || "";
+                                let hasSec = (sec !== "" && sec !== prevSec);
+                                if (hasSec) {
+                                    curY += secH;
+                                    prevSec = sec;
+                                }
+                                let h = defaultH;
+                                let obj = itemAtIndex(i);
+                                if (obj) {
+                                    h = obj.height;
+                                }
+                                if (i === idx) {
+                                    let topY = curY - (hasSec ? secH : 0);
+                                    let botY = curY + h;
+                                    return { top: topY, bottom: botY };
+                                }
+                                curY += h + spacing;
+                            }
+                            return { top: curY, bottom: curY + defaultH };
+                        }
+
+                        function ensureVisible(idx, animated) {
+                            if (idx < 0 || clipBoxModel.count === 0) return;
+                            let bounds = getItemBounds(idx);
+                            if (!bounds) return;
+
+                            let curContentY = scrollAnim.running ? scrollAnim.to : contentY;
+                            let maxScroll = Math.max(0, Math.max(contentHeight, bounds.bottom) - height);
+                            let newContentY = curContentY;
+
+                            if (bounds.top < curContentY) {
+                                newContentY = bounds.top;
+                            } else if (bounds.bottom > curContentY + height) {
+                                newContentY = bounds.bottom - height;
+                            }
+
+                            newContentY = Math.max(0, Math.min(maxScroll, newContentY));
+
+                            if (Math.abs(newContentY - contentY) > 0.5) {
+                                if (animated) {
+                                    scrollAnim.stop();
+                                    scrollAnim.from = contentY;
+                                    scrollAnim.to = newContentY;
+                                    scrollAnim.start();
+                                } else {
+                                    scrollAnim.stop();
+                                    contentY = newContentY;
+                                }
+                            }
+                        }
+
+                        onMovementStarted: {
+                            scrollAnim.stop();
+                        }
+
                         onCurrentIndexChanged: {
                             if (currentIndex >= 0) {
-                                positionViewAtIndex(currentIndex, ListView.Contain);
+                                ensureVisible(currentIndex, clipboardWindow.isKeyboardNav);
                             }
                         }
 
@@ -1156,7 +1258,7 @@ PanelWindow {
                                     easing.type: Easing.OutQuart
                                     onRunningChanged: {
                                         if (!running && clipDelegateWrapper.isSelected) {
-                                            clipList.positionViewAtIndex(clipList.currentIndex, ListView.Contain);
+                                            clipList.ensureVisible(clipList.currentIndex, true);
                                         }
                                     }
                                 }
@@ -1210,7 +1312,7 @@ PanelWindow {
                                     if (model.type !== "image" && clipboardWindow.expandedClipId !== clipIdString) {
                                         clipboardWindow.fetchFullText(clipIdString);
                                     }
-                                    clipList.positionViewAtIndex(index, ListView.Contain);
+                                    clipList.ensureVisible(index, true);
                                 }
                             }
 

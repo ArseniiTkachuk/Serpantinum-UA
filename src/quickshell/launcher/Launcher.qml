@@ -328,6 +328,7 @@ PanelWindow {
             focusRetryTimer.restart();
             focusFinalTimer.restart();
         } else {
+            appList.resetScroll();
             filterDebounceTimer.stop();
             focusTimer.stop();
             focusRetryTimer.stop();
@@ -661,6 +662,8 @@ PanelWindow {
         } else {
             appList.currentIndex = -1;
         }
+
+        appList.resetScroll();
     }
 
     function activateIndex(index) {
@@ -1213,6 +1216,14 @@ PanelWindow {
                         }
                     }
 
+                    NumberAnimation {
+                        id: scrollAnim
+                        target: appList
+                        property: "contentY"
+                        duration: 260
+                        easing.type: Easing.OutCubic
+                    }
+
                     ListView {
                         id: appList
                         anchors.fill: parent
@@ -1221,6 +1232,7 @@ PanelWindow {
                         spacing: launcherWindow.s(4)
                         currentIndex: 0
                         boundsBehavior: Flickable.StopAtBounds
+                        cacheBuffer: launcherWindow.s(500)
 
                         highlightFollowsCurrentItem: false
 
@@ -1232,9 +1244,51 @@ PanelWindow {
                         move: transitionsEnabled ? listMoveTrans : null
                         moveDisplaced: transitionsEnabled ? listDisplacedTrans : null
 
+                        function getItemY(idx) {
+                            return idx * (launcherWindow.s(44) + spacing);
+                        }
+
+                        function resetScroll() {
+                            scrollAnim.stop();
+                            contentY = 0;
+                        }
+
+                        function ensureVisible(idx, animated) {
+                            if (idx < 0 || appModel.count === 0) return;
+                            let itemH = launcherWindow.s(44);
+                            let step = itemH + spacing;
+                            let itemTop = idx * step;
+                            let itemBottom = itemTop + itemH;
+
+                            let curContentY = scrollAnim.running ? scrollAnim.to : contentY;
+                            let totalH = appModel.count * step - spacing;
+                            let maxScroll = Math.max(0, Math.max(totalH, contentHeight) - height);
+                            let newContentY = curContentY;
+
+                            if (itemTop < curContentY) {
+                                newContentY = itemTop;
+                            } else if (itemBottom > curContentY + height) {
+                                newContentY = itemBottom - height;
+                            }
+
+                            newContentY = Math.max(0, Math.min(maxScroll, newContentY));
+
+                            if (Math.abs(newContentY - contentY) > 0.5) {
+                                if (animated && transitionsEnabled) {
+                                    scrollAnim.stop();
+                                    scrollAnim.from = contentY;
+                                    scrollAnim.to = newContentY;
+                                    scrollAnim.start();
+                                } else {
+                                    scrollAnim.stop();
+                                    contentY = newContentY;
+                                }
+                            }
+                        }
+
                         onCurrentIndexChanged: {
                             if (currentIndex >= 0) {
-                                positionViewAtIndex(currentIndex, ListView.Contain);
+                                ensureVisible(currentIndex, launcherWindow.isKeyboardNav);
                             }
                         }
 
@@ -1256,7 +1310,7 @@ PanelWindow {
                             radius: ThemeBackend.borderRadius
                             color: ThemeBackend.mauve
 
-                            property real targetY: (appList.currentIndex >= 0 && appList.currentItem) ? appList.currentItem.y : 0
+                            property real targetY: (appList.currentIndex >= 0) ? (appList.currentItem ? appList.currentItem.y : appList.getItemY(appList.currentIndex)) : 0
                             y: targetY
 
                             Behavior on y {
