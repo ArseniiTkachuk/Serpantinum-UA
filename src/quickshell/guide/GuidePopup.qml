@@ -26,6 +26,7 @@ Item {
     property real introBase: 0.0
     property real introSidebar: 0.0
     property real introContent: 0.0
+    property real introTabs: 0.0
     property var tutorialSections: []
 
     property var tabsModel: [
@@ -63,6 +64,26 @@ Item {
 
     function s(val) {
         return Scaler.s(val);
+    }
+
+    function getTabProgress(idx) {
+        if (introTabs >= 1.0) return 1.0;
+        if (introTabs <= 0.0) return 0.0;
+        let start = idx * 0.04;
+        let p = Math.min(1.0, Math.max(0.0, (introTabs - start) / 0.42));
+        if (p <= 0.0) return 0.0;
+        if (p >= 1.0) return 1.0;
+        let c1 = 0.85;
+        let c3 = c1 + 1;
+        return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2);
+    }
+
+    function getTabOpacity(idx) {
+        if (introTabs >= 1.0) return 1.0;
+        if (introTabs <= 0.0) return 0.0;
+        let start = idx * 0.04;
+        let p = Math.min(1.0, Math.max(0.0, (introTabs - start) / 0.28));
+        return p;
     }
 
     function gotoTab(tabName, subTabName) {
@@ -128,6 +149,7 @@ Item {
         introBase = 0.0;
         introSidebar = 0.0;
         introContent = 0.0;
+        introTabs = 0.0;
         startupSequence.restart();
         Updater.checkUpdate();
     }
@@ -150,6 +172,7 @@ Item {
             introBase = 0.0;
             introSidebar = 0.0;
             introContent = 0.0;
+            introTabs = 0.0;
             if (root.chargingSoundHandle !== -1 && typeof Sounds !== "undefined") {
                 Sounds.stopSfx(root.chargingSoundHandle);
                 root.chargingSoundHandle = -1;
@@ -271,31 +294,40 @@ Item {
             property: "introBase"
             from: 0.0
             to: 1.0
-            duration: 900
+            duration: 650
             easing.type: Easing.OutExpo
         }
         SequentialAnimation {
-            PauseAnimation { duration: 150 }
+            PauseAnimation { duration: 60 }
             NumberAnimation {
                 target: root
                 property: "introSidebar"
                 from: 0.0
                 to: 1.0
-                duration: 1800
-                easing.type: Easing.OutBack
-                easing.overshoot: 1.05
+                duration: 400
+                easing.type: Easing.OutCubic
             }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 250 }
+            PauseAnimation { duration: 100 }
+            NumberAnimation {
+                target: root
+                property: "introTabs"
+                from: 0.0
+                to: 1.0
+                duration: 550
+                easing.type: Easing.Linear
+            }
+        }
+        SequentialAnimation {
+            PauseAnimation { duration: 180 }
             NumberAnimation {
                 target: root
                 property: "introContent"
                 from: 0.0
                 to: 1.0
-                duration: 1100
-                easing.type: Easing.OutBack
-                easing.overshoot: 1.02
+                duration: 650
+                easing.type: Easing.OutCubic
             }
         }
     }
@@ -324,6 +356,13 @@ Item {
                 to: 0.0
                 duration: 150
                 easing.type: Easing.InExpo
+            }
+            NumberAnimation {
+                target: root
+                property: "introTabs"
+                to: 0.0
+                duration: 120
+                easing.type: Easing.InQuad
             }
         }
         NumberAnimation {
@@ -424,6 +463,9 @@ Item {
                             width: targetW
                             height: targetH
 
+                            opacity: root.getTabOpacity(root.currentTab)
+                            transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(root.currentTab)) }
+
                             Behavior on x { NumberAnimation { duration: 300; easing.type: Easing.OutQuint } }
                             Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.OutQuint } }
                             Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutQuint } }
@@ -457,6 +499,9 @@ Item {
                                 implicitHeight: root.s(44)
                                 radius: ThemeBackend.borderRadius
                                 z: 1
+
+                                opacity: root.getTabOpacity(0)
+                                transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(0)) }
 
                                 property bool isDirectActive: root.currentTab === 0
 
@@ -524,6 +569,9 @@ Item {
                                 radius: ThemeBackend.borderRadius
                                 z: 1
 
+                                opacity: root.getTabOpacity(1)
+                                transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(1)) }
+
                                 property bool isDirectActive: root.currentTab === 1
 
                                 color: tabGeneralMa.containsMouse && !isDirectActive ? Qt.alpha(ThemeBackend.surface1, 0.5) : "transparent"
@@ -585,6 +633,9 @@ Item {
                                 id: tabDisplay
                                 Layout.fillWidth: true
                                 spacing: 0
+
+                                opacity: root.getTabOpacity(2)
+                                transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(2)) }
 
                                 property bool isExpanded: root.expandedTab === 2
                                 property real fullSubtabsHeight: 2 * root.s(36) + root.s(4) + root.s(8)
@@ -852,6 +903,9 @@ Item {
                                 radius: ThemeBackend.borderRadius
                                 z: 1
 
+                                opacity: root.getTabOpacity(3)
+                                transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(3)) }
+
                                 property bool isDirectActive: root.currentTab === 3
 
                                 color: tabThemeMa.containsMouse && !isDirectActive ? Qt.alpha(ThemeBackend.surface1, 0.5) : "transparent"
@@ -916,6 +970,9 @@ Item {
                                 implicitHeight: root.s(44)
                                 radius: ThemeBackend.borderRadius
                                 z: 1
+
+                                opacity: root.getTabOpacity(4)
+                                transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(4)) }
 
                                 property bool isDirectActive: root.currentTab === 4
 
@@ -983,6 +1040,9 @@ Item {
                                 radius: ThemeBackend.borderRadius
                                 z: 1
 
+                                opacity: root.getTabOpacity(5)
+                                transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(5)) }
+
                                 property bool isDirectActive: root.currentTab === 5
 
                                 color: tabLauncherMa.containsMouse && !isDirectActive ? Qt.alpha(ThemeBackend.surface1, 0.5) : "transparent"
@@ -1047,6 +1107,9 @@ Item {
                                 implicitHeight: root.s(44)
                                 radius: ThemeBackend.borderRadius
                                 z: 1
+
+                                opacity: root.getTabOpacity(6)
+                                transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(6)) }
 
                                 property bool isDirectActive: root.currentTab === 6
 
@@ -1113,6 +1176,9 @@ Item {
                                 radius: ThemeBackend.borderRadius
                                 z: 1
 
+                                opacity: root.getTabOpacity(7)
+                                transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(7)) }
+
                                 property bool isDirectActive: root.currentTab === 7
 
                                 color: tabOsdMa.containsMouse && !isDirectActive ? Qt.alpha(ThemeBackend.surface1, 0.5) : "transparent"
@@ -1177,6 +1243,9 @@ Item {
                                 implicitHeight: root.s(44)
                                 radius: ThemeBackend.borderRadius
                                 z: 1
+
+                                opacity: root.getTabOpacity(8)
+                                transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(8)) }
 
                                 property bool isDirectActive: root.currentTab === 8
 
@@ -1243,6 +1312,9 @@ Item {
                                 radius: ThemeBackend.borderRadius
                                 z: 1
 
+                                opacity: root.getTabOpacity(9)
+                                transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(9)) }
+
                                 property bool isDirectActive: root.currentTab === 9
 
                                 color: tabWellbeingMa.containsMouse && !isDirectActive ? Qt.alpha(ThemeBackend.surface1, 0.5) : "transparent"
@@ -1307,6 +1379,9 @@ Item {
                                 implicitHeight: root.s(44)
                                 radius: ThemeBackend.borderRadius
                                 z: 1
+
+                                opacity: root.getTabOpacity(10)
+                                transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(10)) }
 
                                 property bool isDirectActive: root.currentTab === 10
 
@@ -1373,6 +1448,9 @@ Item {
                                 implicitHeight: root.s(44)
                                 radius: ThemeBackend.borderRadius
                                 z: 1
+
+                                opacity: root.getTabOpacity(11)
+                                transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(11)) }
 
                                 property bool isDirectActive: root.currentTab === 11
 
@@ -1444,6 +1522,8 @@ Item {
                         textFontSize: root.s(13)
                         accentColor: ThemeBackend.green
                         textColor: ThemeBackend.crust
+                        opacity: root.getTabOpacity(12)
+                        transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(12)) }
                         onClicked: {
                             root.gotoTab("about");
                         }
