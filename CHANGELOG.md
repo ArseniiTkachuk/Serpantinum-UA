@@ -1,3 +1,26 @@
+### 2.1.6
+
+- fix: make sure the bar doesn't stay moved to the side on-logout
+- feat: add widget presets, add custom widget presets, add 3 default presets
+- refactor: split the usage widget into 4 separate widgets and remove the network widget
+- style: make the border radius of the systemusagecards clamped
+- style: change the background color of the themeeditor to match the guidepopup
+- feat: make the settings window in main.qml freely draggable on the screen
+- fix: make sure config.qml prevents staggering writes but emits the settingsloaded signal correctly
+- fix: Dock elements having no animation when isSameSideAsBar was true
+- fix: unblock orbit view refreshes and handle locked-state/update sync issues
+- fix: prevent orbit repeater crash on bluetooth connect/disconnect. fixes #251 (#286)
+- fix: make config writes atomic and prevent file corruption
+- feat: add a dock setting that allows to place on top or below application windows
+- fix: make numlock, capslock state detection work on niri and sway. remove unnecessary timers
+- fix: dock animating through a whole screen on workspace change
+- docs: move a pull request template into another folder
+- style: make sure the lockbox around passwordinput is always seen on the lockscreen
+- style: offset the icon glyph in welcometab iconbutton in guidepopup by 1px to center it
+- fix: config breaking and now allowing writes for the configuration
+- fix: make sure sddm isn't reinstalled on updates
+- style: remove border for themes, move the + button for theme creation next to the search field, make sure theme names don't get truncated
+
 ### 2.1.5
 
 - feat: 2 new widgets, a battery widget and a system usage widget
