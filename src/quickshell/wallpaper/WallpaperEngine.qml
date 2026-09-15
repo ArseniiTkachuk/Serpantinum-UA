@@ -51,6 +51,7 @@ ShellRoot {
                 property bool isPreloading: false
                 property int activeTransitionType: 0
                 property bool wipeIsVertical: false
+                property int swipeDirection: 0
                 property real transitionOriginX: 0.5
                 property real transitionOriginY: 0.5
                 property bool isInitialLoad: true
@@ -264,8 +265,9 @@ ShellRoot {
                     if (!path) return;
 
                     barWindow.isInitialLoad = false;
-                    barWindow.activeTransitionType = Math.floor(Math.random() * 3);
+                    barWindow.activeTransitionType = Math.floor(Math.random() * 4);
                     barWindow.wipeIsVertical = Math.random() < 0.5;
+                    barWindow.swipeDirection = Math.floor(Math.random() * 8);
                     barWindow.transitionOriginX = 0.15 + Math.random() * 0.70;
                     barWindow.transitionOriginY = 0.15 + Math.random() * 0.70;
 
@@ -413,6 +415,7 @@ ShellRoot {
 
                             Rectangle {
                                 color: "white"
+                                transformOrigin: Item.Center
 
                                 readonly property real p: layerA.p
                                 readonly property real cx: barWindow.transitionOriginX * parent.width
@@ -427,6 +430,34 @@ ShellRoot {
                                     return Math.max(d1, d2, d3, d4);
                                 }
                                 readonly property real diam: p * maxR * 2
+                                readonly property real diagDiag: Math.sqrt(parent.width * parent.width + parent.height * parent.height)
+                                readonly property real diagSize: diagDiag * 2.5
+                                readonly property var diagGeom: {
+                                    let w = parent.width;
+                                    let h = parent.height;
+                                    let d = diagDiag;
+                                    if (d <= 0) return { x: 0, y: 0, rot: 0 };
+                                    let dir = barWindow.swipeDirection;
+                                    let px = 0, py = 0, ux = 0, uy = 0;
+                                    if (dir === 4) {
+                                        px = p * w; py = p * h;
+                                        ux = w / d; uy = h / d;
+                                    } else if (dir === 5) {
+                                        px = w - p * w; py = p * h;
+                                        ux = -w / d; uy = h / d;
+                                    } else if (dir === 6) {
+                                        px = p * w; py = h - p * h;
+                                        ux = w / d; uy = -h / d;
+                                    } else {
+                                        px = w - p * w; py = h - p * h;
+                                        ux = -w / d; uy = -h / d;
+                                    }
+                                    let halfL = diagSize / 2;
+                                    let cx = px - halfL * ux;
+                                    let cy = py - halfL * uy;
+                                    let rot = Math.atan2(uy, ux) * 180 / Math.PI;
+                                    return { x: cx - halfL, y: cy - halfL, rot: rot };
+                                }
 
                                 width: {
                                     if (barWindow.activeTransitionType === 1) {
@@ -434,6 +465,15 @@ ShellRoot {
                                     }
                                     if (barWindow.activeTransitionType === 2) {
                                         return diam;
+                                    }
+                                    if (barWindow.activeTransitionType === 3) {
+                                        if (barWindow.swipeDirection === 0 || barWindow.swipeDirection === 1) {
+                                            return p * parent.width;
+                                        }
+                                        if (barWindow.swipeDirection === 2 || barWindow.swipeDirection === 3) {
+                                            return parent.width;
+                                        }
+                                        return diagSize;
                                     }
                                     return parent.width;
                                 }
@@ -445,6 +485,15 @@ ShellRoot {
                                     if (barWindow.activeTransitionType === 2) {
                                         return diam;
                                     }
+                                    if (barWindow.activeTransitionType === 3) {
+                                        if (barWindow.swipeDirection === 0 || barWindow.swipeDirection === 1) {
+                                            return parent.height;
+                                        }
+                                        if (barWindow.swipeDirection === 2 || barWindow.swipeDirection === 3) {
+                                            return p * parent.height;
+                                        }
+                                        return diagSize;
+                                    }
                                     return parent.height;
                                 }
 
@@ -454,6 +503,12 @@ ShellRoot {
                                     }
                                     if (barWindow.activeTransitionType === 2) {
                                         return cx - width / 2;
+                                    }
+                                    if (barWindow.activeTransitionType === 3) {
+                                        if (barWindow.swipeDirection === 0) return 0;
+                                        if (barWindow.swipeDirection === 1) return parent.width - width;
+                                        if (barWindow.swipeDirection === 2 || barWindow.swipeDirection === 3) return 0;
+                                        return diagGeom.x;
                                     }
                                     return 0;
                                 }
@@ -465,9 +520,16 @@ ShellRoot {
                                     if (barWindow.activeTransitionType === 2) {
                                         return cy - height / 2;
                                     }
+                                    if (barWindow.activeTransitionType === 3) {
+                                        if (barWindow.swipeDirection === 0 || barWindow.swipeDirection === 1) return 0;
+                                        if (barWindow.swipeDirection === 2) return 0;
+                                        if (barWindow.swipeDirection === 3) return parent.height - height;
+                                        return diagGeom.y;
+                                    }
                                     return 0;
                                 }
 
+                                rotation: (barWindow.activeTransitionType === 3 && barWindow.swipeDirection >= 4) ? diagGeom.rot : 0
                                 radius: barWindow.activeTransitionType === 2 ? width / 2 : 0
                             }
                         }
@@ -533,6 +595,7 @@ ShellRoot {
 
                             Rectangle {
                                 color: "white"
+                                transformOrigin: Item.Center
 
                                 readonly property real p: layerB.p
                                 readonly property real cx: barWindow.transitionOriginX * parent.width
@@ -547,6 +610,34 @@ ShellRoot {
                                     return Math.max(d1, d2, d3, d4);
                                 }
                                 readonly property real diam: p * maxR * 2
+                                readonly property real diagDiag: Math.sqrt(parent.width * parent.width + parent.height * parent.height)
+                                readonly property real diagSize: diagDiag * 2.5
+                                readonly property var diagGeom: {
+                                    let w = parent.width;
+                                    let h = parent.height;
+                                    let d = diagDiag;
+                                    if (d <= 0) return { x: 0, y: 0, rot: 0 };
+                                    let dir = barWindow.swipeDirection;
+                                    let px = 0, py = 0, ux = 0, uy = 0;
+                                    if (dir === 4) {
+                                        px = p * w; py = p * h;
+                                        ux = w / d; uy = h / d;
+                                    } else if (dir === 5) {
+                                        px = w - p * w; py = p * h;
+                                        ux = -w / d; uy = h / d;
+                                    } else if (dir === 6) {
+                                        px = p * w; py = h - p * h;
+                                        ux = w / d; uy = -h / d;
+                                    } else {
+                                        px = w - p * w; py = h - p * h;
+                                        ux = -w / d; uy = -h / d;
+                                    }
+                                    let halfL = diagSize / 2;
+                                    let cx = px - halfL * ux;
+                                    let cy = py - halfL * uy;
+                                    let rot = Math.atan2(uy, ux) * 180 / Math.PI;
+                                    return { x: cx - halfL, y: cy - halfL, rot: rot };
+                                }
 
                                 width: {
                                     if (barWindow.activeTransitionType === 1) {
@@ -554,6 +645,15 @@ ShellRoot {
                                     }
                                     if (barWindow.activeTransitionType === 2) {
                                         return diam;
+                                    }
+                                    if (barWindow.activeTransitionType === 3) {
+                                        if (barWindow.swipeDirection === 0 || barWindow.swipeDirection === 1) {
+                                            return p * parent.width;
+                                        }
+                                        if (barWindow.swipeDirection === 2 || barWindow.swipeDirection === 3) {
+                                            return parent.width;
+                                        }
+                                        return diagSize;
                                     }
                                     return parent.width;
                                 }
@@ -565,6 +665,15 @@ ShellRoot {
                                     if (barWindow.activeTransitionType === 2) {
                                         return diam;
                                     }
+                                    if (barWindow.activeTransitionType === 3) {
+                                        if (barWindow.swipeDirection === 0 || barWindow.swipeDirection === 1) {
+                                            return parent.height;
+                                        }
+                                        if (barWindow.swipeDirection === 2 || barWindow.swipeDirection === 3) {
+                                            return p * parent.height;
+                                        }
+                                        return diagSize;
+                                    }
                                     return parent.height;
                                 }
 
@@ -574,6 +683,12 @@ ShellRoot {
                                     }
                                     if (barWindow.activeTransitionType === 2) {
                                         return cx - width / 2;
+                                    }
+                                    if (barWindow.activeTransitionType === 3) {
+                                        if (barWindow.swipeDirection === 0) return 0;
+                                        if (barWindow.swipeDirection === 1) return parent.width - width;
+                                        if (barWindow.swipeDirection === 2 || barWindow.swipeDirection === 3) return 0;
+                                        return diagGeom.x;
                                     }
                                     return 0;
                                 }
@@ -585,9 +700,16 @@ ShellRoot {
                                     if (barWindow.activeTransitionType === 2) {
                                         return cy - height / 2;
                                     }
+                                    if (barWindow.activeTransitionType === 3) {
+                                        if (barWindow.swipeDirection === 0 || barWindow.swipeDirection === 1) return 0;
+                                        if (barWindow.swipeDirection === 2) return 0;
+                                        if (barWindow.swipeDirection === 3) return parent.height - height;
+                                        return diagGeom.y;
+                                    }
                                     return 0;
                                 }
 
+                                rotation: (barWindow.activeTransitionType === 3 && barWindow.swipeDirection >= 4) ? diagGeom.rot : 0
                                 radius: barWindow.activeTransitionType === 2 ? width / 2 : 0
                             }
                         }
