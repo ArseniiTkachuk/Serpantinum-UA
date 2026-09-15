@@ -133,7 +133,7 @@ ShellRoot {
                                 if (savedName !== "") {
                                     let histFile = barWindow.wpCacheDir + "/history.txt";
                                     Quickshell.execDetached(["bash", "-c",
-                                        "HIST='" + histFile + "'; if [ -f \"$HIST\" ]; then if [ \"$(head -n 1 \"$HIST\" 2>/dev/null)\" != '" + savedName + "' ]; then grep -v -F -x '" + savedName + "' \"$HIST\" > \"$HIST.tmp\" 2>/dev/null || true; printf '%s\n' '" + savedName + "' | cat - \"$HIST.tmp\" > \"$HIST\" 2>/dev/null; rm -f \"$HIST.tmp\"; fi; else printf '%s\n' '" + savedName + "' > \"$HIST\"; fi"
+                                        "HIST='" + histFile + "'; if [ -f \"$HIST\" ]; then if [ \"$(head -n 1 \"$HIST\" 2>/dev/null)\" != '" + savedName + "' ]; then grep -v -F -x '" + savedName + "' \"$HIST\" > \"$HIST.tmp\" 2>/dev/null || true; printf '%s\n' '" + savedName + "' | cat - \"$HIST.tmp\" > \"$HIST\"; rm -f \"$HIST.tmp\"; fi; else printf '%s\n' '" + savedName + "' > \"$HIST\"; fi"
                                     ]);
                                 }
                             }
@@ -392,7 +392,7 @@ ShellRoot {
 
                         opacity: {
                             if (barWindow.isPreloading && isIncoming) return 0.0;
-                            if (barWindow.activeTransitionType !== 0 && isIncoming) return 1.0;
+                            if (barWindow.activeTransitionType !== 0) return 1.0;
                             return isIncoming ? p : 1.0 - p;
                         }
 
@@ -512,7 +512,7 @@ ShellRoot {
 
                         opacity: {
                             if (barWindow.isPreloading && isIncoming) return 0.0;
-                            if (barWindow.activeTransitionType !== 0 && isIncoming) return 1.0;
+                            if (barWindow.activeTransitionType !== 0) return 1.0;
                             return isIncoming ? p : 1.0 - p;
                         }
 
