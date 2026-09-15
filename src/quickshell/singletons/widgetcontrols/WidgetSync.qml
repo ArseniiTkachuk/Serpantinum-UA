@@ -21,12 +21,10 @@ Item {
     signal redactModeChanged(string monitor, bool active)
 
     function setPosition(monitor: string, widgetId: string, x: real, y: real): void {
-        console.log("[WidgetSync] setPosition:", monitor, widgetId, x, y);
         root.positionChanged(monitor, widgetId, x, y);
     }
 
     function setPositions(monitor: string, positions: var): void {
-        console.log("[WidgetSync] setPositions:", monitor, JSON.stringify(positions));
         if (!positions) return;
         if (Array.isArray(positions)) {
             for (let i = 0; i < positions.length; i++) {
@@ -46,32 +44,26 @@ Item {
     }
 
     function setGeometry(monitor: string, widgetId: string, x: real, y: real, w: real, h: real, opacity: real, rotation: real): void {
-        console.log("[WidgetSync] setGeometry:", monitor, widgetId, x, y, w, h, opacity, rotation);
         root.geometryChanged(monitor, widgetId, x, y, w, h, opacity, rotation);
     }
 
     function setOpacity(monitor: string, widgetId: string, opacity: real): void {
-        console.log("[WidgetSync] setOpacity:", monitor, widgetId, opacity);
         root.opacityChanged(monitor, widgetId, opacity);
     }
 
     function setRotation(monitor: string, widgetId: string, rotation: real): void {
-        console.log("[WidgetSync] setRotation:", monitor, widgetId, rotation);
         root.rotationChanged(monitor, widgetId, rotation);
     }
 
     function setVariant(monitor: string, widgetId: string, variant: string): void {
-        console.log("[WidgetSync] setVariant:", monitor, widgetId, variant);
         root.variantChanged(monitor, widgetId, variant);
     }
 
     function setImagePath(monitor: string, widgetId: string, imagePath: string): void {
-        console.log("[WidgetSync] setImagePath:", monitor, widgetId, imagePath);
         root.imagePathChanged(monitor, widgetId, imagePath);
     }
 
     function addWidget(monitor: string, widgetId: string, type: string, x: real, y: real, w: real, h: real, opacity: real, imagePath: string, rotation: real, variant: string): void {
-        console.log("[WidgetSync] addWidget:", monitor, widgetId, type, x, y, w, h);
         root.widgetAdded(monitor, widgetId, type, x, y, w, h, opacity, imagePath, rotation, variant || "");
     }
 
@@ -115,43 +107,35 @@ Item {
         let x = pos.x;
         let y = pos.y;
 
-        console.log("[WidgetSync] addFromRegistry:", monitor, type, id, x, y, w, h);
         root.widgetAdded(monitor, id, type, x, y, w, h, op, img, rot, variant);
         return id;
     }
 
     function removeWidget(monitor: string, widgetId: string): void {
-        console.log("[WidgetSync] removeWidget:", monitor, widgetId);
         root.widgetRemoved(monitor, widgetId);
     }
 
     function removeWidgetsByType(monitor: string, type: string): void {
-        console.log("[WidgetSync] removeWidgetsByType:", monitor, type);
         root.widgetsByTypeRemoved(monitor, type);
     }
 
     function clearWidgets(monitor: string): void {
-        console.log("[WidgetSync] clearWidgets:", monitor);
         root.widgetsCleared(monitor);
     }
 
     function applyPreset(monitor: string, widgetsList: var, clearFirst: bool): void {
         let len = (widgetsList && widgetsList.length !== undefined) ? widgetsList.length : 0;
-        console.log("[WidgetSync] applyPreset called for monitor:", monitor, "count:", len);
         if (!widgetsList || len === 0) {
-            console.warn("[WidgetSync] applyPreset aborted: empty or invalid widgetsList");
             return;
         }
         root.presetApplied(monitor, widgetsList);
     }
 
     function bringToFront(monitor: string, widgetId: string): void {
-        console.log("[WidgetSync] bringToFront:", monitor, widgetId);
         root.bringToFrontRequested(monitor, widgetId);
     }
 
     function setRedactMode(monitor: string, active: bool): void {
-        console.log("[WidgetSync] setRedactMode:", monitor, active);
         root.redactModeChanged(monitor, active);
     }
 }
