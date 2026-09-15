@@ -264,8 +264,17 @@ ShellRoot {
                 function changeWallpaper(path, ttype) {
                     if (!path) return;
 
+                    let isInterrupted = transitionAnim.running && barWindow.transitionProgress > 0.1 && barWindow.transitionProgress < 0.85;
+
                     barWindow.isInitialLoad = false;
-                    barWindow.activeTransitionType = Math.floor(Math.random() * 4);
+                    if (isInterrupted) {
+                        barWindow.activeTransitionType = 0;
+                    } else if (typeof ttype === "number" && ttype >= 0) {
+                        barWindow.activeTransitionType = ttype;
+                    } else {
+                        barWindow.activeTransitionType = Math.floor(Math.random() * 4);
+                    }
+
                     barWindow.wipeIsVertical = Math.random() < 0.5;
                     barWindow.swipeDirection = Math.floor(Math.random() * 8);
                     barWindow.transitionOriginX = 0.15 + Math.random() * 0.70;
