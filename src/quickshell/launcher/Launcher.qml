@@ -42,8 +42,51 @@ PanelWindow {
     property bool isVisible: LauncherController.isVisible
     property int configRevision: 0
     property bool appsLoaded: false
+    property real introItems: 0.0
+
+    function getItemProgress(idx) {
+        if (introItems >= 1.0) return 1.0;
+        if (introItems <= 0.0) return 0.0;
+        let start = Math.min(idx, 10) * 0.04;
+        let p = Math.min(1.0, Math.max(0.0, (introItems - start) / 0.42));
+        if (p <= 0.0) return 0.0;
+        if (p >= 1.0) return 1.0;
+        let c1 = 0.85;
+        let c3 = c1 + 1;
+        return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2);
+    }
+
+    function getItemOpacity(idx) {
+        if (introItems >= 1.0) return 1.0;
+        if (introItems <= 0.0) return 0.0;
+        let start = Math.min(idx, 10) * 0.04;
+        let p = Math.min(1.0, Math.max(0.0, (introItems - start) / 0.28));
+        return p;
+    }
+
+    function restartItemsIntro() {
+        introItems = 0.0;
+        itemsIntroSequence.restart();
+    }
+
+    SequentialAnimation {
+        id: itemsIntroSequence
+        running: false
+        PauseAnimation { duration: 60 }
+        NumberAnimation {
+            target: launcherWindow
+            property: "introItems"
+            from: 0.0
+            to: 1.0
+            duration: 520
+            easing.type: Easing.Linear
+        }
+    }
 
     Component.onCompleted: {
+        if (smartRanking) {
+            rankFetcher.running = true;
+        }
         loadApps();
         appsLoaded = true;
         executeFilter("");
@@ -60,6 +103,18 @@ PanelWindow {
     Connections {
         target: (typeof I18n !== "undefined") ? I18n : null
         function onLanguageChanged() {
+            if (launcherWindow.isVisible) {
+                launcherWindow.loadApps();
+                launcherWindow.executeFilter(searchInput.text);
+            } else {
+                launcherWindow.appsLoaded = false;
+            }
+        }
+    }
+
+    Connections {
+        target: (typeof DesktopEntries !== "undefined") ? DesktopEntries : null
+        function onApplicationsChanged() {
             if (launcherWindow.isVisible) {
                 launcherWindow.loadApps();
                 launcherWindow.executeFilter(searchInput.text);
@@ -224,7 +279,7 @@ PanelWindow {
     property real animatedLauncherHeight: targetLauncherHeight
     Behavior on animatedLauncherHeight {
         NumberAnimation {
-            duration: 280
+            duration: 300
             easing.type: Easing.OutCubic
         }
     }
@@ -253,8 +308,11 @@ PanelWindow {
                 try {
                     if (this.text && this.text.trim().length > 0) {
                         launcherWindow.usageRanks = JSON.parse(this.text);
-                        launcherWindow.loadApps();
-                        executeFilter(searchInput.text);
+                        if (!launcherWindow.isVisible || appModel.count === 0) {
+                            launcherWindow.loadApps();
+                            launcherWindow.appsLoaded = true;
+                            launcherWindow.executeFilter(searchInput.text);
+                        }
                     }
                 } catch(e) {}
             }
@@ -308,6 +366,7 @@ PanelWindow {
 
     onIsVisibleChanged: {
         if (isVisible) {
+            restartItemsIntro();
             if (!launcherWindow.appsLoaded) {
                 launcherWindow.loadApps();
                 launcherWindow.appsLoaded = true;
@@ -319,8 +378,7 @@ PanelWindow {
             } else {
                 filterDebounceTimer.stop();
             }
-            if (launcherWindow.smartRanking) {
-                rankFetcher.running = false;
+            if (launcherWindow.smartRanking && !rankFetcher.running) {
                 rankFetcher.running = true;
             }
             launcherWindow.grabInputFocus();
@@ -328,12 +386,19 @@ PanelWindow {
             focusRetryTimer.restart();
             focusFinalTimer.restart();
         } else {
+            itemsIntroSequence.stop();
+            introItems = 0.0;
+            launcherWindow.appsLoaded = false;
             appList.resetScroll();
             filterDebounceTimer.stop();
             focusTimer.stop();
             focusRetryTimer.stop();
             focusFinalTimer.stop();
             keyboardNavTimer.stop();
+            if (launcherWindow.smartRanking) {
+                loadApps();
+                executeFilter("");
+            }
         }
     }
 
@@ -762,9 +827,9 @@ PanelWindow {
         property real animProgress: launcherWindow.isVisible ? 1.0 : 0.0
         Behavior on animProgress {
             NumberAnimation {
-                duration: launcherWindow.isVisible ? (launcherWindow.isCentered ? 320 : 220) : (launcherWindow.isCentered ? 200 : 150)
+                duration: launcherWindow.isVisible ? (launcherWindow.isCentered ? 420 : 340) : (launcherWindow.isCentered ? 200 : 150)
                 easing.type: launcherWindow.isVisible ? Easing.OutBack : Easing.InQuad
-                easing.overshoot: 1.15
+                easing.overshoot: launcherWindow.isVisible ? 1.28 : 1.0
             }
         }
 
@@ -1161,62 +1226,6 @@ PanelWindow {
                              ? Math.max(0.0, Math.min(1.0, (container.animProgress - 0.2) / 0.8))
                              : 1.0
 
-                    Transition {
-                        id: listAddTrans
-                        NumberAnimation {
-                            property: "opacity"
-                            from: 0.0
-                            to: 1.0
-                            duration: 220
-                            easing.type: Easing.OutCubic
-                        }
-                        NumberAnimation {
-                            property: "scale"
-                            from: 0.94
-                            to: 1.0
-                            duration: 250
-                            easing.type: Easing.OutBack
-                            easing.overshoot: 1.1
-                        }
-                    }
-
-                    Transition {
-                        id: listRemoveTrans
-                        NumberAnimation {
-                            property: "opacity"
-                            to: 0.0
-                            duration: 150
-                            easing.type: Easing.OutCubic
-                        }
-                        NumberAnimation {
-                            property: "scale"
-                            to: 0.92
-                            duration: 150
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-
-                    Transition {
-                        id: listDisplacedTrans
-                        NumberAnimation {
-                            property: "y"
-                            duration: 300
-                            easing.type: Easing.OutCubic
-                        }
-                        NumberAnimation {
-                            property: "opacity"
-                            to: 1.0
-                            duration: 200
-                            easing.type: Easing.OutCubic
-                        }
-                        NumberAnimation {
-                            property: "scale"
-                            to: 1.0
-                            duration: 200
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-
                     NumberAnimation {
                         id: scrollAnim
                         target: appList
@@ -1237,12 +1246,10 @@ PanelWindow {
 
                         highlightFollowsCurrentItem: false
 
-                        property bool transitionsEnabled: launcherWindow.isVisible && container.animProgress > 0.7
-
-                        add: transitionsEnabled ? listAddTrans : null
-                        remove: transitionsEnabled ? listRemoveTrans : null
-                        move: transitionsEnabled ? listDisplacedTrans : null
-                        displaced: transitionsEnabled ? listDisplacedTrans : null
+                        add: null
+                        remove: null
+                        move: null
+                        displaced: null
 
                         function getItemY(idx) {
                             return idx * (launcherWindow.s(44) + spacing);
@@ -1283,7 +1290,7 @@ PanelWindow {
                             newContentY = Math.max(0, Math.min(maxScroll, newContentY));
 
                             if (Math.abs(newContentY - contentY) > 0.5) {
-                                if (animated && transitionsEnabled) {
+                                if (animated) {
                                     scrollAnim.stop();
                                     scrollAnim.from = contentY;
                                     scrollAnim.to = newContentY;
@@ -1306,8 +1313,11 @@ PanelWindow {
                             parent: appList.contentItem
                             z: 0
                             visible: opacity > 0.001
-                            opacity: (appList.count > 0 && appList.currentIndex >= 0 && appList.currentItem !== null) ? 1.0 : 0.0
+                            opacity: (appList.count > 0 && appList.currentIndex >= 0 && appList.currentItem !== null)
+                                     ? launcherWindow.getItemOpacity(appList.currentIndex)
+                                     : 0.0
                             Behavior on opacity {
+                                enabled: !itemsIntroSequence.running
                                 NumberAnimation {
                                     duration: 170
                                     easing.type: Easing.OutCubic
@@ -1322,8 +1332,12 @@ PanelWindow {
                             property real targetY: (appList.currentIndex >= 0) ? appList.getItemY(appList.currentIndex) : 0
                             y: targetY
 
+                            transform: Translate {
+                                x: launcherWindow.s(-20) * (1.0 - launcherWindow.getItemProgress(appList.currentIndex))
+                            }
+
                             Behavior on y {
-                                enabled: appList.transitionsEnabled
+                                enabled: launcherWindow.isKeyboardNav
                                 NumberAnimation {
                                     duration: 260
                                     easing.type: Easing.OutCubic
@@ -1335,10 +1349,15 @@ PanelWindow {
                             id: delegateRoot
                             width: ListView.view ? ListView.view.width : 0
                             height: launcherWindow.s(44)
-                            clip: true
+                            clip: false
                             z: 1
 
-                            property bool isSelected: index === appList.currentIndex
+                            property bool isSelected: ListView.isCurrentItem || index === appList.currentIndex
+
+                            opacity: launcherWindow.getItemOpacity(index)
+                            transform: Translate {
+                                x: launcherWindow.s(-20) * (1.0 - launcherWindow.getItemProgress(index))
+                            }
 
                             Item {
                                 id: delegateContent
@@ -1403,6 +1422,7 @@ PanelWindow {
                                                 id: delegateIcon
                                                 anchors.fill: parent
                                                 property bool failedLoad: false
+                                                cache: false
 
                                                 visible: (!model.fontIcon || model.fontIcon === "") && source !== "" && status === Image.Ready && !failedLoad
 
@@ -1411,7 +1431,17 @@ PanelWindow {
                                                     let ic = model.icon || "";
                                                     if (!ic) return "";
                                                     if (ic.startsWith("file://") || ic.startsWith("image://") || ic.startsWith("http://") || ic.startsWith("https://")) return ic;
-                                                    return ic.startsWith("/") ? "file://" + ic : "image://icon/" + ic;
+                                                    if (ic.startsWith("/")) return "file://" + ic;
+
+                                                    let baseName = ic.replace(/\.(png|svg|xpm|ico)$/i, "");
+                                                    if (typeof Quickshell !== "undefined" && typeof Quickshell.iconPath === "function") {
+                                                        let resolved = Quickshell.iconPath(ic) || Quickshell.iconPath(baseName);
+                                                        if (resolved && resolved.length > 0) {
+                                                            return resolved.startsWith("/") ? ("file://" + resolved) : resolved;
+                                                        }
+                                                    }
+
+                                                    return "image://icon/" + baseName;
                                                 }
 
                                                 sourceSize: Qt.size(64, 64)
