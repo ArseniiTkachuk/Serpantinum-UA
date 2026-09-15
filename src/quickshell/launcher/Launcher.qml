@@ -1246,10 +1246,40 @@ PanelWindow {
 
                         highlightFollowsCurrentItem: false
 
-                        add: null
+                        add: Transition {
+                            NumberAnimation {
+                                property: "opacity"
+                                from: 0.0
+                                to: 1.0
+                                duration: 180
+                                easing.type: Easing.OutQuad
+                            }
+                            NumberAnimation {
+                                property: "x"
+                                from: launcherWindow.s(-10)
+                                to: 0
+                                duration: 220
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+
                         remove: null
-                        move: null
-                        displaced: null
+
+                        move: Transition {
+                            NumberAnimation {
+                                property: "y"
+                                duration: 240
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+
+                        displaced: Transition {
+                            NumberAnimation {
+                                property: "y"
+                                duration: 240
+                                easing.type: Easing.OutCubic
+                            }
+                        }
 
                         function getItemY(idx) {
                             return idx * (launcherWindow.s(44) + spacing);
