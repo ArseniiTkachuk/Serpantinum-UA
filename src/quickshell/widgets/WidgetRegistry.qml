@@ -88,18 +88,7 @@ QtObject {
                 "digital": { file: "faces/ClockFaceDigital.qml", icon: "1", label: I18n.t("widgets.variants.digital") },
                 "analog":  { file: "faces/ClockFaceAnalog.qml",  icon: "2", label: I18n.t("widgets.variants.analog")  },
                 "minimal": { file: "faces/ClockFaceMinimal.qml", icon: "3", label: I18n.t("widgets.variants.minimal") }
-            },
-            additionalSettings: [
-                {
-                    id: "stretchWidth",
-                    icon: "󰊓",
-                    iconFontSize: 16,
-                    action: "stretchWidth",
-                    row: "top",
-                    accentColor: "surface0",
-                    textColor: "mauve"
-                }
-            ]
+            }
         },
         "music": {
             name: I18n.t("widgets.types.music"),
@@ -110,18 +99,7 @@ QtObject {
             variants: {
                 "full": { file: "faces/MusicFace.qml", icon: "1", label: I18n.t("widgets.variants.full") },
                 "round": { file: "faces/MusicFaceRound.qml", icon: "2", label: I18n.t("widgets.variants.round") }
-            },
-            additionalSettings: [
-                {
-                    id: "stretchWidth",
-                    icon: "󰊓",
-                    iconFontSize: 16,
-                    action: "stretchWidth",
-                    row: "top",
-                    accentColor: "surface0",
-                    textColor: "mauve"
-                }
-            ]
+            }
         },
         "weather": {
             name: I18n.t("widgets.types.weather"),
@@ -134,18 +112,7 @@ QtObject {
                 "compact": { file: "faces/WeatherFaceCompact.qml", icon: "1", label: I18n.t("widgets.variants.compact") },
                 "full": { file: "faces/WeatherFaceFull.qml", icon: "2", label: I18n.t("widgets.variants.full") },
                 "round": { file: "faces/WeatherFaceRound.qml", icon: "3", label: I18n.t("widgets.variants.round") }
-            },
-            additionalSettings: [
-                {
-                    id: "stretchWidth",
-                    icon: "󰊓",
-                    iconFontSize: 16,
-                    action: "stretchWidth",
-                    row: "top",
-                    accentColor: "surface0",
-                    textColor: "mauve"
-                }
-            ]
+            }
         },
         "image": {
             name: I18n.t("widgets.types.image"),
@@ -166,15 +133,6 @@ QtObject {
                     icon: "󰋩",
                     iconFontSize: 16,
                     action: "pickImage",
-                    row: "top",
-                    accentColor: "surface0",
-                    textColor: "mauve"
-                },
-                {
-                    id: "stretchWidth",
-                    icon: "󰊓",
-                    iconFontSize: 16,
-                    action: "stretchWidth",
                     row: "top",
                     accentColor: "surface0",
                     textColor: "mauve"
