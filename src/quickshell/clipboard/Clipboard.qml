@@ -203,51 +203,13 @@ PanelWindow {
         return i === sub.length;
     }
 
-    function getClipKey(item) {
-        return (item && item.id !== undefined && item.id !== null) ? item.id.toString() : "";
-    }
-
     function syncClipBoxModel(targetItems) {
-        let newKeys = {};
-        for (let i = 0; i < targetItems.length; i++) {
-            newKeys[getClipKey(targetItems[i])] = true;
-        }
-
-        for (let i = clipBoxModel.count - 1; i >= 0; i--) {
-            let key = getClipKey(clipBoxModel.get(i));
-            if (!newKeys[key]) {
-                clipBoxModel.remove(i);
-            }
-        }
-
         for (let i = 0; i < targetItems.length; i++) {
             let item = targetItems[i];
-            let targetKey = getClipKey(item);
-
             if (i < clipBoxModel.count) {
-                let currentKey = getClipKey(clipBoxModel.get(i));
-                if (currentKey === targetKey) {
-                    let cur = clipBoxModel.get(i);
-                    if (cur.pinned !== item.pinned || cur.content !== item.content || cur.type !== item.type || cur.sectionCategory !== item.sectionCategory) {
-                        clipBoxModel.set(i, item);
-                    }
-                } else {
-                    let foundIndex = -1;
-                    for (let j = i + 1; j < clipBoxModel.count; j++) {
-                        if (getClipKey(clipBoxModel.get(j)) === targetKey) {
-                            foundIndex = j;
-                            break;
-                        }
-                    }
-                    if (foundIndex !== -1) {
-                        clipBoxModel.move(foundIndex, i, 1);
-                        let cur = clipBoxModel.get(i);
-                        if (cur.pinned !== item.pinned || cur.content !== item.content || cur.type !== item.type || cur.sectionCategory !== item.sectionCategory) {
-                            clipBoxModel.set(i, item);
-                        }
-                    } else {
-                        clipBoxModel.insert(i, item);
-                    }
+                let cur = clipBoxModel.get(i);
+                if (cur.id !== item.id || cur.pinned !== item.pinned || cur.content !== item.content || cur.type !== item.type || cur.sectionCategory !== item.sectionCategory || cur.score !== item.score) {
+                    clipBoxModel.set(i, item);
                 }
             } else {
                 clipBoxModel.append(item);
@@ -325,13 +287,13 @@ PanelWindow {
 
         syncClipBoxModel(filtered);
 
+        clipList.resetScroll();
+
         if (clipBoxModel.count > 0) {
             clipList.currentIndex = 0;
         } else {
             clipList.currentIndex = -1;
         }
-
-        clipList.resetScroll();
     }
 
     function filterClips(query) {
@@ -1056,6 +1018,7 @@ PanelWindow {
 
                         function resetScroll() {
                             scrollAnim.stop();
+                            positionViewAtBeginning();
                             contentY = 0;
                         }
 
@@ -1078,7 +1041,7 @@ PanelWindow {
                             }
 
                             if (itemObj) {
-                                let topY = itemObj.y - (isFirstInSection ? secH : 0);
+                                let topY = Math.max(0, itemObj.y - (isFirstInSection ? secH : 0));
                                 let botY = itemObj.y + itemObj.height;
                                 return { top: topY, bottom: botY };
                             }
@@ -1100,13 +1063,13 @@ PanelWindow {
                                     h = obj.height;
                                 }
                                 if (i === idx) {
-                                    let topY = curY - (hasSec ? secH : 0);
+                                    let topY = Math.max(0, curY - (hasSec ? secH : 0));
                                     let botY = curY + h;
                                     return { top: topY, bottom: botY };
                                 }
                                 curY += h + spacing;
                             }
-                            return { top: curY, bottom: curY + defaultH };
+                            return { top: Math.max(0, curY), bottom: curY + defaultH };
                         }
 
                         function ensureVisible(idx, animated) {
@@ -1199,31 +1162,12 @@ PanelWindow {
                             }
                         }
 
-                        displaced: Transition {
-                            NumberAnimation {
-                                properties: "y"
-                                duration: 280
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-
-                        move: Transition {
-                            NumberAnimation {
-                                properties: "y"
-                                duration: 280
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-
-                        moveDisplaced: Transition {
-                            NumberAnimation {
-                                properties: "y"
-                                duration: 280
-                                easing.type: Easing.OutCubic
-                            }
-                        }
+                        displaced: null
 
                         onContentYChanged: {
+                            if (contentY < 0 && !moving && !flicking) {
+                                contentY = 0;
+                            }
                             if (clipboardWindow.hasMoreClips && !clipFetcherProc.running && searchInput.text.trim().length === 0) {
                                 if (contentY + height >= contentHeight - clipboardWindow.s(450)) {
                                     clipboardWindow.fetchNextClipPage();
@@ -1265,6 +1209,12 @@ PanelWindow {
                             }
 
                             property string clipIdString: (typeof model !== "undefined" && model && model.id !== undefined) ? model.id.toString() : (clipBoxModel.get(index) ? clipBoxModel.get(index).id.toString() : "")
+                            
+                            onClipIdStringChanged: {
+                                itemExpanded = false;
+                                dragX = 0;
+                            }
+
                             property real dragX: 0
                             property bool isDismissing: false
 
@@ -1295,6 +1245,7 @@ PanelWindow {
                                 font.family: ThemeBackend.fontFamily
                                 font.pixelSize: clipboardWindow.s(12)
                                 wrapMode: Text.Wrap
+                                textFormat: Text.PlainText
                             }
 
                             function toggleExpand() {
@@ -1628,6 +1579,7 @@ PanelWindow {
                                         elide: Text.ElideRight
                                         maximumLineCount: 2
                                         wrapMode: Text.Wrap
+                                        textFormat: Text.PlainText
                                         verticalAlignment: Text.AlignVCenter
                                     }
                                 }

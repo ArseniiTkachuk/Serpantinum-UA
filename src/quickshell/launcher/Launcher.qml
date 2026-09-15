@@ -487,14 +487,6 @@ PanelWindow {
         return i === sub.length;
     }
 
-    function getItemKey(item) {
-        if (!item) return "";
-        if (item.isCommand) return "cmd:" + item.command;
-        if (item.isCalc) return "calc:" + item.calcResult;
-        if (item.isWidget) return "widget:" + (item.widgetTarget || item.name);
-        return item.desktop_id ? ("desktop:" + item.desktop_id) : ("name:" + item.name);
-    }
-
     function executeFilter(query) {
         launcherWindow.isKeyboardNav = false;
         if (keyboardNavTimer.running) keyboardNavTimer.stop();
@@ -613,40 +605,12 @@ PanelWindow {
             });
         }
 
-        let newKeys = {};
-        for (let i = 0; i < filtered.length; i++) {
-            newKeys[getItemKey(filtered[i])] = true;
-        }
-
-        for (let i = appModel.count - 1; i >= 0; i--) {
-            let key = getItemKey(appModel.get(i));
-            if (!newKeys[key]) {
-                appModel.remove(i);
-            }
-        }
-
         for (let i = 0; i < filtered.length; i++) {
             let item = filtered[i];
-            let targetKey = getItemKey(item);
-
             if (i < appModel.count) {
-                let currentKey = getItemKey(appModel.get(i));
-                if (currentKey === targetKey) {
+                let cur = appModel.get(i);
+                if (cur.name !== item.name || cur.desktop_id !== item.desktop_id || cur.score !== item.score || cur.command !== item.command || cur.calcResult !== item.calcResult || cur.isCommand !== item.isCommand || cur.isCalc !== item.isCalc || cur.isWidget !== item.isWidget || cur.fontIcon !== item.fontIcon || cur.icon !== item.icon || cur.description !== item.description) {
                     appModel.set(i, item);
-                } else {
-                    let foundIndex = -1;
-                    for (let j = i + 1; j < appModel.count; j++) {
-                        if (getItemKey(appModel.get(j)) === targetKey) {
-                            foundIndex = j;
-                            break;
-                        }
-                    }
-                    if (foundIndex !== -1) {
-                        appModel.move(foundIndex, i, 1);
-                        appModel.set(i, item);
-                    } else {
-                        appModel.insert(i, item);
-                    }
                 }
             } else {
                 appModel.append(item);
@@ -657,13 +621,13 @@ PanelWindow {
             appModel.remove(appModel.count - 1);
         }
 
+        appList.resetScroll();
+
         if (appModel.count > 0) {
             appList.currentIndex = 0;
         } else {
             appList.currentIndex = -1;
         }
-
-        appList.resetScroll();
     }
 
     function activateIndex(index) {
@@ -1198,24 +1162,6 @@ PanelWindow {
                         }
                     }
 
-                    Transition {
-                        id: listDisplacedTrans
-                        NumberAnimation {
-                            properties: "y"
-                            duration: 280
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-
-                    Transition {
-                        id: listMoveTrans
-                        NumberAnimation {
-                            properties: "y"
-                            duration: 280
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-
                     NumberAnimation {
                         id: scrollAnim
                         target: appList
@@ -1240,9 +1186,7 @@ PanelWindow {
 
                         add: transitionsEnabled ? listAddTrans : null
                         remove: transitionsEnabled ? listRemoveTrans : null
-                        displaced: transitionsEnabled ? listDisplacedTrans : null
-                        move: transitionsEnabled ? listMoveTrans : null
-                        moveDisplaced: transitionsEnabled ? listDisplacedTrans : null
+                        displaced: null
 
                         function getItemY(idx) {
                             return idx * (launcherWindow.s(44) + spacing);
@@ -1250,7 +1194,14 @@ PanelWindow {
 
                         function resetScroll() {
                             scrollAnim.stop();
+                            positionViewAtBeginning();
                             contentY = 0;
+                        }
+
+                        onContentYChanged: {
+                            if (contentY < 0 && !moving && !flicking) {
+                                contentY = 0;
+                            }
                         }
 
                         function ensureVisible(idx, animated) {
