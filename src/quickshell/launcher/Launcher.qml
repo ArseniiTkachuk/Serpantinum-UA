@@ -224,7 +224,7 @@ PanelWindow {
     property real animatedLauncherHeight: targetLauncherHeight
     Behavior on animatedLauncherHeight {
         NumberAnimation {
-            duration: 300
+            duration: 280
             easing.type: Easing.OutCubic
         }
     }
@@ -487,6 +487,15 @@ PanelWindow {
         return i === sub.length;
     }
 
+    function getItemKey(item) {
+        if (!item) return "";
+        if (item.isCommand) return "cmd:" + item.command;
+        if (item.isCalc) return "calc:" + item.calcResult;
+        if (item.isWidget) return "widget:" + (item.widgetTarget || item.name);
+        if (item.desktop_id) return "app:" + item.desktop_id;
+        return "name:" + item.name;
+    }
+
     function executeFilter(query) {
         launcherWindow.isKeyboardNav = false;
         if (keyboardNavTimer.running) keyboardNavTimer.stop();
@@ -605,20 +614,44 @@ PanelWindow {
             });
         }
 
+        let targetKeys = {};
         for (let i = 0; i < filtered.length; i++) {
-            let item = filtered[i];
-            if (i < appModel.count) {
-                let cur = appModel.get(i);
-                if (cur.name !== item.name || cur.desktop_id !== item.desktop_id || cur.score !== item.score || cur.command !== item.command || cur.calcResult !== item.calcResult || cur.isCommand !== item.isCommand || cur.isCalc !== item.isCalc || cur.isWidget !== item.isWidget || cur.fontIcon !== item.fontIcon || cur.icon !== item.icon || cur.description !== item.description) {
-                    appModel.set(i, item);
-                }
-            } else {
-                appModel.append(item);
+            targetKeys[getItemKey(filtered[i])] = true;
+        }
+
+        for (let i = appModel.count - 1; i >= 0; i--) {
+            let key = getItemKey(appModel.get(i));
+            if (!targetKeys[key]) {
+                appModel.remove(i);
             }
         }
 
-        while (appModel.count > filtered.length) {
-            appModel.remove(appModel.count - 1);
+        for (let i = 0; i < filtered.length; i++) {
+            let target = filtered[i];
+            let targetKey = getItemKey(target);
+
+            let curIndex = -1;
+            for (let j = i; j < appModel.count; j++) {
+                if (getItemKey(appModel.get(j)) === targetKey) {
+                    curIndex = j;
+                    break;
+                }
+            }
+
+            if (curIndex === i) {
+                let cur = appModel.get(i);
+                if (cur.name !== target.name || cur.desktop_id !== target.desktop_id || cur.description !== target.description || cur.icon !== target.icon || cur.fontIcon !== target.fontIcon || cur.command !== target.command || cur.calcResult !== target.calcResult || cur.isCommand !== target.isCommand || cur.isCalc !== target.isCalc || cur.isWidget !== target.isWidget) {
+                    appModel.set(i, target);
+                }
+            } else if (curIndex > i) {
+                appModel.move(curIndex, i, 1);
+                let cur = appModel.get(i);
+                if (cur.name !== target.name || cur.desktop_id !== target.desktop_id || cur.description !== target.description || cur.icon !== target.icon || cur.fontIcon !== target.fontIcon || cur.command !== target.command || cur.calcResult !== target.calcResult || cur.isCommand !== target.isCommand || cur.isCalc !== target.isCalc || cur.isWidget !== target.isWidget) {
+                    appModel.set(i, target);
+                }
+            } else {
+                appModel.insert(i, target);
+            }
         }
 
         appList.resetScroll();
@@ -1134,15 +1167,16 @@ PanelWindow {
                             property: "opacity"
                             from: 0.0
                             to: 1.0
-                            duration: 250
+                            duration: 220
                             easing.type: Easing.OutCubic
                         }
                         NumberAnimation {
                             property: "scale"
-                            from: 0.96
+                            from: 0.94
                             to: 1.0
-                            duration: 270
-                            easing.type: Easing.OutCubic
+                            duration: 250
+                            easing.type: Easing.OutBack
+                            easing.overshoot: 1.1
                         }
                     }
 
@@ -1151,13 +1185,34 @@ PanelWindow {
                         NumberAnimation {
                             property: "opacity"
                             to: 0.0
-                            duration: 170
+                            duration: 150
                             easing.type: Easing.OutCubic
                         }
                         NumberAnimation {
                             property: "scale"
-                            to: 0.96
-                            duration: 170
+                            to: 0.92
+                            duration: 150
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    Transition {
+                        id: listDisplacedTrans
+                        NumberAnimation {
+                            property: "y"
+                            duration: 300
+                            easing.type: Easing.OutCubic
+                        }
+                        NumberAnimation {
+                            property: "opacity"
+                            to: 1.0
+                            duration: 200
+                            easing.type: Easing.OutCubic
+                        }
+                        NumberAnimation {
+                            property: "scale"
+                            to: 1.0
+                            duration: 200
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -1182,11 +1237,12 @@ PanelWindow {
 
                         highlightFollowsCurrentItem: false
 
-                        property bool transitionsEnabled: launcherWindow.isVisible && container.animProgress > 0.98
+                        property bool transitionsEnabled: launcherWindow.isVisible && container.animProgress > 0.7
 
                         add: transitionsEnabled ? listAddTrans : null
                         remove: transitionsEnabled ? listRemoveTrans : null
-                        displaced: null
+                        move: transitionsEnabled ? listDisplacedTrans : null
+                        displaced: transitionsEnabled ? listDisplacedTrans : null
 
                         function getItemY(idx) {
                             return idx * (launcherWindow.s(44) + spacing);
@@ -1194,8 +1250,10 @@ PanelWindow {
 
                         function resetScroll() {
                             scrollAnim.stop();
-                            positionViewAtBeginning();
-                            contentY = 0;
+                            if (contentY > 0) {
+                                positionViewAtBeginning();
+                                contentY = 0;
+                            }
                         }
 
                         onContentYChanged: {
@@ -1261,7 +1319,7 @@ PanelWindow {
                             radius: ThemeBackend.borderRadius
                             color: ThemeBackend.mauve
 
-                            property real targetY: (appList.currentIndex >= 0) ? (appList.currentItem ? appList.currentItem.y : appList.getItemY(appList.currentIndex)) : 0
+                            property real targetY: (appList.currentIndex >= 0) ? appList.getItemY(appList.currentIndex) : 0
                             y: targetY
 
                             Behavior on y {
