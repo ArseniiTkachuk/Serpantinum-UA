@@ -1,14 +1,9 @@
-<div align="center">
-  <a href="https://ko-fi.com/ilyamiro">
-    <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" />
-  </a>
-</div>
 
 <div align="center">
   <img src="docs/assets/banner.png" alt="Serpantinum" width="850" />
 </div>
 
-## Previews
+## Превʼю
 
 | | |
 |---|---|
@@ -17,18 +12,17 @@
 
 ---
 
-## Installation
+## Встановлення
 
-> [!IMPORTANT]
-> **Migrating from v1:** All previous configuration will be backed up and unused. Configuration of compositor settings such as monitors, keybinds, and autostart is now up to you, as the project migrated from being dotfiles to being a shell.
 
-### Arch Linux and its derivatives
+### Arch Linux та похідні
 
-For Arch-based distributions (including systemd, OpenRC, and other init systems), run the automated installation script.:
+Для дистрибутивів на основі Arch (включно з systemd, OpenRC та іншими init-системами) виконай автоматичний скрипт встановлення:
+```
 
-```bash
+```
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/ilyamiro/serpantinum/master/install/install.sh)"
-
+```
 ```
 
 > [!NOTE]
@@ -38,11 +32,11 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/ilyamiro/serpantinum/mas
 
 ### NixOS
 
-Serpantinum provides flake outputs, a NixOS module for system dependencies, and a Home Manager module for user configuration and service management.
+Serpantinum надає flake-виводи, модуль NixOS для системних залежностей та модуль Home Manager для налаштувань користувача й керування сервісами.
 
-#### 1. Add Flake Input
+#### 1. Додай Flake Input
 
-Add Serpantinum to your `flake.nix`:
+Додай Serpantinum до свого `flake.nix`:
 
 ```nix
 {
@@ -67,7 +61,7 @@ Add Serpantinum to your `flake.nix`:
 
 #### 2. configuration.nix
 
-Enable the NixOS module to configure system prerequisites:
+Увімкни модуль NixOS для налаштування системних передумов:
 
 ```nix
 {
@@ -76,7 +70,7 @@ Enable the NixOS module to configure system prerequisites:
 
 ```
 
-If you prefer installing the package directly without the system module:
+Якщо волієш встановити пакет напряму без системного модуля:
 
 ```nix
 { pkgs, serpantinum, ... }:
@@ -89,7 +83,7 @@ If you prefer installing the package directly without the system module:
 
 ```
 
-#### 3. Home Manager Configuration
+#### 3. Конфігурація Home Manager
 
 ```nix
 { serpantinum, ... }:
@@ -141,9 +135,9 @@ If you prefer installing the package directly without the system module:
 
 ```
 
-#### 4. Updating
+#### 4. Оновлення
 
-Update the flake lockfile and rebuild your system:
+Онови lock-файл flake і перезбери систему:
 
 ```bash
 nix flake update serpantinum
@@ -151,15 +145,14 @@ sudo nixos-rebuild switch --flake .
 
 ```
 
-> **Note:** The automatic installer handles compositor integration on standard distributions. On NixOS / Home Manager, you must manually integrate compositor configs.
-> Sample configs, autostart entries, and keybindings for supported window managers and compositors are available in the [compositors](https://github.com/ilyamiro/serpantinum/tree/master/compositors) directory.
+> **Примітка:** Автоматичний інсталятор налаштовує інтеграцію з компоузитором на стандартних дистрибутивах. На NixOS / Home Manager інтеграцію з конфігами компоузитора треба виконати вручну.
+> Приклади конфігів, записи автозапуску та гарячі клавіші для підтримуваних віконних менеджерів і компоузиторів доступні в теці [compositors](https://github.com/ilyamiro/serpantinum/tree/master/compositors).
 
+#### Необхідний автозапуск
 
-#### Required autostart
+Не забудь додати слухачів буфера обміну та потрібні сервіси до автозапуску свого компоузитора, щоб буфер обміну й еквалайзер працювали коректно.
 
-Remember to add clipboard listeners and required services to your compositor's autostart configuration for the clipboard and the equalizer to work properly.
-
-Example on Hyprland:
+Приклад для Hyprland:
 
 ```lua
 hl.on("hyprland.start", function()
@@ -171,21 +164,20 @@ end)
 ```
 ---
 
-## Running
+## Запуск
 
-To run the shell, launch `serpantinumd start`
-
----
-
-## Credits
-
-* Special thanks to Darkall44/Qylock for providing a gorgeous material SDDM theme!
+Щоб запустити шел, виконай `serpantinumd start`
 
 ---
 
-## License
+## Подяки
+
+* Особлива подяка Darkall44/Qylock за чудову material-тему для SDDM!
+
+---
+
+## Ліцензія
 
 Copyright (C) 2026 Illia Miroshnichenko
 
-This project is licensed under the GNU Affero General Public License version 3, or (at your option) any later version. See the [LICENSE.md](LICENSE.md) file for the full license text.
-
+Цей проєкт ліцензований під GNU Affero General Public License версії 3, або (на твій вибір) будь-якою пізнішою версією. Повний текст ліцензії — у файлі [LICENSE.md](LICENSE.md).
