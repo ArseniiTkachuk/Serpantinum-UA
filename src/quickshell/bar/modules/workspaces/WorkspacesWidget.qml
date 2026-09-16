@@ -249,7 +249,7 @@ Rectangle {
         command: [
             "bash",
             "-c",
-            "workspaces=$(niri msg -j workspaces 2>/dev/null \vert{}\vert{} echo '[]'); windows=$(niri msg -j windows 2>/dev/null || echo '[]'); echo \"{\\\"workspaces\\\": $workspaces, \\\"windows\\\": $windows}\""
+            "workspaces=$(niri msg -j workspaces 2>/dev/null || echo '[]'); windows=$(niri msg -j windows 2>/dev/null || echo '[]'); echo \"{\\\"workspaces\\\": $workspaces, \\\"windows\\\": $windows}\""
         ]
         stdout: StdioCollector {
             onStreamFinished: {
@@ -367,6 +367,7 @@ Rectangle {
         anchors.fill: parent
         z: 10
         acceptedButtons: Qt.NoButton
+        cursorShape: Qt.PointingHandCursor
         onWheel: wheel => {
             wsWheelTimer.restart();
             workspacesWidgetRoot.wheelAccumulator += wheel.angleDelta.y;

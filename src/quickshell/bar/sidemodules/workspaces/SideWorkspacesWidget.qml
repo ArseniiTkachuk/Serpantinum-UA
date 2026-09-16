@@ -390,6 +390,7 @@ Rectangle {
         anchors.fill: parent
         z: 10
         acceptedButtons: Qt.NoButton
+        cursorShape: Qt.PointingHandCursor
         onWheel: wheel => {
             wsWheelTimer.restart();
             workspacesWidgetRoot.wheelAccumulator += wheel.angleDelta.y;
