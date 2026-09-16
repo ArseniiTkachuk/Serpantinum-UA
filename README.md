@@ -18,15 +18,13 @@
 ### Arch Linux та похідні
 
 Для дистрибутивів на основі Arch (включно з systemd, OpenRC та іншими init-системами) виконай автоматичний скрипт встановлення:
-```
 
 ```
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/ilyamiro/serpantinum/master/install/install.sh)"
 ```
-```
 
 > [!NOTE]
-> To update, when or if you recieve a notification about the new version being available, just run the script again and choose "update"
+> Щоб оновити, коли або якщо ви отримаєте сповіщення про доступність нової версії, просто запустіть скрипт ще раз і виберіть "update".
 
 ---
 
