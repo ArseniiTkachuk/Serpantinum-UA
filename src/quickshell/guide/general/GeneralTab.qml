@@ -71,8 +71,8 @@ Item {
         return path;
     }
 
-    property var languageCodes: ["en", "ru", "de", "es", "it", "hy", "vi", "ko", "pt", "az"]
-    property var languageNames: ["English", "Русский", "Deutsch", "Español", "Italiano", "Հայերեն", "Tiếng Việt", "한국어", "Português", "Azərbaycanca"]
+    property var languageCodes: ["en", "ru", "ua", "de", "es", "it", "hy", "vi", "ko", "pt", "az"]
+    property var languageNames: ["English", "Русский", "Українська", "Deutsch", "Español", "Italiano", "Հայերեն", "Tiếng Việt", "한국어", "Português", "Azərbaycanca"]
 
     property var weatherUnitCodes: ["metric", "imperial", "standard"]
     property var weatherUnitNames: ["Celsius", "Fahrenheit", "Kelvin"]
@@ -1120,7 +1120,7 @@ Item {
                     ClickButton {
                         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                         implicitHeight: rootObj.s(32)
-                        buttonText: "Copy settings"
+                        buttonText: "Копіювати налаштування"
                         buttonIcon: "󰆏"
                         accentColor: ThemeBackend.surface0
                         textColor: ThemeBackend.text
@@ -1137,3 +1137,4 @@ Item {
         }
     }
 }
+

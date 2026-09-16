@@ -1,10 +1,24 @@
 {
   "general": {
-    "language": "en",
-    "avatarPath": "",
+    "language": "ua",
+    "avatarPath": "/home/user/Pictures/Screenshots/photo_2026-09-15_20-12-33.jpg",
     "muteSfx": false,
     "weatherInterval": 15,
-    "weatherUnit": "metric"
+    "weatherUnit": "metric",
+    "location": {
+      "latitude": 48.67274,
+      "longitude": 25.50163,
+      "city": "Kolomyya Raion",
+      "region": "Ivano-Frankivska oblast",
+      "country_name": "Ukraine",
+      "country_code": "UA",
+      "timezone": "Europe/Kyiv",
+      "source": "manual",
+      "updated_at": 1789451569
+    },
+    "sfxVolume": 100,
+    "screenshotCaptureOnRelease": false,
+    "quickactions": true
   },
   "syspanel": {
     "clipExpandProgress": 0,
@@ -15,7 +29,7 @@
     "position": "top",
     "width": 100,
     "opacity": 100,
-    "style": "fill", 
+    "style": "solid",
     "time": {
       "format": "HH:mm:ss"
     },
@@ -25,32 +39,64 @@
       "left": [
         "left",
         "workspaces",
-        "media" 
+        "media"
       ],
-     "center": [
+      "center": [
         [
           "timedate",
           "info",
-          "weather"
+          "weather",
+          "sysmon"
         ]
-      ],      
-     "right": [
-        "tray",
+      ],
+      "right": [
         [
+          "vis",
           "kb",
-          "wifi",
           "bt",
+          "wifi",
           "vol",
           "bat"
         ]
       ]
+    },
+    "distinctPills": false,
+    "workspaceCount": 9,
+    "groupColors": {
+      "g_timedate": "#b0a8b8",
+      "g_kb": "#d4b2bd"
     }
   },
   "theme": {
     "fontFamily": "Adwaita Mono",
     "borderRadius": 10,
     "activePreset": "Matugen",
-    "matugen": true
+    "matugen": true,
+    "colors": {
+      "base": "#000000",
+      "blue": "#ffffff",
+      "crust": "#000000",
+      "green": "#ffffff",
+      "mantle": "#050505",
+      "maroon": "#808080",
+      "mauve": "#d0d0d0",
+      "overlay0": "#5a5a5a",
+      "overlay1": "#7a7a7a",
+      "overlay2": "#9a9a9a",
+      "peach": "#cccccc",
+      "pink": "#e0e0e0",
+      "red": "#a0a0a0",
+      "sapphire": "#e0e0e0",
+      "subtext0": "#a0a0a0",
+      "subtext1": "#c0c0c0",
+      "surface0": "#1a1a1a",
+      "surface1": "#2a2a2a",
+      "surface2": "#3a3a3a",
+      "teal": "#c0c0c0",
+      "text": "#ffffff",
+      "yellow": "#ffffff"
+    },
+    "schemeType": "scheme-vibrant"
   },
   "idle": {
     "enabled": true,
@@ -95,13 +141,17 @@
         "resumeCommand": "",
         "isCustom": false
       }
-    }
+    },
+    "manualInhibit": false
   },
   "notifications": {
-    "dnd": true,
+    "dnd": false,
     "position": "top right",
     "sound": true,
-    "soundFile": ""
+    "soundFile": "/home/user/.local/share/serpantinum/src/assets/sounds/notifications/Botanica.wav",
+    "horizontalPosition": 98,
+    "verticalPosition": 7,
+    "showEmptyGraphic": true
   },
   "display": {
     "monitors": {
@@ -110,5 +160,45 @@
         "scale": 1
       }
     }
+  },
+  "wallpaperDir": "/home/user/Pictures/Wallpapers",
+  "launcher": {
+    "position": "center",
+    "width": 670,
+    "itemCount": 8,
+    "terminalCommand": "kitty -e",
+    "smartRanking": true
+  },
+  "dock": {
+    "enabled": true,
+    "position": "bottom",
+    "onTop": true,
+    "elementSize": 44,
+    "floating": false,
+    "opacity": 100,
+    "exclusive": false,
+    "autohide": false,
+    "autohideTimeout": 1000,
+    "editing": false,
+    "apps": [],
+    "overrideBoundsCorrection": false,
+    "enableScrolling": false,
+    "visibleElements": 7,
+    "hoverScale": 120,
+    "cascadeScale": false
+  },
+  "osd": {
+    "horizontalPosition": 50,
+    "verticalPosition": 90,
+    "orientation": "horizontal",
+    "showCapsLock": true,
+    "showNumLock": true,
+    "showAirplane": true,
+    "attachToBar": false
+  },
+  "widgets": {
+    "hideBarInRedactor": true
   }
 }
+
+
