@@ -1359,7 +1359,7 @@ PanelWindow {
                             radius: ThemeBackend.borderRadius
                             color: ThemeBackend.mauve
 
-                            property real targetY: (appList.currentIndex >= 0) ? appList.getItemY(appList.currentIndex) : 0
+                            property real targetY: appList.currentItem ? appList.currentItem.y : 0
                             y: targetY
 
                             transform: Translate {
@@ -1382,7 +1382,7 @@ PanelWindow {
                             clip: false
                             z: 1
 
-                            property bool isSelected: ListView.isCurrentItem || index === appList.currentIndex
+                            property bool isSelected: index === appList.currentIndex
 
                             opacity: launcherWindow.getItemOpacity(index)
                             transform: Translate {
