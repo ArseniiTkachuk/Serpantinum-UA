@@ -39,7 +39,10 @@
       "display_widgets": "Tiện ích",
       "display_general": "Chung",
       "osd": "OSD",
-      "dock": "Dock"
+      "dock": "Dock",
+      "bar_general": "Chung",
+      "bar_modules": "Mô-đun",
+      "bar_side_modules": "Mô-đun bên cạnh"
     },
     "launcher": {
       "position": {
@@ -275,7 +278,16 @@
       "modules": {
         "vis": "Trình hiển thị âm thanh (cava)",
         "actions": "Thao tác",
-        "workspaces": "Không gian làm việc",
+        "workspaces": {
+          "style": {
+            "name": {
+              "pills": "Dạng viên",
+              "numbers": "Số",
+              "pacman": "Pacman"
+            }
+          },
+          "name": "Không gian làm việc"
+        },
         "media": "Phương tiện",
         "tray": "Khay hệ thống",
         "keyboard": "Bàn phím",

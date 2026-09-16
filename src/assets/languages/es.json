@@ -40,7 +40,10 @@
       "display_widgets": "Widgets",
       "display_general": "General",
       "osd": "OSD",
-      "dock": "Dock"
+      "dock": "Dock",
+      "bar_general": "General",
+      "bar_modules": "Módulos",
+      "bar_side_modules": "Módulos laterales"
     },
     "launcher": {
       "position": {
@@ -276,7 +279,16 @@
       "modules": {
         "vis": "Visualizador (cava)",
         "actions": "Acciones",
-        "workspaces": "Espacios de trabajo",
+        "workspaces": {
+          "style": {
+            "name": {
+              "pills": "Píldoras",
+              "numbers": "Números",
+              "pacman": "Pacman"
+            }
+          },
+          "name": "Espacios de trabajo"
+        },
         "media": "Multimedia",
         "tray": "Bandeja del sistema",
         "keyboard": "Teclado",

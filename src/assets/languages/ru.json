@@ -40,7 +40,10 @@
       "display_widgets": "Виджеты",
       "display_general": "Общие",
       "osd": "OSD",
-      "dock": "Док"
+      "dock": "Док",
+      "bar_general": "Основные",
+      "bar_modules": "Модули",
+      "bar_side_modules": "Боковые модули"
     },
     "launcher": {
       "position": {
@@ -276,7 +279,16 @@
       "modules": {
         "vis": "Визуализатор (cava)",
         "actions": "Действия",
-        "workspaces": "Рабочие пространства",
+        "workspaces": {
+          "style": {
+            "name": {
+              "pills": "Пилюли",
+              "numbers": "Номера",
+              "pacman": "Pacman"
+            }
+          },
+          "name": "Рабочие пространства"
+        },
         "media": "Медиа",
         "tray": "Трей",
         "keyboard": "Клавиатура",

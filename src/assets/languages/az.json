@@ -39,7 +39,10 @@
       "display_widgets": "Vidcetlər",
       "display_general": "Ümumi",
       "osd": "Ekran göstəricisi",
-      "dock": "Tətbiq rəfi"
+      "dock": "Tətbiq rəfi",
+      "bar_general": "Ümumi",
+      "bar_modules": "Modullar",
+      "bar_side_modules": "Yan modullar"
     },
     "launcher": {
       "position": {
@@ -273,7 +276,16 @@
       "modules": {
         "vis": "Səs görüntüləyicisi (cava)",
         "actions": "Əməliyyatlar",
-        "workspaces": "İş sahələri",
+        "workspaces": {
+          "style": {
+            "name": {
+              "pills": "Həblər",
+              "numbers": "Nömrələr",
+              "pacman": "Pacman"
+            }
+          },
+          "name": "İş sahələri"
+        },
         "media": "Media",
         "tray": "Sistem nişanları sahəsi",
         "keyboard": "Klaviatura",

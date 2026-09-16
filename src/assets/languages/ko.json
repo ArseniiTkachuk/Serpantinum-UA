@@ -39,7 +39,10 @@
       "display_widgets": "위젯",
       "display_general": "일반",
       "osd": "OSD",
-      "dock": "도크"
+      "dock": "도크",
+      "bar_general": "일반",
+      "bar_modules": "모듈",
+      "bar_side_modules": "사이드 모듈"
     },
     "launcher": {
       "position": {
@@ -275,7 +278,16 @@
       "modules": {
         "vis": "비주얼라이저 (cava)",
         "actions": "동작",
-        "workspaces": "작업 공간",
+        "workspaces": {
+          "style": {
+            "name": {
+              "pills": "알약",
+              "numbers": "숫자",
+              "pacman": "팩맨"
+            }
+          },
+          "name": "작업 공간"
+        },
         "media": "미디어",
         "tray": "트레이",
         "keyboard": "키보드",

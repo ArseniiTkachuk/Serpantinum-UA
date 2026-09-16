@@ -39,7 +39,10 @@
       "display_widgets": "Վիջեթներ",
       "display_general": "Ընդհանուր",
       "osd": "OSD",
-      "dock": "Դոկ"
+      "dock": "Դոկ",
+      "bar_general": "Ընդհանուր",
+      "bar_modules": "Մոդուլներ",
+      "bar_side_modules": "Կողային մոդուլներ"
     },
     "launcher": {
       "position": {
@@ -275,7 +278,16 @@
       "modules": {
         "vis": "Տեսապատկերիչ (cava)",
         "actions": "Գործողություններ",
-        "workspaces": "Աշխատատարածքներ",
+        "workspaces": {
+          "style": {
+            "name": {
+              "pills": "Հաբեր",
+              "numbers": "Թվեր",
+              "pacman": "Pacman"
+            }
+          },
+          "name": "Աշխատանքային տարածքներ"
+        },
         "media": "Մեդիա",
         "tray": "Համակարգային դարակ",
         "keyboard": "Ստեղնաշար",
