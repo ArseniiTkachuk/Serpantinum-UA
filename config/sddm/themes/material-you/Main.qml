@@ -18,16 +18,18 @@ Rectangle {
     property bool isQuickshell: typeof sddm === "undefined" || sddm.hostName === undefined
     property int sessionIndex: (typeof sessionModel !== "undefined" && sessionModel.lastIndex >= 0) ? sessionModel.lastIndex : 0
     property int userIndex: (typeof userModel !== "undefined" && userModel.lastIndex >= 0) ? userModel.lastIndex : 0
-    
+
     property real ui1: 0
     property real ui2: 0
     property string errorMessage: ""
+
+    readonly property var uaLocale: Qt.locale("uk_UA")
 
     FontLoader {
         id: customFont
         source: "font/GoogleSans-VariableFont_GRAD,opsz,wght.ttf"
     }
-    
+
     readonly property string sansFont: customFont.name !== "" ? customFont.name : "Roboto, Inter, sans-serif"
 
     function syncModel() {
@@ -43,6 +45,18 @@ Rectangle {
         for (let i = matchLen; i < str.length; i++) {
             charModel.append({ char: str[i] });
         }
+    }
+
+    // Виконує вхід із введеним іменем користувача (може бути будь-яким, напр. "root")
+    function doLogin() {
+        if (root.isQuickshell || pwd.text === "") return;
+
+        let typedUser = userInput.text.trim();
+        let currentUser = typedUser !== ""
+            ? typedUser
+            : (userHelper.currentItem ? userHelper.currentItem.uLogin : userModel.lastUser);
+
+        sddm.login(currentUser, pwd.text, root.sessionIndex);
     }
 
     ListView {
@@ -76,13 +90,13 @@ Rectangle {
         id: focusTimer
         interval: 300
         running: true
-        onTriggered: pwd.forceActiveFocus()
+        onTriggered: userInput.forceActiveFocus()
     }
 
     Connections {
         target: typeof sddm !== "undefined" ? sddm : null
         function onLoginFailed() {
-            root.errorMessage = "ACCESS DENIED";
+            root.errorMessage = "ДОСТУП ЗАБОРОНЕНО";
             pwd.text = "";
             charModel.clear();
             shakeAnim.start();
@@ -99,6 +113,7 @@ Rectangle {
     Component.onCompleted: {
         fadeAnim.start();
         if (typeof keyboard !== "undefined") keyboard.numLock = true;
+        userInput.text = userHelper.currentItem ? userHelper.currentItem.uLogin : (userModel.lastUser || "");
     }
 
     SequentialAnimation {
@@ -123,7 +138,7 @@ Rectangle {
         anchors.fill: parent
         cursorShape: Qt.ArrowCursor
         z: -1
-        onClicked: pwd.forceActiveFocus()
+        onClicked: userInput.forceActiveFocus()
     }
 
     Row {
@@ -137,7 +152,7 @@ Rectangle {
         Column {
             spacing: 24 * s
             anchors.verticalCenter: parent.verticalCenter
-            
+
             Timer {
                 interval: 1000
                 running: true
@@ -146,13 +161,13 @@ Rectangle {
                     let d = new Date();
                     hText.text = Qt.formatTime(d, "hh");
                     mText.text = Qt.formatTime(d, "mm");
-                    dateChipText.text = Qt.formatDate(d, "dddd, MMM d").toUpperCase();
+                    dateChipText.text = d.toLocaleDateString(root.uaLocale, "dddd, d MMMM").toUpperCase();
                 }
             }
 
             Column {
                 spacing: -24 * s
-                
+
                 Text {
                     id: hText
                     text: Qt.formatTime(new Date(), "hh")
@@ -161,7 +176,7 @@ Rectangle {
                     font.weight: Font.Bold
                     color: "#0F3C2C"
                 }
-                
+
                 Text {
                     id: mText
                     text: Qt.formatTime(new Date(), "mm")
@@ -177,11 +192,11 @@ Rectangle {
                 height: 44 * s
                 radius: 22 * s
                 color: "#BEE8C7"
-                
+
                 Text {
                     id: dateChipText
                     anchors.centerIn: parent
-                    text: Qt.formatDate(new Date(), "dddd, MMM d").toUpperCase()
+                    text: new Date().toLocaleDateString(root.uaLocale, "dddd, d MMMM").toUpperCase()
                     font.family: root.sansFont
                     font.pixelSize: 11 * s
                     font.bold: true
@@ -196,7 +211,7 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
 
             Text {
-                text: "QUICK SETTINGS"
+                text: "ШВИДКІ НАЛАШТУВАННЯ"
                 font.family: root.sansFont
                 font.pixelSize: 11 * s
                 font.bold: true
@@ -207,7 +222,7 @@ Rectangle {
             Grid {
                 columns: 2
                 spacing: 16 * s
-                
+
                 Rectangle {
                     id: powerTile
                     width: 180 * s; height: 76 * s; radius: 38 * s
@@ -215,18 +230,18 @@ Rectangle {
                     scale: powerMouse.pressed ? 0.95 : (powerMouse.containsMouse ? 1.03 : 1.0)
                     Behavior on color { ColorAnimation { duration: 150 } }
                     Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                    
+
                     Row {
                         anchors.fill: parent
                         anchors.leftMargin: 16 * s
                         anchors.rightMargin: 16 * s
                         spacing: 12 * s
-                        
+
                         Rectangle {
                             width: 48 * s; height: 48 * s; radius: 24 * s
                             color: "#BEE8C7"
                             anchors.verticalCenter: parent.verticalCenter
-                            
+
                             Image {
                                 id: powerIcon
                                 source: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M18.36 6.64a9 9 0 1 1-12.73 0'></path><line x1='12' y1='2' x2='12' y2='12'></line></svg>"
@@ -243,13 +258,13 @@ Rectangle {
                                 color: "#0F3C2C"
                             }
                         }
-                        
+
                         Column {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 2 * s
-                            
+
                             Text {
-                                text: "POWER"
+                                text: "ЖИВЛЕННЯ"
                                 font.family: root.sansFont
                                 font.pixelSize: 12 * s
                                 font.bold: true
@@ -257,7 +272,7 @@ Rectangle {
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
                             Text {
-                                text: "SHUT DOWN"
+                                text: "ВИМКНУТИ"
                                 font.family: root.sansFont
                                 font.pixelSize: 9 * s
                                 color: powerMouse.containsMouse ? "#E9F3EB" : "#1E4F3E"
@@ -265,7 +280,7 @@ Rectangle {
                             }
                         }
                     }
-                    
+
                     MouseArea {
                         id: powerMouse
                         anchors.fill: parent
@@ -274,7 +289,7 @@ Rectangle {
                         onClicked: if (!root.isQuickshell) sddm.powerOff();
                     }
                 }
-                
+
                 Rectangle {
                     id: sessionTile
                     width: 180 * s; height: 76 * s; radius: 38 * s
@@ -282,18 +297,18 @@ Rectangle {
                     scale: sessionMouse.pressed ? 0.95 : (sessionMouse.containsMouse ? 1.03 : 1.0)
                     Behavior on color { ColorAnimation { duration: 150 } }
                     Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                    
+
                     Row {
                         anchors.fill: parent
                         anchors.leftMargin: 16 * s
                         anchors.rightMargin: 16 * s
                         spacing: 12 * s
-                        
+
                         Rectangle {
                             width: 48 * s; height: 48 * s; radius: 24 * s
                             color: "#BEE8C7"
                             anchors.verticalCenter: parent.verticalCenter
-                            
+
                             Image {
                                 id: sessionIcon
                                 source: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='3'></circle><path d='M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z'></path></svg>"
@@ -310,13 +325,13 @@ Rectangle {
                                 color: "#0F3C2C"
                             }
                         }
-                        
+
                         Column {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 2 * s
-                            
+
                             Text {
-                                text: "SESSION"
+                                text: "СЕСІЯ"
                                 font.family: root.sansFont
                                 font.pixelSize: 12 * s
                                 font.bold: true
@@ -334,7 +349,7 @@ Rectangle {
                             }
                         }
                     }
-                    
+
                     MouseArea {
                         id: sessionMouse
                         anchors.fill: parent
@@ -355,18 +370,18 @@ Rectangle {
                     scale: rebootMouse.pressed ? 0.95 : (rebootMouse.containsMouse ? 1.03 : 1.0)
                     Behavior on color { ColorAnimation { duration: 150 } }
                     Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                    
+
                     Row {
                         anchors.fill: parent
                         anchors.leftMargin: 16 * s
                         anchors.rightMargin: 16 * s
                         spacing: 12 * s
-                        
+
                         Rectangle {
                             width: 48 * s; height: 48 * s; radius: 24 * s
                             color: "#BEE8C7"
                             anchors.verticalCenter: parent.verticalCenter
-                            
+
                             Image {
                                 id: rebootIcon
                                 source: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 4 23 10 17 10'></polyline><path d='M20.49 15a9 9 0 1 1-2.12-9.36L23 10'></path></svg>"
@@ -383,13 +398,13 @@ Rectangle {
                                 color: "#0F3C2C"
                             }
                         }
-                        
+
                         Column {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 2 * s
-                            
+
                             Text {
-                                text: "REBOOT"
+                                text: "ПЕРЕЗАВАНТАЖИТИ"
                                 font.family: root.sansFont
                                 font.pixelSize: 12 * s
                                 font.bold: true
@@ -397,7 +412,7 @@ Rectangle {
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
                             Text {
-                                text: "RESTART"
+                                text: "ПЕРЕЗАПУСК"
                                 font.family: root.sansFont
                                 font.pixelSize: 9 * s
                                 color: rebootMouse.containsMouse ? "#E9F3EB" : "#1E4F3E"
@@ -405,7 +420,7 @@ Rectangle {
                             }
                         }
                     }
-                    
+
                     MouseArea {
                         id: rebootMouse
                         anchors.fill: parent
@@ -422,18 +437,18 @@ Rectangle {
                     scale: suspendMouse.pressed ? 0.95 : (suspendMouse.containsMouse ? 1.03 : 1.0)
                     Behavior on color { ColorAnimation { duration: 150 } }
                     Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                    
+
                     Row {
                         anchors.fill: parent
                         anchors.leftMargin: 16 * s
                         anchors.rightMargin: 16 * s
                         spacing: 12 * s
-                        
+
                         Rectangle {
                             width: 48 * s; height: 48 * s; radius: 24 * s
                             color: "#BEE8C7"
                             anchors.verticalCenter: parent.verticalCenter
-                            
+
                             Image {
                                 id: suspendIcon
                                 source: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'></path></svg>"
@@ -450,13 +465,13 @@ Rectangle {
                                 color: "#0F3C2C"
                             }
                         }
-                        
+
                         Column {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 2 * s
-                            
+
                             Text {
-                                text: "SLEEP"
+                                text: "СОН"
                                 font.family: root.sansFont
                                 font.pixelSize: 12 * s
                                 font.bold: true
@@ -464,7 +479,7 @@ Rectangle {
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
                             Text {
-                                text: "SUSPEND"
+                                text: "ПРИСПАТИ"
                                 font.family: root.sansFont
                                 font.pixelSize: 9 * s
                                 color: suspendMouse.containsMouse ? "#E9F3EB" : "#1E4F3E"
@@ -472,7 +487,7 @@ Rectangle {
                             }
                         }
                     }
-                    
+
                     MouseArea {
                         id: suspendMouse
                         anchors.fill: parent
@@ -486,20 +501,20 @@ Rectangle {
             Rectangle {
                 id: notificationCard
                 width: 376 * s
-                height: 180 * s
+                height: 236 * s
                 radius: 32 * s
                 color: "#E9F3EB"
                 transform: Translate { id: shakeTranslate }
-                
+
                 Column {
                     anchors.fill: parent
                     anchors.margins: 20 * s
-                    spacing: 12 * s
-                    
+                    spacing: 10 * s
+
                     Row {
                         width: parent.width
                         spacing: 8 * s
-                        
+
                         Item {
                             width: 12 * s
                             height: 12 * s
@@ -519,7 +534,7 @@ Rectangle {
                             }
                         }
                         Text {
-                            text: "SYSTEM UI"
+                            text: "СИСТЕМА"
                             font.family: root.sansFont
                             font.pixelSize: 10 * s
                             font.bold: true
@@ -528,11 +543,57 @@ Rectangle {
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
-                            text: "•  now"
+                            text: "•  зараз"
                             font.family: root.sansFont
                             font.pixelSize: 10 * s
                             color: "#8ca090"
                             anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    // Поле вводу імені користувача (можна ввести будь-яке ім'я, напр. root)
+                    Rectangle {
+                        width: parent.width
+                        height: 44 * s
+                        radius: 22 * s
+                        color: "#D0EADB"
+                        border.color: userInput.activeFocus ? "#0F3C2C" : "transparent"
+                        border.width: userInput.activeFocus ? 2 * s : 0
+                        Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                        TextInput {
+                            id: userInput
+                            anchors.fill: parent
+                            anchors.leftMargin: 20 * s
+                            anchors.rightMargin: 20 * s
+                            verticalAlignment: TextInput.AlignVCenter
+                            font.family: root.sansFont
+                            font.pixelSize: 15 * s
+                            font.bold: true
+                            color: "#0F3C2C"
+                            selectionColor: "#0F3C2C"
+                            selectedTextColor: "#E9F3EB"
+                            clip: true
+
+                            Text {
+                                anchors.fill: parent
+                                verticalAlignment: Text.AlignVCenter
+                                text: "ІМ'Я КОРИСТУВАЧА"
+                                font.family: root.sansFont
+                                font.pixelSize: 11 * s
+                                font.bold: true
+                                font.letterSpacing: 1 * s
+                                color: "#8ca090"
+                                visible: userInput.text === "" && !userInput.activeFocus
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.IBeamCursor
+                                onClicked: userInput.forceActiveFocus()
+                            }
+
+                            onAccepted: pwd.forceActiveFocus()
                         }
                     }
 
@@ -544,7 +605,7 @@ Rectangle {
                         border.color: root.errorMessage !== "" ? "#ea1821" : (pwd.activeFocus ? "#0F3C2C" : "transparent")
                         border.width: pwd.activeFocus ? 2 * s : 0
                         Behavior on border.color { ColorAnimation { duration: 150 } }
-                        
+
                         ListModel {
                             id: charModel
                         }
@@ -693,16 +754,18 @@ Rectangle {
                             cursorVisible: false
                             cursorDelegate: Item { width: 0; height: 0 }
                             clip: true
+                            echoMode: TextInput.Password
+                            passwordCharacter: " "
                             inputMethodHints: Qt.ImhHiddenText | Qt.ImhSensitiveData | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-                            
+
                             property bool wasClicked: false
                             onActiveFocusChanged: if (!activeFocus && text.length === 0) wasClicked = false
-                            
+
                             onTextChanged: root.syncModel()
 
                             Text {
                                 anchors.centerIn: parent
-                                text: root.errorMessage !== "" ? root.errorMessage : "PASSWORD REQUIRED"
+                                text: root.errorMessage !== "" ? root.errorMessage : "ВВЕДІТЬ ПАРОЛЬ"
                                 font.family: root.sansFont
                                 font.pixelSize: 11 * s
                                 font.bold: true
@@ -711,7 +774,7 @@ Rectangle {
                                 opacity: pwd.text === "" && (!pwd.activeFocus || (!pwd.wasClicked && pwd.text.length === 0)) ? 1 : 0
                                 Behavior on opacity { NumberAnimation { duration: 150 } }
                             }
-                            
+
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.IBeamCursor
@@ -720,57 +783,54 @@ Rectangle {
                                     pwd.forceActiveFocus();
                                 }
                             }
-                            
-                            onAccepted: {
-                                if (!root.isQuickshell && pwd.text !== "") {
-                                    let currentUser = userHelper.currentItem ? userHelper.currentItem.uLogin : userModel.lastUser;
-                                    sddm.login(currentUser, pwd.text, root.sessionIndex);
-                                }
-                            }
+
+                            onAccepted: root.doLogin()
                         }
                     }
 
                     Row {
                         width: parent.width
                         spacing: 12 * s
-                        
+
                         Rectangle {
-                            width: userText.implicitWidth + 32 * s
+                            id: cycleUserPill
+                            width: cycleText.implicitWidth + 32 * s
                             height: 38 * s
                             radius: 19 * s
-                            color: userMouse.pressed ? "#cbe8cc" : (userMouse.containsMouse ? "#d2ebd4" : "#eef6f0")
-                            scale: userMouse.pressed ? 0.95 : (userMouse.containsMouse ? 1.02 : 1.0)
+                            color: cycleMouse.pressed ? "#cbe8cc" : (cycleMouse.containsMouse ? "#d2ebd4" : "#eef6f0")
+                            scale: cycleMouse.pressed ? 0.95 : (cycleMouse.containsMouse ? 1.02 : 1.0)
                             Behavior on color { ColorAnimation { duration: 150 } }
                             Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
-                            
+
                             Text {
-                                id: userText
+                                id: cycleText
                                 anchors.centerIn: parent
-                                text: ((userHelper.currentItem && userHelper.currentItem.uName) ? userHelper.currentItem.uName : (userModel.lastUser || "USER")).toUpperCase()
+                                text: "ІНШИЙ КОРИСТУВАЧ"
                                 font.family: root.sansFont
                                 font.pixelSize: 10 * s
                                 font.bold: true
                                 font.letterSpacing: 1 * s
                                 color: "#1d3c34"
                             }
-                            
+
                             MouseArea {
-                                id: userMouse
+                                id: cycleMouse
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     if (!root.isQuickshell && typeof userModel !== "undefined" && userModel.rowCount() > 0) {
                                         root.userIndex = (root.userIndex + 1) % userModel.rowCount();
+                                        userInput.text = userHelper.currentItem ? userHelper.currentItem.uLogin : userInput.text;
                                     }
                                 }
                             }
                         }
 
                         Item {
-                            width: parent.width - (userText.implicitWidth + 32 * s) - 12 * s
+                            width: parent.width - (cycleText.implicitWidth + 32 * s) - 12 * s
                             height: 38 * s
-                            
+
                             Rectangle {
                                 anchors.right: parent.right
                                 width: parent.width
@@ -780,13 +840,13 @@ Rectangle {
                                 scale: loginMouse.pressed ? 0.95 : (loginMouse.containsMouse ? 1.02 : 1.0)
                                 Behavior on color { ColorAnimation { duration: 150 } }
                                 Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
-                                
+
                                 Row {
                                     anchors.centerIn: parent
                                     spacing: 6 * s
-                                    
+
                                     Text {
-                                        text: "UNLOCK"
+                                        text: "УВІЙТИ"
                                         font.family: root.sansFont
                                         font.pixelSize: 10 * s
                                         font.bold: true
@@ -806,13 +866,13 @@ Rectangle {
                                         }
                                     }
                                 }
-                                
+
                                 MouseArea {
                                     id: loginMouse
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: pwd.accepted()
+                                    onClicked: root.doLogin()
                                 }
                             }
                         }
