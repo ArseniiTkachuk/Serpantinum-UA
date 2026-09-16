@@ -44,7 +44,72 @@ Rectangle {
         return "pills";
     }
 
-    property int workspaceCount: (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar && Config.rawSettings.bar.workspaceCount !== undefined) ? Math.max(2, Math.min(10, Config.rawSettings.bar.workspaceCount)) : ((typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.general && Config.rawSettings.general.workspaceCount !== undefined) ? Math.max(2, Math.min(10, Config.rawSettings.general.workspaceCount)) : ((typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.workspaceCount !== undefined) ? Math.max(2, Math.min(10, Config.rawSettings.workspaceCount)) : 8))
+    property int baseWorkspaceCount: {
+        let dummy = configRevision;
+        if (typeof Config !== "undefined" && Config.rawSettings) {
+            if (Config.rawSettings.bar && Config.rawSettings.bar.workspaceCount !== undefined) {
+                return Math.max(2, Math.min(10, Config.rawSettings.bar.workspaceCount));
+            }
+            if (Config.rawSettings.general && Config.rawSettings.general.workspaceCount !== undefined) {
+                return Math.max(2, Math.min(10, Config.rawSettings.general.workspaceCount));
+            }
+            if (Config.rawSettings.workspaceCount !== undefined) {
+                return Math.max(2, Math.min(10, Config.rawSettings.workspaceCount));
+            }
+        }
+        return 8;
+    }
+
+    ListModel {
+        id: workspaceListModel
+    }
+
+    function syncModel() {
+        let target = (activeIndex >= baseWorkspaceCount) ? (activeIndex + 1) : baseWorkspaceCount;
+        target = Math.max(2, target);
+
+        while (workspaceListModel.count < target) {
+            workspaceListModel.append({ "modelData": workspaceListModel.count });
+        }
+        while (workspaceListModel.count > target) {
+            workspaceListModel.remove(workspaceListModel.count - 1);
+        }
+    }
+
+    onActiveIndexChanged: syncModel()
+    onBaseWorkspaceCountChanged: syncModel()
+
+    property int workspaceCount: workspaceListModel.count > 0 ? workspaceListModel.count : baseWorkspaceCount
+
+    function findRepeater(obj) {
+        if (!obj) return null;
+        if (obj.model !== undefined && obj.count !== undefined && typeof obj.itemAt === "function") {
+            return obj;
+        }
+        if (obj.children) {
+            for (let i = 0; i < obj.children.length; i++) {
+                let res = findRepeater(obj.children[i]);
+                if (res) return res;
+            }
+        }
+        if (obj.data) {
+            for (let j = 0; j < obj.data.length; j++) {
+                let res = findRepeater(obj.data[j]);
+                if (res) return res;
+            }
+        }
+        return null;
+    }
+
+    function attachModel() {
+        if (faceLoader.item) {
+            faceLoader.item.widget = workspacesWidgetRoot;
+            let rep = findRepeater(faceLoader.item);
+            if (rep && rep.model !== workspaceListModel) {
+                rep.model = workspaceListModel;
+            }
+        }
+    }
 
     function s(val) {
         if (barWindow && typeof barWindow.s === "function") return barWindow.s(val);
@@ -77,7 +142,7 @@ Rectangle {
             swayActiveIndex = index;
             Quickshell.execDetached(["swaymsg", "workspace", "number", wsId.toString()]);
         } else {
-            Hyprland.dispatch("hl.dsp.focus({ workspace = " + wsId + " })");
+            Hyprland.dispatch("workspace", wsId.toString());
         }
     }
 
@@ -92,7 +157,7 @@ Rectangle {
             if (!fw) return -1;
             idx = fw.id - 1;
         }
-        return (idx >= 0 && idx < workspaceCount) ? idx : -1;
+        return idx >= 0 ? idx : -1;
     }
 
     Component.onCompleted: {
@@ -106,6 +171,7 @@ Rectangle {
         if (workspacesWidgetRoot.isSway && workspacesWidgetRoot.moduleActive) {
             swayPoller.running = true;
         }
+        syncModel();
     }
 
     onModuleActiveChanged: {
@@ -230,7 +296,7 @@ Rectangle {
                     let wsList = JSON.parse(this.text) || [];
                     let occ = {};
                     let activeIdx = 0;
-                    for (let i = 0; i < winList.length; i++) {
+                    for (let i = 0; i < wsList.length; i++) {
                         let w = wsList[i];
                         let num = (w.num !== undefined && w.num > 0) ? w.num : parseInt(w.name);
                         let idx = (!isNaN(num) && num > 0) ? num - 1 : i;
@@ -342,9 +408,8 @@ Rectangle {
             }
         }
         onLoaded: {
-            if (item) {
-                item.widget = workspacesWidgetRoot;
-            }
+            attachModel();
+            Qt.callLater(attachModel);
         }
     }
 

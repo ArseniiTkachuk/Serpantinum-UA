@@ -46,14 +46,20 @@ Rectangle {
         return "pills";
     }
 
-    property int workspaceCount: {
+    property int baseWorkspaceCount: {
         let dummy = configRevision;
         if (typeof Config !== "undefined" && Config.rawSettings) {
-            if (Config.rawSettings.sideBar && Config.rawSettings.sideBar.workspaceCount !== undefined) {
-                return Math.max(2, Math.min(10, Config.rawSettings.sideBar.workspaceCount));
+            if (Config.rawSettings.sideWorkspaceCount !== undefined) {
+                return Math.max(2, Math.min(10, Config.rawSettings.sideWorkspaceCount));
+            }
+            if (Config.rawSettings.sideBar && Config.rawSettings.sideBar.sideWorkspaceCount !== undefined) {
+                return Math.max(2, Math.min(10, Config.rawSettings.sideBar.sideWorkspaceCount));
             }
             if (Config.rawSettings.bar && Config.rawSettings.bar.sideWorkspaceCount !== undefined) {
                 return Math.max(2, Math.min(10, Config.rawSettings.bar.sideWorkspaceCount));
+            }
+            if (Config.rawSettings.sideBar && Config.rawSettings.sideBar.workspaceCount !== undefined) {
+                return Math.max(2, Math.min(10, Config.rawSettings.sideBar.workspaceCount));
             }
             if (Config.rawSettings.bar && Config.rawSettings.bar.workspaceCount !== undefined) {
                 return Math.max(2, Math.min(10, Config.rawSettings.bar.workspaceCount));
@@ -66,6 +72,57 @@ Rectangle {
             }
         }
         return 8;
+    }
+
+    ListModel {
+        id: workspaceListModel
+    }
+
+    function syncModel() {
+        let target = (activeIndex >= baseWorkspaceCount) ? (activeIndex + 1) : baseWorkspaceCount;
+        target = Math.max(2, target);
+
+        while (workspaceListModel.count < target) {
+            workspaceListModel.append({ "modelData": workspaceListModel.count });
+        }
+        while (workspaceListModel.count > target) {
+            workspaceListModel.remove(workspaceListModel.count - 1);
+        }
+    }
+
+    onActiveIndexChanged: syncModel()
+    onBaseWorkspaceCountChanged: syncModel()
+
+    property int workspaceCount: workspaceListModel.count > 0 ? workspaceListModel.count : baseWorkspaceCount
+
+    function findRepeater(obj) {
+        if (!obj) return null;
+        if (obj.model !== undefined && obj.count !== undefined && typeof obj.itemAt === "function") {
+            return obj;
+        }
+        if (obj.children) {
+            for (let i = 0; i < obj.children.length; i++) {
+                let res = findRepeater(obj.children[i]);
+                if (res) return res;
+            }
+        }
+        if (obj.data) {
+            for (let j = 0; j < obj.data.length; j++) {
+                let res = findRepeater(obj.data[j]);
+                if (res) return res;
+            }
+        }
+        return null;
+    }
+
+    function attachModel() {
+        if (faceLoader.item) {
+            faceLoader.item.widget = workspacesWidgetRoot;
+            let rep = findRepeater(faceLoader.item);
+            if (rep && rep.model !== workspaceListModel) {
+                rep.model = workspaceListModel;
+            }
+        }
     }
 
     function s(val) {
@@ -99,7 +156,7 @@ Rectangle {
             swayActiveIndex = index;
             Quickshell.execDetached(["swaymsg", "workspace", "number", wsId.toString()]);
         } else {
-            Hyprland.dispatch("hl.dsp.focus({ workspace = " + wsId + " })");
+            Hyprland.dispatch("workspace", wsId.toString());
         }
     }
 
@@ -114,7 +171,7 @@ Rectangle {
             if (!fw) return -1;
             idx = fw.id - 1;
         }
-        return (idx >= 0 && idx < workspaceCount) ? idx : -1;
+        return idx >= 0 ? idx : -1;
     }
 
     Component.onCompleted: {
@@ -128,6 +185,7 @@ Rectangle {
         if (workspacesWidgetRoot.isSway && workspacesWidgetRoot.moduleActive) {
             swayPoller.running = true;
         }
+        syncModel();
     }
 
     onModuleActiveChanged: {
@@ -378,7 +436,8 @@ Rectangle {
             if (item) {
                 item.width = Qt.binding(function() { return item.implicitWidth; });
                 item.height = Qt.binding(function() { return item.implicitHeight; });
-                item.widget = workspacesWidgetRoot;
+                attachModel();
+                Qt.callLater(attachModel);
             }
         }
     }
