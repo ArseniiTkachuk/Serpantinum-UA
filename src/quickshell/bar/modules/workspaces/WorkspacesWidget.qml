@@ -398,7 +398,9 @@ Rectangle {
     Loader {
         id: faceLoader
         z: 2
-        anchors.centerIn: parent
+        anchors.left: parent.left
+        anchors.leftMargin: s(isCompact ? 18 : 22) / 2
+        anchors.verticalCenter: parent.verticalCenter
         source: {
             switch (workspacesWidgetRoot.workspacesStyle) {
                 case "numbers": return Qt.resolvedUrl("faces/NumbersFace.qml");

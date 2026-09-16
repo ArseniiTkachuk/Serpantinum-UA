@@ -421,7 +421,9 @@ Rectangle {
     Loader {
         id: faceLoader
         z: 2
-        anchors.centerIn: parent
+        anchors.top: parent.top
+        anchors.topMargin: s(isCompact ? 18 : 22) / 2
+        anchors.horizontalCenter: parent.horizontalCenter
         width: item ? item.implicitWidth : 0
         height: item ? item.implicitHeight : 0
         source: {
