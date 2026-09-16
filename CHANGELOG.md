@@ -1,3 +1,31 @@
+### 2.1.7
+
+- feat: add module settings tab, introduce workspace widget styling
+- fix: don't pacman -Syyu on updates or reinstalls, only on migration or fresh installs
+- style: change the default iconbutton accentcolor
+- style: recolor the delete button for a more minimal look
+- fix: fix launcher selection computing its own position which resulted in data-desync
+- chore: update the lockfile
+- fix: force a fade animation if the transition animation is interrupted
+- fix: remove full screen expand button for all widgets except for the visualizer
+- feat: add a swipe and a diagonal swipe animation to the wallpaperengine
+- style: animation of the sidepanel to slide out from the sides
+- style: improve the search animation in the launcher after removing it
+- fix: a bug with launcher selected element being incorrectly changing the text color and improve animations for the launcher
+- style: remove opacity changes for the viniette in the wallpaper engine animations
+- style: improve the search animation in the launcher
+- feat: add a width limit for bar's focus widget to prevent overflowing
+- fix: fix the bug with the launcher items being offset wrongly during search, clipboard image attirbute fixes
+- refactor: remove logging in the widgetsync
+- fix: follow bigdatacloud's redirect when reverse-geocoding manual location (#288)
+- nix: update flake.lock
+- fix: improve scrolling animation for the launcher and the clipboard and make them smooth without wrong y-animation
+- style: move the dock applications list to the top
+- feat: add 4 more wallpaper changing animations
+- animations: improve the entrance animation for the networkpopup
+- animations: add tab entrance animation for the guidepopup
+- fix: fix an offset bug for widget presets and fix the media widget preset
+
 ### 2.1.6
 
 - fix: make sure the bar doesn't stay moved to the side on-logout
