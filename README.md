@@ -20,7 +20,7 @@
 Для дистрибутивів на основі Arch (включно з systemd, OpenRC та іншими init-системами) виконай автоматичний скрипт встановлення:
 
 ```
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/ilyamiro/serpantinum/master/install/install.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/ArseniiTkachuk/Serpantinum-UA/master/install/install.sh)"
 ```
 
 > [!NOTE]
@@ -40,7 +40,7 @@ Serpantinum надає flake-виводи, модуль NixOS для систе�
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    serpantinum.url = "github:ilyamiro/serpantinum";
+    serpantinum.url = "github:ArseniiTkachuk/Serpantinum-UA";
   };
 
   outputs = { self, nixpkgs, serpantinum, ... }: {
