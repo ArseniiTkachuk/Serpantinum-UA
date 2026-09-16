@@ -142,7 +142,7 @@ Rectangle {
             swayActiveIndex = index;
             Quickshell.execDetached(["swaymsg", "workspace", "number", wsId.toString()]);
         } else {
-            Hyprland.dispatch("workspace", wsId.toString());
+            Hyprland.dispatch("hl.dsp.focus({ workspace = " + wsId + " })");
         }
     }
 
@@ -249,7 +249,7 @@ Rectangle {
         command: [
             "bash",
             "-c",
-            "workspaces=$(niri msg -j workspaces 2>/dev/null || echo '[]'); windows=$(niri msg -j windows 2>/dev/null || echo '[]'); echo \"{\\\"workspaces\\\": $workspaces, \\\"windows\\\": $windows}\""
+            "workspaces=$(niri msg -j workspaces 2>/dev/null \vert{}\vert{} echo '[]'); windows=$(niri msg -j windows 2>/dev/null || echo '[]'); echo \"{\\\"workspaces\\\": $workspaces, \\\"windows\\\": $windows}\""
         ]
         stdout: StdioCollector {
             onStreamFinished: {

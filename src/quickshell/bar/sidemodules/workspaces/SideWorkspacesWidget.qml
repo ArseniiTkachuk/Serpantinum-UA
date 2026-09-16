@@ -156,7 +156,7 @@ Rectangle {
             swayActiveIndex = index;
             Quickshell.execDetached(["swaymsg", "workspace", "number", wsId.toString()]);
         } else {
-            Hyprland.dispatch("workspace", wsId.toString());
+            Hyprland.dispatch("hl.dsp.focus({ workspace = " + wsId + " })");
         }
     }
 
