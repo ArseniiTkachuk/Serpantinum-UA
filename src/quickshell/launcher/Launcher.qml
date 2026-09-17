@@ -1056,7 +1056,7 @@ PanelWindow {
             anchors.fill: parent
             radius: container.dynamicCornerRadius
             color: ThemeBackend.base
-            border.width: launcherWindow.isCentered ? 1 : 0
+            border.width: 0
             border.color: launcherWindow.isCentered ? Qt.alpha(ThemeBackend.surface2, 0.6) : "transparent"
             clip: true
 
