@@ -617,6 +617,10 @@
       "on_top": {
         "title": "Place dock on top of windows",
         "desc": "Keep the dock visible above application windows"
+      },
+      "smart_autohide": {
+        "title": "Smart auto-hide",
+        "desc": "Auto-hide dock only when windows are open, keep visible on desktop"
       }
     }
   },

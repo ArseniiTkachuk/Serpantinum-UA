@@ -661,6 +661,10 @@
       "on_top": {
         "title": "Colocar dock sobre las ventanas",
         "desc": "Mantener el dock visible encima de las ventanas de aplicaciones"
+      },
+      "smart_autohide": {
+        "title": "Ocultación automática inteligente",
+        "desc": "Ocultar el dock solo cuando haya ventanas abiertas, mantener visible en el escritorio"
       }
     }
   },

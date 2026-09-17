@@ -617,6 +617,10 @@
       "on_top": {
         "title": "Colocar a dock sobre as janelas",
         "desc": "Manter a dock visível sobre as janelas de aplicativos"
+      },
+      "smart_autohide": {
+        "title": "Ocultação automática inteligente",
+        "desc": "Ocultar a dock apenas quando houver janelas abertas, mantendo-a visível na área de trabalho"
       }
     }
   },

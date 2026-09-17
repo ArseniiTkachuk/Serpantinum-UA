@@ -28,6 +28,7 @@ Item {
         "opacity": 100,
         "exclusive": false,
         "autohide": false,
+        "smartAutohide": true,
         "autohideTimeout": 1000,
         "editing": false,
         "apps": [],
@@ -63,6 +64,7 @@ Item {
     property bool currentCascadeScale: dockSettings && dockSettings.cascadeScale !== undefined ? Boolean(dockSettings.cascadeScale) : false
     property bool currentEnableScrolling: dockSettings && dockSettings.enableScrolling !== undefined ? dockSettings.enableScrolling : false
     property int currentVisibleElements: (dockSettings && dockSettings.visibleElements !== undefined && !isNaN(parseInt(dockSettings.visibleElements)) && parseInt(dockSettings.visibleElements) > 0) ? parseInt(dockSettings.visibleElements) : 7
+    property bool currentSmartAutohide: dockSettings && dockSettings.smartAutohide !== undefined ? dockSettings.smartAutohide : true
     property bool currentAutohide: dockSettings && dockSettings.autohide !== undefined ? dockSettings.autohide : false
     property int currentAutohideTimeout: (dockSettings && dockSettings.autohideTimeout !== undefined && !isNaN(parseInt(dockSettings.autohideTimeout))) ? parseInt(dockSettings.autohideTimeout) : 1000
     property bool currentEditing: dockSettings && dockSettings.editing !== undefined ? dockSettings.editing : false
@@ -85,6 +87,7 @@ Item {
         dockTabRoot.currentCascadeScale = s.cascadeScale !== undefined ? Boolean(s.cascadeScale) : false;
         dockTabRoot.currentEnableScrolling = s.enableScrolling !== undefined ? s.enableScrolling : false;
         dockTabRoot.currentVisibleElements = (s.visibleElements !== undefined && !isNaN(parseInt(s.visibleElements)) && parseInt(s.visibleElements) > 0) ? parseInt(s.visibleElements) : 7;
+        dockTabRoot.currentSmartAutohide = s.smartAutohide !== undefined ? s.smartAutohide : true;
         dockTabRoot.currentAutohide = s.autohide !== undefined ? s.autohide : false;
         dockTabRoot.currentAutohideTimeout = (s.autohideTimeout !== undefined && !isNaN(parseInt(s.autohideTimeout))) ? parseInt(s.autohideTimeout) : 1000;
         dockTabRoot.currentEditing = s.editing !== undefined ? s.editing : false;
@@ -1298,6 +1301,67 @@ Item {
                     spacing: rootObj.s(12)
 
                     RowLayout {
+                        id: rowSmartAutohideLayout
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: autohideCol.width
+                        spacing: rootObj.s(12)
+
+                        IconButton {
+                            enabled: false
+                            size: rootObj.s(32)
+                            Layout.preferredWidth: rootObj.s(32)
+                            Layout.preferredHeight: rootObj.s(32)
+                            Layout.alignment: Qt.AlignVCenter
+                            cornerRadius: ThemeBackend.borderRadius
+                            buttonIcon: "󱂬"
+                            iconFontSize: rootObj.s(16)
+                            accentColor: ThemeBackend.surface0
+                            textColor: "#ffffff"
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
+                            spacing: rootObj.s(2)
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: I18n.t("guide.dock.smart_autohide.title", "Smart auto-hide")
+                                font.family: ThemeBackend.fontFamily
+                                font.pixelSize: rootObj.s(13)
+                                color: ThemeBackend.text
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: I18n.t("guide.dock.smart_autohide.desc", "Auto-hide dock only when windows are open, keep visible on desktop")
+                                font.family: ThemeBackend.fontFamily
+                                font.pixelSize: rootObj.s(11)
+                                color: ThemeBackend.subtext0
+                            }
+                        }
+
+                        Toggle {
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            checked: dockTabRoot.currentSmartAutohide
+                            accentColor: ThemeBackend.mauve
+                            baseColor: ThemeBackend.surface1
+                            handleColor: ThemeBackend.crust
+                            handleOffColor: ThemeBackend.text
+                            onToggled: function(val) {
+                                dockTabRoot.currentSmartAutohide = val;
+                                dockTabRoot.updateDockSetting("smartAutohide", val);
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: autohideCol.width
+                        height: 1
+                        color: Qt.alpha(ThemeBackend.surface1, 0.3)
+                    }
+
+                    RowLayout {
                         id: rowAutohideLayout
                         Layout.fillWidth: true
                         Layout.preferredWidth: autohideCol.width
@@ -1357,8 +1421,8 @@ Item {
                         Layout.preferredWidth: autohideCol.width
                         clip: true
                         visible: implicitHeight > 0
-                        opacity: dockTabRoot.currentAutohide ? 1.0 : 0.0
-                        implicitHeight: dockTabRoot.currentAutohide ? (timeoutInnerCol.implicitHeight + rootObj.s(4)) : 0
+                        opacity: (dockTabRoot.currentAutohide || dockTabRoot.currentSmartAutohide) ? 1.0 : 0.0
+                        implicitHeight: (dockTabRoot.currentAutohide || dockTabRoot.currentSmartAutohide) ? (timeoutInnerCol.implicitHeight + rootObj.s(4)) : 0
 
                         Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                         Behavior on implicitHeight { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }

@@ -661,6 +661,10 @@
       "on_top": {
         "title": "Dock über Fenstern platzieren",
         "desc": "Das Dock über Anwendungsfenstern sichtbar halten"
+      },
+      "smart_autohide": {
+        "title": "Intelligentes automatisches Ausblenden",
+        "desc": "Dock nur bei geöffneten Fenstern ausblenden, auf dem Desktop sichtbar lassen"
       }
     }
   },

@@ -617,6 +617,10 @@
       "on_top": {
         "title": "Đặt dock lên trên các cửa sổ",
         "desc": "Giữ dock hiển thị phía trên các cửa sổ ứng dụng"
+      },
+      "smart_autohide": {
+        "title": "Tự động ẩn thông minh",
+        "desc": "Chỉ ẩn dock khi có cửa sổ mở, giữ hiển thị trên màn hình chính"
       }
     }
   },
