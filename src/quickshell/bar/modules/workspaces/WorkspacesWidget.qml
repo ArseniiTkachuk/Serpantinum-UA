@@ -60,13 +60,14 @@ Rectangle {
         return 8;
     }
 
+    property int workspaceCount: Math.max(2, (activeIndex >= baseWorkspaceCount) ? (activeIndex + 1) : baseWorkspaceCount)
+
     ListModel {
         id: workspaceListModel
     }
 
     function syncModel() {
-        let target = (activeIndex >= baseWorkspaceCount) ? (activeIndex + 1) : baseWorkspaceCount;
-        target = Math.max(2, target);
+        let target = workspaceCount;
 
         while (workspaceListModel.count < target) {
             workspaceListModel.append({ "modelData": workspaceListModel.count });
@@ -76,10 +77,7 @@ Rectangle {
         }
     }
 
-    onActiveIndexChanged: syncModel()
-    onBaseWorkspaceCountChanged: syncModel()
-
-    property int workspaceCount: workspaceListModel.count > 0 ? workspaceListModel.count : baseWorkspaceCount
+    onWorkspaceCountChanged: syncModel()
 
     function findRepeater(obj) {
         if (!obj) return null;
