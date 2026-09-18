@@ -1033,7 +1033,9 @@
       "rounded": "Rounded",
       "bars": "Bars",
       "continuous": "Continuous",
-      "default": "Default"
+      "default": "Default",
+      "material": "Material",
+      "materialAnalog": "Material Analog"
     },
     "presets": {
       "minimal": {

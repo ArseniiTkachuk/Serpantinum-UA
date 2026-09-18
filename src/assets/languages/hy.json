@@ -1033,7 +1033,9 @@
       "rounded": "Կլորացված",
       "bars": "Սյունակներ",
       "continuous": "Անընդհատ",
-      "default": "Լռելյայն"
+      "default": "Լռելյայն",
+      "material": "Մատերիալ",
+      "materialAnalog": "Մատերիալ անալոգային"
     },
     "presets": {
       "minimal": {

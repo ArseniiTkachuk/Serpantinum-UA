@@ -1077,7 +1077,9 @@
       "rounded": "Abgerundet",
       "bars": "Balken",
       "continuous": "Kontinuierlich",
-      "default": "Standard"
+      "default": "Standard",
+      "material": "Material",
+      "materialAnalog": "Material analog"
     },
     "presets": {
       "minimal": {
