@@ -5,7 +5,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     serpantinum-wallpapers = {
-      url = "github:ilyamiro/shell-wallpapers";
+      url = "github:ArseniiTkachuk/shell-wallpapers";
       flake = false;
     };
   };
