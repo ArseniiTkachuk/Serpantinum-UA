@@ -297,7 +297,16 @@
         "battery": "배터리",
         "focus": "포커스",
         "sysmon": "시스템 모니터",
-        "timedate": "시간/날짜",
+        "timedate": {
+          "name": "시간 및 날짜",
+          "style": {
+            "name": {
+              "classic": "클래식",
+              "material": "머티리얼",
+              "badge": "도트 매트릭스"
+            }
+          }
+        },
         "info": "녹화/타이머",
         "weather": "날씨"
       },
@@ -357,6 +366,12 @@
       "distinct_pills": {
         "title": "위젯에 모듈식의 컴팩트한 스타일 사용",
         "desc": "바 모듈에 테두리를 추가하고 크기를 줄여 모듈식 디자인에 맞는 간결한 모양을 제공합니다"
+      },
+      "timedate": {
+        "show_date": {
+          "title": "날짜 표시",
+          "desc": "시계 옆에 날짜 텍스트를 표시합니다"
+        }
       }
     },
     "theme": {

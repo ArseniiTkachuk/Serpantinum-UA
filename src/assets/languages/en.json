@@ -297,7 +297,16 @@
         "battery": "Battery",
         "focus": "Focus",
         "sysmon": "System monitor",
-        "timedate": "Time/date",
+        "timedate": {
+          "name": "Time & Date",
+          "style": {
+            "name": {
+              "classic": "Classic",
+              "material": "Material",
+              "badge": "Dot Matrix"
+            }
+          }
+        },
         "info": "Recording/timer",
         "weather": "Weather"
       },
@@ -357,6 +366,12 @@
       "distinct_pills": {
         "title": "Enable a modular and compact style for widgets",
         "desc": "Makes bar's modules have an outlining rectangle and shrink their size to fit the modular look"
+      },
+      "timedate": {
+        "show_date": {
+          "title": "Show Date",
+          "desc": "Display the date text alongside the clock"
+        }
       }
     },
     "theme": {

@@ -61,7 +61,6 @@ Item {
         return "modular";
     }
     property bool distinctPills: barSettings.distinctPills !== undefined ? barSettings.distinctPills : false
-    property string timeFormat: barSettings.time && barSettings.time.format !== undefined ? barSettings.time.format : "HH:mm:ss"
     property bool autohide: barSettings.autohide !== undefined ? barSettings.autohide : false
     property int autohideTimeout: barSettings.autohideTimeout !== undefined ? barSettings.autohideTimeout : 1000
 
@@ -199,7 +198,7 @@ Item {
             "left": I18n.t("guide.bar.modules.actions"),
             "workspaces": I18n.t("guide.bar.modules.workspaces.name"),
             "focus": I18n.t("guide.bar.modules.focus"),
-            "timedate": I18n.t("guide.bar.modules.timedate"),
+            "timedate": I18n.t("guide.bar.modules.timedate.name"),
             "info": I18n.t("guide.bar.modules.info"),
             "weather": I18n.t("guide.bar.modules.weather"),
             "media": I18n.t("guide.bar.modules.media"),
@@ -717,7 +716,6 @@ Item {
             barTabRoot.barStyle = "modular";
         }
         barTabRoot.distinctPills = ts.distinctPills !== undefined ? ts.distinctPills : false;
-        barTabRoot.timeFormat = ts.time && ts.time.format !== undefined ? ts.time.format : "HH:mm:ss";
         barTabRoot.autohide = ts.autohide !== undefined ? ts.autohide : false;
         barTabRoot.autohideTimeout = ts.autohideTimeout !== undefined ? ts.autohideTimeout : 1000;
         if (ts.groupColors) {
@@ -753,8 +751,6 @@ Item {
         current.opacity = barTabRoot.currentBarOpacity;
         current.style = barTabRoot.barStyle;
         current.distinctPills = barTabRoot.distinctPills;
-        if (!current.time) current.time = {};
-        current.time.format = barTabRoot.timeFormat;
         current.autohide = barTabRoot.autohide;
         current.autohideTimeout = barTabRoot.autohideTimeout;
         if (!current.modules) current.modules = barTabRoot.defaultBarSettings.modules;
@@ -853,7 +849,7 @@ Item {
                             if (moduleId === "left") return I18n.t("guide.bar.modules.actions");
                             if (moduleId === "workspaces") return I18n.t("guide.bar.modules.workspaces.name");
                             if (moduleId === "focus") return I18n.t("guide.bar.modules.focus");
-                            if (moduleId === "timedate") return I18n.t("guide.bar.modules.timedate");
+                            if (moduleId === "timedate") return I18n.t("guide.bar.modules.timedate.name");
                             if (moduleId === "info") return I18n.t("guide.bar.modules.info");
                             if (moduleId === "weather") return I18n.t("guide.bar.modules.weather");
                             if (moduleId === "media") return I18n.t("guide.bar.modules.media");
@@ -1468,70 +1464,6 @@ Item {
                                 barWidthDebounceTimer.stop();
                                 barTabRoot.updateBarSettings();
                             }
-                        }
-                    }
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: rowTimeLayout.implicitHeight + rootObj.s(24)
-                radius: ThemeBackend.borderRadius
-                color: Qt.alpha(ThemeBackend.surface0, 0.4)
-                border.width: 0
-
-                RowLayout {
-                    id: rowTimeLayout
-                    anchors.left: parent.left
-                    anchors.leftMargin: rootObj.s(14)
-                    anchors.right: parent.right
-                    anchors.rightMargin: rootObj.s(14)
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: rootObj.s(12)
-
-                    IconButton {
-                        enabled: false
-                        size: rootObj.s(32)
-                        Layout.preferredWidth: rootObj.s(32)
-                        Layout.preferredHeight: rootObj.s(32)
-                        Layout.alignment: Qt.AlignVCenter
-                        cornerRadius: ThemeBackend.borderRadius
-                        buttonIcon: "󰅐"
-                        iconFontSize: rootObj.s(16)
-                        accentColor: ThemeBackend.surface0
-                        textColor: "#ffffff"
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: rootObj.s(2)
-                        Text { Layout.fillWidth: true; text: I18n.t("guide.bar.time.title"); font.family: ThemeBackend.fontFamily; font.pixelSize: rootObj.s(13); color: ThemeBackend.text }
-                        Text { Layout.fillWidth: true; text: I18n.t("guide.bar.time.desc"); font.family: ThemeBackend.fontFamily; font.pixelSize: rootObj.s(11); color: ThemeBackend.subtext0 }
-                    }
-
-                    Input {
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        implicitWidth: rootObj.s(140)
-                        implicitHeight: rootObj.s(32)
-                        text: barTabRoot.timeFormat
-                        placeholderText: "HH:mm:ss"
-                        baseColor: ThemeBackend.surface0
-                        accentColor: ThemeBackend.mauve
-                        textColor: ThemeBackend.text
-                        subTextColor: ThemeBackend.subtext0
-                        borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
-                        cornerRadius: ThemeBackend.borderRadius
-                        fontPixelSize: rootObj.s(11)
-                        onTextEdited: function(newText) {
-                            barTabRoot.clearPendingGroup();
-                            barTabRoot.timeFormat = newText;
-                            barTabRoot.updateBarSettings();
-                        }
-                        onAccepted: function(finalText) {
-                            barTabRoot.clearPendingGroup();
-                            barTabRoot.timeFormat = finalText;
-                            barTabRoot.updateBarSettings();
                         }
                     }
                 }

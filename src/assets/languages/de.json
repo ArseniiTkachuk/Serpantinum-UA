@@ -298,7 +298,16 @@
         "battery": "Akku",
         "focus": "Fokus",
         "sysmon": "Systemmonitor",
-        "timedate": "Uhrzeit/datum",
+        "timedate": {
+          "name": "Zeit & Datum",
+          "style": {
+            "name": {
+              "classic": "Klassisch",
+              "material": "Material",
+              "badge": "Punktmatrix"
+            }
+          }
+        },
         "info": "Aufnahme/timer",
         "weather": "Wetter"
       },
@@ -358,6 +367,12 @@
       "distinct_pills": {
         "title": "Aktiviere einen modularen und kompakten Stil für Widgets",
         "desc": "Verleiht den Modulen der Leiste einen umrandeten Rahmen und verkleinert sie für ein kompakteres, modulares Erscheinungsbild"
+      },
+      "timedate": {
+        "show_date": {
+          "title": "Datum anzeigen",
+          "desc": "Datumstext neben der Uhr anzeigen"
+        }
       }
     },
     "theme": {

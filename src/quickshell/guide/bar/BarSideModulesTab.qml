@@ -40,6 +40,35 @@ Item {
         return 8;
     }
 
+    property string timeStyle: {
+        let ss = Config.getSetting("sideBar", {});
+        if (ss && ss.timeStyle) return ss.timeStyle;
+        let bs = Config.getSetting("bar", {});
+        if (bs && bs.sideTimeStyle) return bs.sideTimeStyle;
+        if (bs && bs.timeStyle) return bs.timeStyle;
+        return "classic";
+    }
+
+    property bool timeShowDate: {
+        let ss = Config.getSetting("sideBar", {});
+        if (ss && ss.timeShowDate !== undefined) return ss.timeShowDate;
+        if (ss && ss.showDate !== undefined) return ss.showDate;
+        let bs = Config.getSetting("bar", {});
+        if (bs && bs.sideTimeShowDate !== undefined) return bs.sideTimeShowDate;
+        if (bs && bs.timeShowDate !== undefined) return bs.timeShowDate;
+        if (bs && bs.showDate !== undefined) return bs.showDate;
+        return true;
+    }
+
+    property string timeFormat: {
+        let ss = Config.getSetting("sideBar", {});
+        if (ss && ss.time && ss.time.format !== undefined) return ss.time.format;
+        let bs = Config.getSetting("bar", {});
+        if (bs && bs.sideTime && bs.sideTime.format !== undefined) return bs.sideTime.format;
+        if (bs && bs.time && bs.time.format !== undefined) return bs.time.format;
+        return "HH:mm:ss";
+    }
+
     readonly property var workspaceStyles: [
         {
             "id": "pills",
@@ -64,6 +93,30 @@ Item {
         }
     ]
 
+    readonly property var timeStyles: [
+        {
+            "id": "classic",
+            "name": I18n.t("guide.bar.modules.timedate.style.name.classic", "Classic"),
+            "desc": I18n.t("guide.bar.modules.timedate.style.classic", "Clean stacked time and date"),
+            "icon": "󰥔",
+            "faceFile": "timedate/faces/SideClassicFace.qml"
+        },
+        {
+            "id": "material",
+            "name": I18n.t("guide.bar.modules.timedate.style.name.material", "Material"),
+            "desc": I18n.t("guide.bar.modules.timedate.style.material", "Diagonal bold accent numbers"),
+            "icon": "󰸗",
+            "faceFile": "timedate/faces/SideMaterialFace.qml"
+        },
+        {
+            "id": "badge",
+            "name": I18n.t("guide.bar.modules.timedate.style.name.badge", "Badge"),
+            "desc": I18n.t("guide.bar.modules.timedate.style.badge", "Pill-capsule segmented cards"),
+            "icon": "󰃰",
+            "faceFile": "timedate/faces/SideBadgeFace.qml"
+        }
+    ]
+
     readonly property var previewWidget: ({
         "s": function(v) { return rootObj ? rootObj.s(v) : v; },
         "workspaceCount": 5,
@@ -74,6 +127,23 @@ Item {
         "barWindow": { "startupCascadeFinished": true },
         "moduleActive": true
     })
+
+    QtObject {
+        id: previewTimeWidgetObj
+        function s(v) { return rootObj ? rootObj.s(v) : v; }
+        property bool isCompact: false
+        property bool showDate: barSideModulesRoot.timeShowDate
+        property string timeStr: (typeof DateTime !== "undefined" && DateTime.time) ? DateTime.time : "14:28"
+        property string hourStr: (typeof DateTime !== "undefined" && DateTime.hour) ? DateTime.hour : "14"
+        property string minuteStr: (typeof DateTime !== "undefined" && DateTime.minute) ? DateTime.minute : "28"
+        property string secondStr: (typeof DateTime !== "undefined" && DateTime.second) ? DateTime.second : "00"
+        property string dayStr: (typeof DateTime !== "undefined" && DateTime.day) ? DateTime.day : "18"
+        property string monthStr: (typeof DateTime !== "undefined" && DateTime.monthShort) ? DateTime.monthShort : "Sep"
+        property string fullDateStr: (typeof DateTime !== "undefined" && DateTime.fullDate) ? DateTime.fullDate : "Fri, Sep 18"
+        property string dateStr: (typeof DateTime !== "undefined" && DateTime.fullDate) ? DateTime.fullDate : "Fri, Sep 18"
+        property var barWindow: ({ "startupCascadeFinished": true, "s": function(v) { return rootObj ? rootObj.s(v) : v; } })
+        property bool moduleActive: true
+    }
 
     function getFaceUrl(file) {
         if (!file) return "";
@@ -103,6 +173,40 @@ Item {
         } else {
             barSideModulesRoot.workspaceCount = 8;
         }
+
+        if (ss && ss.timeStyle) {
+            barSideModulesRoot.timeStyle = ss.timeStyle;
+        } else if (bs && bs.sideTimeStyle) {
+            barSideModulesRoot.timeStyle = bs.sideTimeStyle;
+        } else if (bs && bs.timeStyle) {
+            barSideModulesRoot.timeStyle = bs.timeStyle;
+        } else {
+            barSideModulesRoot.timeStyle = "classic";
+        }
+
+        if (ss && ss.timeShowDate !== undefined) {
+            barSideModulesRoot.timeShowDate = ss.timeShowDate;
+        } else if (ss && ss.showDate !== undefined) {
+            barSideModulesRoot.timeShowDate = ss.showDate;
+        } else if (bs && bs.sideTimeShowDate !== undefined) {
+            barSideModulesRoot.timeShowDate = bs.sideTimeShowDate;
+        } else if (bs && bs.timeShowDate !== undefined) {
+            barSideModulesRoot.timeShowDate = bs.timeShowDate;
+        } else if (bs && bs.showDate !== undefined) {
+            barSideModulesRoot.timeShowDate = bs.showDate;
+        } else {
+            barSideModulesRoot.timeShowDate = true;
+        }
+
+        if (ss && ss.time && ss.time.format !== undefined) {
+            barSideModulesRoot.timeFormat = ss.time.format;
+        } else if (bs && bs.sideTime && bs.sideTime.format !== undefined) {
+            barSideModulesRoot.timeFormat = bs.sideTime.format;
+        } else if (bs && bs.time && bs.time.format !== undefined) {
+            barSideModulesRoot.timeFormat = bs.time.format;
+        } else {
+            barSideModulesRoot.timeFormat = "HH:mm:ss";
+        }
     }
 
     function setWorkspacesStyle(styleName) {
@@ -122,6 +226,40 @@ Item {
         Config.setSetting("sideBar", currentSide);
         let currentBar = Config.getSetting("bar", {});
         currentBar.sideWorkspaceCount = count;
+        Config.setSetting("bar", currentBar);
+    }
+
+    function setTimeStyle(styleName) {
+        barSideModulesRoot.timeStyle = styleName;
+        let currentSide = Config.getSetting("sideBar", {});
+        currentSide.timeStyle = styleName;
+        Config.setSetting("sideBar", currentSide);
+        let currentBar = Config.getSetting("bar", {});
+        currentBar.sideTimeStyle = styleName;
+        Config.setSetting("bar", currentBar);
+    }
+
+    function setTimeShowDate(show) {
+        barSideModulesRoot.timeShowDate = show;
+        let currentSide = Config.getSetting("sideBar", {});
+        currentSide.timeShowDate = show;
+        currentSide.showDate = show;
+        Config.setSetting("sideBar", currentSide);
+        let currentBar = Config.getSetting("bar", {});
+        currentBar.sideTimeShowDate = show;
+        currentBar.showDate = show;
+        Config.setSetting("bar", currentBar);
+    }
+
+    function setTimeFormat(fmt) {
+        barSideModulesRoot.timeFormat = fmt;
+        let currentSide = Config.getSetting("sideBar", {});
+        if (!currentSide.time) currentSide.time = {};
+        currentSide.time.format = fmt;
+        Config.setSetting("sideBar", currentSide);
+        let currentBar = Config.getSetting("bar", {});
+        if (!currentBar.sideTime) currentBar.sideTime = {};
+        currentBar.sideTime.format = fmt;
         Config.setSetting("bar", currentBar);
     }
 
@@ -423,6 +561,367 @@ Item {
                                                             color: isActive ? ThemeBackend.yellow : ThemeBackend.subtext0
                                                         }
                                                     }
+                                                }
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            radius: parent.radius
+                                            color: "transparent"
+                                            border.width: 1
+                                            border.color: Qt.alpha(ThemeBackend.surface2, 0.25)
+                                        }
+                                    }
+
+                                    Text {
+                                        Layout.fillWidth: true
+                                        Layout.leftMargin: rootObj.s(2)
+                                        Layout.rightMargin: rootObj.s(2)
+                                        Layout.bottomMargin: rootObj.s(2)
+                                        text: modelData.name
+                                        font.family: ThemeBackend.fontFamily
+                                        font.pixelSize: rootObj.s(13)
+                                        font.weight: Font.Bold
+                                        color: ThemeBackend.text
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                id: timeDateModuleBox
+                Layout.fillWidth: true
+                implicitHeight: timeDateCardLayout.implicitHeight + rootObj.s(24)
+                radius: ThemeBackend.borderRadius
+                color: Qt.alpha(ThemeBackend.surface0, 0.4)
+                border.color: Qt.alpha(ThemeBackend.surface1, 0.4)
+                border.width: 1
+                clip: true
+
+                ColumnLayout {
+                    id: timeDateCardLayout
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: rootObj.s(12)
+                    spacing: rootObj.s(6)
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: rootObj.s(6)
+                        Layout.leftMargin: rootObj.s(4)
+                        Layout.rightMargin: rootObj.s(4)
+                        spacing: rootObj.s(8)
+
+                        Text {
+                            text: I18n.t("guide.bar.modules.timedate.name", "Time & Date")
+                            font.family: ThemeBackend.fontFamily
+                            font.pixelSize: rootObj.s(16)
+                            font.bold: true
+                            color: ThemeBackend.text
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: rowDateLayout.implicitHeight + rootObj.s(24)
+                        radius: ThemeBackend.borderRadius
+                        color: Qt.alpha(ThemeBackend.surface1, 0.35)
+                        border.width: 0
+
+                        RowLayout {
+                            id: rowDateLayout
+                            anchors.left: parent.left
+                            anchors.leftMargin: rootObj.s(14)
+                            anchors.right: parent.right
+                            anchors.rightMargin: rootObj.s(14)
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: rootObj.s(12)
+
+                            IconButton {
+                                enabled: false
+                                size: rootObj.s(32)
+                                Layout.preferredWidth: rootObj.s(32)
+                                Layout.preferredHeight: rootObj.s(32)
+                                Layout.alignment: Qt.AlignVCenter
+                                cornerRadius: ThemeBackend.borderRadius
+                                buttonIcon: "󰃭"
+                                iconFontSize: rootObj.s(16)
+                                accentColor: ThemeBackend.surface0
+                                textColor: "#ffffff"
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignVCenter
+                                spacing: rootObj.s(2)
+                                Text { Layout.fillWidth: true; text: I18n.t("guide.bar.timedate.show_date.title", "Show Date"); font.family: ThemeBackend.fontFamily; font.pixelSize: rootObj.s(13); color: ThemeBackend.text }
+                                Text { Layout.fillWidth: true; text: I18n.t("guide.bar.timedate.show_date.desc", "Display the date text alongside the clock"); font.family: ThemeBackend.fontFamily; font.pixelSize: rootObj.s(11); color: ThemeBackend.subtext0 }
+                            }
+
+                            Rectangle {
+                                id: dateToggleSwitch
+                                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                                implicitWidth: rootObj.s(46)
+                                implicitHeight: rootObj.s(26)
+                                radius: height / 2
+                                color: barSideModulesRoot.timeShowDate ? ThemeBackend.blue : ThemeBackend.surface0
+                                border.color: barSideModulesRoot.timeShowDate ? ThemeBackend.blue : Qt.alpha(ThemeBackend.surface2, 0.6)
+                                border.width: 1
+
+                                Behavior on color { ColorAnimation { duration: 200 } }
+                                Behavior on border.color { ColorAnimation { duration: 200 } }
+
+                                Rectangle {
+                                    width: parent.height - rootObj.s(6)
+                                    height: width
+                                    radius: width / 2
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    x: barSideModulesRoot.timeShowDate ? (parent.width - width - rootObj.s(3)) : rootObj.s(3)
+                                    color: barSideModulesRoot.timeShowDate ? ThemeBackend.crust : ThemeBackend.text
+
+                                    Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.OutQuint } }
+                                    Behavior on color { ColorAnimation { duration: 200 } }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (typeof Sounds !== "undefined") {
+                                            Sounds.playSfx("reusables/clickbutton/click.wav");
+                                        }
+                                        barSideModulesRoot.setTimeShowDate(!barSideModulesRoot.timeShowDate);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: rowTimeFormatLayout.implicitHeight + rootObj.s(24)
+                        radius: ThemeBackend.borderRadius
+                        color: Qt.alpha(ThemeBackend.surface1, 0.35)
+                        border.width: 0
+
+                        RowLayout {
+                            id: rowTimeFormatLayout
+                            anchors.left: parent.left
+                            anchors.leftMargin: rootObj.s(14)
+                            anchors.right: parent.right
+                            anchors.rightMargin: rootObj.s(14)
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: rootObj.s(12)
+
+                            IconButton {
+                                enabled: false
+                                size: rootObj.s(32)
+                                Layout.preferredWidth: rootObj.s(32)
+                                Layout.preferredHeight: rootObj.s(32)
+                                Layout.alignment: Qt.AlignVCenter
+                                cornerRadius: ThemeBackend.borderRadius
+                                buttonIcon: "󰅐"
+                                iconFontSize: rootObj.s(16)
+                                accentColor: ThemeBackend.surface0
+                                textColor: "#ffffff"
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignVCenter
+                                spacing: rootObj.s(2)
+                                Text { Layout.fillWidth: true; text: I18n.t("guide.bar.time.title", "Time Format"); font.family: ThemeBackend.fontFamily; font.pixelSize: rootObj.s(13); color: ThemeBackend.text }
+                                Text { Layout.fillWidth: true; text: I18n.t("guide.bar.time.desc", "Format pattern (e.g. HH:mm:ss)"); font.family: ThemeBackend.fontFamily; font.pixelSize: rootObj.s(11); color: ThemeBackend.subtext0 }
+                            }
+
+                            Input {
+                                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                                implicitWidth: rootObj.s(140)
+                                implicitHeight: rootObj.s(32)
+                                text: barSideModulesRoot.timeFormat
+                                placeholderText: "HH:mm:ss"
+                                baseColor: ThemeBackend.surface0
+                                accentColor: ThemeBackend.mauve
+                                textColor: ThemeBackend.text
+                                subTextColor: ThemeBackend.subtext0
+                                borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
+                                cornerRadius: ThemeBackend.borderRadius
+                                fontPixelSize: rootObj.s(11)
+                                onTextEdited: function(newText) {
+                                    barSideModulesRoot.setTimeFormat(newText);
+                                }
+                                onAccepted: function(finalText) {
+                                    barSideModulesRoot.setTimeFormat(finalText);
+                                }
+                            }
+                        }
+                    }
+
+                    GridLayout {
+                        id: timeStylesGrid
+                        Layout.fillWidth: true
+                        columns: Math.max(1, Math.min(3, Math.floor(timeDateCardLayout.width / rootObj.s(160))))
+                        rowSpacing: rootObj.s(10)
+                        columnSpacing: rootObj.s(10)
+
+                        Repeater {
+                            model: barSideModulesRoot.timeStyles
+                            delegate: Rectangle {
+                                id: timeStyleCard
+                                required property var modelData
+                                required property int index
+
+                                readonly property bool isSelected: barSideModulesRoot.timeStyle === modelData.id
+                                property real popScale: 1.0
+                                property real flashOpacity: 0.0
+
+                                Layout.fillWidth: true
+                                Layout.preferredWidth: 1
+                                implicitHeight: timeStyleInnerCol.implicitHeight + rootObj.s(16)
+                                radius: ThemeBackend.borderRadius
+                                clip: true
+
+                                color: timeCardMouse.pressed
+                                    ? Qt.darker(ThemeBackend.surface0, 1.15)
+                                    : (isSelected
+                                        ? (timeCardHover.hovered ? Qt.lighter(ThemeBackend.surface0, 1.30) : Qt.lighter(ThemeBackend.surface0, 1.24))
+                                        : (timeCardHover.hovered ? Qt.lighter(ThemeBackend.surface0, 1.10) : ThemeBackend.surface0))
+
+                                border.width: 1
+                                border.color: isSelected
+                                    ? Qt.alpha(ThemeBackend.surface2, 0.75)
+                                    : (timeCardHover.hovered ? Qt.alpha(ThemeBackend.surface2, 0.5) : Qt.alpha(ThemeBackend.surface1, 0.4))
+
+                                Behavior on color { ColorAnimation { duration: 180 } }
+                                Behavior on border.color { ColorAnimation { duration: 180 } }
+
+                                scale: (timeCardMouse.pressed ? 0.985 : (timeCardHover.hovered ? 1.015 : 1.0)) * timeStyleCard.popScale
+                                Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+
+                                HoverHandler {
+                                    id: timeCardHover
+                                }
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: parent.radius
+                                    color: "#ffffff"
+                                    opacity: timeStyleCard.flashOpacity
+                                    PropertyAnimation on opacity { id: timeFlashAnim; to: 0; duration: 350; easing.type: Easing.OutExpo }
+                                }
+
+                                SequentialAnimation {
+                                    id: timePopAnim
+                                    NumberAnimation { target: timeStyleCard; property: "popScale"; to: 1.02; duration: 100; easing.type: Easing.OutQuad }
+                                    NumberAnimation { target: timeStyleCard; property: "popScale"; to: 1.0; duration: 350; easing.type: Easing.OutQuint }
+                                }
+
+                                MouseArea {
+                                    id: timeCardMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        timePopAnim.start();
+                                        timeStyleCard.flashOpacity = 0.15;
+                                        timeFlashAnim.start();
+                                        if (typeof Sounds !== "undefined") {
+                                            Sounds.playSfx("reusables/clickbutton/click.wav");
+                                        }
+                                        barSideModulesRoot.setTimeStyle(modelData.id);
+                                    }
+                                }
+
+                                ColumnLayout {
+                                    id: timeStyleInnerCol
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.top: parent.top
+                                    anchors.margins: rootObj.s(8)
+                                    spacing: rootObj.s(8)
+
+                                    Rectangle {
+                                        id: timePreviewBox
+                                        Layout.fillWidth: true
+                                        implicitHeight: rootObj.s(140)
+                                        radius: ThemeBackend.borderRadius
+                                        color: Qt.darker(ThemeBackend.mantle, 1.1)
+                                        clip: true
+
+                                        Item {
+                                            anchors.fill: parent
+                                            enabled: false
+
+                                            Loader {
+                                                id: timeFacePreviewLoader
+                                                anchors.centerIn: parent
+                                                width: item ? item.implicitWidth : 0
+                                                height: item ? item.implicitHeight : 0
+                                                scale: Math.min(1.0, Math.min((timePreviewBox.width - rootObj.s(16)) / Math.max(1, width), (timePreviewBox.height - rootObj.s(16)) / Math.max(1, height)))
+                                                asynchronous: false
+                                                source: barSideModulesRoot.getFaceUrl(modelData.faceFile)
+
+                                                onLoaded: {
+                                                    if (item) {
+                                                        item.width = Qt.binding(function() { return item.implicitWidth; });
+                                                        item.height = Qt.binding(function() { return item.implicitHeight; });
+                                                        item.widget = previewTimeWidgetObj;
+                                                    }
+                                                }
+                                            }
+
+                                            ColumnLayout {
+                                                anchors.centerIn: parent
+                                                visible: timeFacePreviewLoader.status === Loader.Error || !timeFacePreviewLoader.item
+                                                spacing: rootObj.s(3)
+
+                                                Text {
+                                                    Layout.alignment: Qt.AlignHCenter
+                                                    text: "14"
+                                                    font.family: ThemeBackend.fontFamily
+                                                    font.pixelSize: rootObj.s(13)
+                                                    font.bold: true
+                                                    color: ThemeBackend.blue
+                                                }
+
+                                                Text {
+                                                    Layout.alignment: Qt.AlignHCenter
+                                                    text: "28"
+                                                    font.family: ThemeBackend.fontFamily
+                                                    font.pixelSize: rootObj.s(13)
+                                                    font.bold: true
+                                                    color: ThemeBackend.sapphire
+                                                }
+
+                                                Rectangle {
+                                                    Layout.alignment: Qt.AlignHCenter
+                                                    width: rootObj.s(14)
+                                                    height: 2
+                                                    radius: 1
+                                                    color: ThemeBackend.surface1
+                                                }
+
+                                                Text {
+                                                    Layout.alignment: Qt.AlignHCenter
+                                                    text: "18"
+                                                    font.family: ThemeBackend.fontFamily
+                                                    font.pixelSize: rootObj.s(10)
+                                                    font.bold: true
+                                                    color: ThemeBackend.text
+                                                }
+
+                                                Text {
+                                                    Layout.alignment: Qt.AlignHCenter
+                                                    text: "Sep"
+                                                    font.family: ThemeBackend.fontFamily
+                                                    font.pixelSize: rootObj.s(8)
+                                                    font.bold: true
+                                                    color: ThemeBackend.subtext0
                                                 }
                                             }
                                         }

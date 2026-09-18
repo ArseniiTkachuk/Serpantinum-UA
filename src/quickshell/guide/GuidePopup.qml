@@ -54,8 +54,7 @@ Item {
             iconOffsetX: -2,
             subtabs: [
                 { id: "BarGeneral", key: "bar_general", name: "General", icon: "󰒓", file: "bar/BarGeneralTab.qml", iconOffsetX: -1 },
-                { id: "BarModules", key: "bar_modules", name: "Modules", icon: "󰮯", file: "bar/BarModulesTab.qml", iconOffsetX: -1 },
-                { id: "BarSideModules", key: "bar_side_modules", name: "Side modules", icon: "󱂬", file: "bar/BarSideModulesTab.qml", iconOffsetX: -1 }
+                { id: "BarModules", key: "bar_modules", name: "Modules", icon: "󰮯", file: "bar/BarModulesTab.qml", iconOffsetX: -1 }
             ]
         },
         { id: "Launcher", key: "launcher", name: "Launcher", icon: "󰵆", file: "LauncherTab.qml", iconOffsetX: 0 },
@@ -987,7 +986,7 @@ Item {
                                 transform: Translate { x: root.s(-24) * (1.0 - root.getTabProgress(4)) }
 
                                 property bool isExpanded: root.expandedTab === 4
-                                property real fullSubtabsHeight: 3 * root.s(36) + 2 * root.s(4) + root.s(8)
+                                property real fullSubtabsHeight: 2 * root.s(36) + root.s(4) + root.s(8)
                                 property real expandProgress: isExpanded ? 1.0 : 0.0
                                 Behavior on expandProgress {
                                     NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
@@ -1237,70 +1236,6 @@ Item {
                                                         root.currentTab = 4;
                                                         root.expandedTab = 4;
                                                         root.currentSubTab = 1;
-                                                    }
-                                                }
-                                            }
-
-                                            Rectangle {
-                                                id: subtabBarSideModules
-                                                Layout.fillWidth: true
-                                                Layout.preferredHeight: root.s(36)
-                                                implicitHeight: root.s(36)
-                                                radius: ThemeBackend.borderRadius
-                                                z: 1
-
-                                                property bool isSubActive: root.currentTab === 4 && tabBar.isExpanded && root.currentSubTab === 2
-
-                                                color: subtabBarSideModulesMa.containsMouse && !isSubActive ? Qt.alpha(ThemeBackend.surface1, 0.5) : "transparent"
-                                                Behavior on color { ColorAnimation { duration: 150 } }
-
-                                                scale: subtabBarSideModulesMa.pressed ? 0.98 : 1.0
-                                                Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
-
-                                                RowLayout {
-                                                    anchors.fill: parent
-                                                    anchors.leftMargin: root.s(8) + (subtabBarSideModules.isSubActive ? root.s(4) : 0)
-                                                    anchors.rightMargin: root.s(10)
-                                                    spacing: root.s(8)
-
-                                                    Behavior on anchors.leftMargin { NumberAnimation { duration: 300; easing.type: Easing.OutQuint } }
-
-                                                    IconButton {
-                                                        enabled: false
-                                                        size: root.s(26)
-                                                        Layout.preferredWidth: root.s(26)
-                                                        Layout.preferredHeight: root.s(26)
-                                                        Layout.alignment: Qt.AlignVCenter
-                                                        cornerRadius: ThemeBackend.borderRadius
-                                                        buttonIcon: "󱂬"
-                                                        iconOffsetX: root.tabsModel[4].subtabs[2].iconOffsetX ?? 0
-                                                        iconFontSize: root.s(13)
-                                                        accentColor: ThemeBackend.surface0
-                                                        textColor: "#ffffff"
-                                                    }
-
-                                                    Text {
-                                                        text: I18n.t("guide.tabs.bar_side_modules", "Side modules")
-                                                        font.family: ThemeBackend.fontFamily
-                                                        font.weight: subtabBarSideModules.isSubActive ? Font.Bold : Font.Medium
-                                                        font.pixelSize: root.s(12)
-                                                        color: subtabBarSideModules.isSubActive ? ThemeBackend.crust : ThemeBackend.subtext0
-                                                        Layout.fillWidth: true
-                                                        Layout.alignment: Qt.AlignVCenter
-                                                        elide: Text.ElideRight
-                                                        Behavior on color { ColorAnimation { duration: 150 } }
-                                                    }
-                                                }
-
-                                                MouseArea {
-                                                    id: subtabBarSideModulesMa
-                                                    anchors.fill: parent
-                                                    hoverEnabled: true
-                                                    cursorShape: Qt.PointingHandCursor
-                                                    onClicked: {
-                                                        root.currentTab = 4;
-                                                        root.expandedTab = 4;
-                                                        root.currentSubTab = 2;
                                                     }
                                                 }
                                             }
@@ -1884,9 +1819,17 @@ Item {
                                     if (status === Loader.Null && subData.file) {
                                         setSource(subData.file, {
                                             "rootObj": root,
-                                            "tabIndex": tabContentWrapper.parentTabIndex,
-                                            "subTabIndex": subIndex
+                                            "tabIndex": tabContentWrapper.parentTabIndex
                                         });
+                                        if (item && "subTabIndex" in item) {
+                                            item.subTabIndex = subIndex;
+                                        }
+                                    }
+                                }
+
+                                onLoaded: {
+                                    if (item && "subTabIndex" in item) {
+                                        item.subTabIndex = subIndex;
                                     }
                                 }
 

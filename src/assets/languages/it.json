@@ -297,7 +297,16 @@
         "battery": "Batteria",
         "focus": "Focus",
         "sysmon": "Monitor sistema",
-        "timedate": "Data/Ora",
+        "timedate": {
+          "name": "Ora e data",
+          "style": {
+            "name": {
+              "classic": "Classico",
+              "material": "Material",
+              "badge": "Matrice di punti"
+            }
+          }
+        },
         "info": "Registratore/Timer",
         "weather": "Meteo"
       },
@@ -356,6 +365,12 @@
       "distinct_pills": {
         "title": "Abilita uno stile modulare e compatto per i widget",
         "desc": "Aggiunge un bordo ai moduli della barra e ne riduce le dimensioni per adattarsi a un aspetto modulare"
+      },
+      "timedate": {
+        "show_date": {
+          "title": "Mostra data",
+          "desc": "Mostra il testo della data accanto all'orologio"
+        }
       }
     },
     "theme": {

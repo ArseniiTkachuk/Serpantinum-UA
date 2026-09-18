@@ -298,7 +298,16 @@
         "battery": "Batería",
         "focus": "Foco",
         "sysmon": "Monitor del sistema",
-        "timedate": "Hora/fecha",
+        "timedate": {
+          "name": "Hora y fecha",
+          "style": {
+            "name": {
+              "classic": "Clásico",
+              "material": "Material",
+              "badge": "Matriz de puntos"
+            }
+          }
+        },
         "info": "Grabación/temporizador",
         "weather": "Clima"
       },
@@ -358,6 +367,12 @@
       "distinct_pills": {
         "title": "Activar un estilo modular y compacto para los widgets",
         "desc": "Hace que los módulos de la barra tengan un contorno rectangular y reduzcan su tamaño para adaptarse a una apariencia modular"
+      },
+      "timedate": {
+        "show_date": {
+          "title": "Mostrar fecha",
+          "desc": "Mostrar el texto de la fecha junto al reloj"
+        }
       }
     },
     "theme": {

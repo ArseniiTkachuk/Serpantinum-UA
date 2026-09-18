@@ -49,20 +49,11 @@ Rectangle {
     property int baseWorkspaceCount: {
         let dummy = configRevision;
         if (typeof Config !== "undefined" && Config.rawSettings) {
-            if (Config.rawSettings.sideWorkspaceCount !== undefined) {
-                return Math.max(2, Math.min(10, Config.rawSettings.sideWorkspaceCount));
-            }
-            if (Config.rawSettings.sideBar && Config.rawSettings.sideBar.sideWorkspaceCount !== undefined) {
-                return Math.max(2, Math.min(10, Config.rawSettings.sideBar.sideWorkspaceCount));
-            }
-            if (Config.rawSettings.bar && Config.rawSettings.bar.sideWorkspaceCount !== undefined) {
-                return Math.max(2, Math.min(10, Config.rawSettings.bar.sideWorkspaceCount));
+            if (Config.rawSettings.bar && Config.rawSettings.bar.workspaceCount !== undefined) {
+                return Math.max(2, Math.min(10, Config.rawSettings.bar.workspaceCount));
             }
             if (Config.rawSettings.sideBar && Config.rawSettings.sideBar.workspaceCount !== undefined) {
                 return Math.max(2, Math.min(10, Config.rawSettings.sideBar.workspaceCount));
-            }
-            if (Config.rawSettings.bar && Config.rawSettings.bar.workspaceCount !== undefined) {
-                return Math.max(2, Math.min(10, Config.rawSettings.bar.workspaceCount));
             }
             if (Config.rawSettings.general && Config.rawSettings.general.workspaceCount !== undefined) {
                 return Math.max(2, Math.min(10, Config.rawSettings.general.workspaceCount));

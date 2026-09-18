@@ -6,7 +6,7 @@ TrayWidget 1.0 TrayWidget.qml
 
 WorkspacesWidget 1.0 workspaces/WorkspacesWidget.qml
 InfoWidget 1.0 InfoWidget.qml
-TimeDateWidget 1.0 TimeDateWidget.qml 
+TimeDateWidget 1.0 timedate/TimeDateWidget.qml 
 WeatherWidget 1.0 WeatherWidget.qml
 
 SysMonWidget 1.0 system/SysMonWidget.qml
