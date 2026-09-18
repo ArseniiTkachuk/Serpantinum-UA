@@ -552,15 +552,6 @@ PanelWindow {
         return i === sub.length;
     }
 
-    function getItemKey(item) {
-        if (!item) return "";
-        if (item.isCommand) return "cmd:" + item.command;
-        if (item.isCalc) return "calc:" + item.calcResult;
-        if (item.isWidget) return "widget:" + (item.widgetTarget || item.name);
-        if (item.desktop_id) return "app:" + item.desktop_id;
-        return "name:" + item.name;
-    }
-
     function executeFilter(query) {
         launcherWindow.isKeyboardNav = false;
         if (keyboardNavTimer.running) keyboardNavTimer.stop();
@@ -652,7 +643,7 @@ PanelWindow {
             }
 
             if (matches) {
-                let appCopy = {
+                filtered.push({
                     name: app.name,
                     description: app.description,
                     desktop_id: app.desktop_id,
@@ -665,8 +656,7 @@ PanelWindow {
                     calcResult: "",
                     isWidget: app.isWidget || false,
                     widgetTarget: app.widgetTarget || ""
-                };
-                filtered.push(appCopy);
+                });
             }
         }
 
@@ -679,43 +669,33 @@ PanelWindow {
             });
         }
 
-        let targetKeys = {};
-        for (let i = 0; i < filtered.length; i++) {
-            targetKeys[getItemKey(filtered[i])] = true;
+        let minCount = Math.min(appModel.count, filtered.length);
+        for (let i = 0; i < minCount; i++) {
+            let cur = appModel.get(i);
+            let target = filtered[i];
+            if (cur.name !== target.name
+                || cur.desktop_id !== target.desktop_id
+                || cur.description !== target.description
+                || cur.icon !== target.icon
+                || cur.fontIcon !== target.fontIcon
+                || cur.score !== target.score
+                || cur.command !== target.command
+                || cur.calcResult !== target.calcResult
+                || cur.isCommand !== target.isCommand
+                || cur.isCalc !== target.isCalc
+                || cur.isWidget !== target.isWidget
+                || cur.widgetTarget !== target.widgetTarget) {
+                appModel.set(i, target);
+            }
         }
 
-        for (let i = appModel.count - 1; i >= 0; i--) {
-            let key = getItemKey(appModel.get(i));
-            if (!targetKeys[key]) {
+        if (appModel.count > filtered.length) {
+            for (let i = appModel.count - 1; i >= filtered.length; i--) {
                 appModel.remove(i);
             }
-        }
-
-        for (let i = 0; i < filtered.length; i++) {
-            let target = filtered[i];
-            let targetKey = getItemKey(target);
-
-            let curIndex = -1;
-            for (let j = i; j < appModel.count; j++) {
-                if (getItemKey(appModel.get(j)) === targetKey) {
-                    curIndex = j;
-                    break;
-                }
-            }
-
-            if (curIndex === i) {
-                let cur = appModel.get(i);
-                if (cur.name !== target.name || cur.desktop_id !== target.desktop_id || cur.description !== target.description || cur.icon !== target.icon || cur.fontIcon !== target.fontIcon || cur.command !== target.command || cur.calcResult !== target.calcResult || cur.isCommand !== target.isCommand || cur.isCalc !== target.isCalc || cur.isWidget !== target.isWidget) {
-                    appModel.set(i, target);
-                }
-            } else if (curIndex > i) {
-                appModel.move(curIndex, i, 1);
-                let cur = appModel.get(i);
-                if (cur.name !== target.name || cur.desktop_id !== target.desktop_id || cur.description !== target.description || cur.icon !== target.icon || cur.fontIcon !== target.fontIcon || cur.command !== target.command || cur.calcResult !== target.calcResult || cur.isCommand !== target.isCommand || cur.isCalc !== target.isCalc || cur.isWidget !== target.isWidget) {
-                    appModel.set(i, target);
-                }
-            } else {
-                appModel.insert(i, target);
+        } else if (appModel.count < filtered.length) {
+            for (let i = appModel.count; i < filtered.length; i++) {
+                appModel.append(filtered[i]);
             }
         }
 
@@ -1076,7 +1056,7 @@ PanelWindow {
             anchors.fill: parent
             radius: container.dynamicCornerRadius
             color: ThemeBackend.base
-            border.width: launcherWindow.isCentered ? 1 : 0
+            border.width: 0
             border.color: launcherWindow.isCentered ? Qt.alpha(ThemeBackend.surface2, 0.6) : "transparent"
             clip: true
 
@@ -1246,51 +1226,13 @@ PanelWindow {
 
                         highlightFollowsCurrentItem: false
 
-                        add: Transition {
-                            NumberAnimation {
-                                property: "opacity"
-                                from: 0.0
-                                to: 1.0
-                                duration: 180
-                                easing.type: Easing.OutQuad
-                            }
-                            NumberAnimation {
-                                property: "x"
-                                from: launcherWindow.s(-10)
-                                to: 0
-                                duration: 220
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-
-                        remove: null
-
-                        move: Transition {
-                            NumberAnimation {
-                                property: "y"
-                                duration: 240
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-
-                        displaced: Transition {
-                            NumberAnimation {
-                                property: "y"
-                                duration: 240
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-
                         function getItemY(idx) {
                             return idx * (launcherWindow.s(44) + spacing);
                         }
 
                         function resetScroll() {
                             scrollAnim.stop();
-                            if (contentY > 0) {
-                                positionViewAtBeginning();
-                                contentY = 0;
-                            }
+                            contentY = 0;
                         }
 
                         onContentYChanged: {
@@ -1307,8 +1249,8 @@ PanelWindow {
                             let itemBottom = itemTop + itemH;
 
                             let curContentY = scrollAnim.running ? scrollAnim.to : contentY;
-                            let totalH = appModel.count * step - spacing;
-                            let maxScroll = Math.max(0, Math.max(totalH, contentHeight) - height);
+                            let totalH = Math.max(0, appModel.count * step - spacing);
+                            let maxScroll = Math.max(0, totalH - height);
                             let newContentY = curContentY;
 
                             if (itemTop < curContentY) {
@@ -1343,7 +1285,7 @@ PanelWindow {
                             parent: appList.contentItem
                             z: 0
                             visible: opacity > 0.001
-                            opacity: (appList.count > 0 && appList.currentIndex >= 0 && appList.currentItem !== null)
+                            opacity: (appList.count > 0 && appList.currentIndex >= 0)
                                      ? launcherWindow.getItemOpacity(appList.currentIndex)
                                      : 0.0
                             Behavior on opacity {
@@ -1359,7 +1301,9 @@ PanelWindow {
                             radius: ThemeBackend.borderRadius
                             color: ThemeBackend.mauve
 
-                            property real targetY: appList.currentItem ? appList.currentItem.y : 0
+                            property real targetY: (appList.currentIndex >= 0 && appModel.count > 0)
+                                                   ? appList.getItemY(appList.currentIndex)
+                                                   : 0
                             y: targetY
 
                             transform: Translate {
@@ -1551,6 +1495,7 @@ PanelWindow {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
+                                        launcherWindow.isKeyboardNav = false;
                                         appList.currentIndex = index;
                                         activateIndex(index);
                                     }

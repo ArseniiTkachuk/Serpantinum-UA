@@ -295,7 +295,16 @@
         "battery": "Batareya",
         "focus": "Diqqət",
         "sysmon": "Sistem izləyicisi",
-        "timedate": "Vaxt/tarix",
+        "timedate": {
+          "name": "Vaxt və tarix",
+          "style": {
+            "name": {
+              "classic": "Klassik",
+              "material": "Material",
+              "badge": "Nöqtəli matris"
+            }
+          }
+        },
         "info": "Video çəkilişi/vaxtölçən",
         "weather": "Hava"
       },
@@ -355,6 +364,12 @@
       "distinct_pills": {
         "title": "Vidcetlər üçün hissələrə bölünmüş və yığcam üslubu aktivləşdir",
         "desc": "Zolağın modullarına düzbucaqlı çərçivə əlavə edir və hissələrə bölünmüş görünüşə uyğun ölçülərini kiçildir"
+      },
+      "timedate": {
+        "show_date": {
+          "title": "Tarixi göstər",
+          "desc": "Saatın yanında tarix mətnini göstərin"
+        }
       }
     },
     "theme": {
@@ -611,6 +626,10 @@
       "on_top": {
         "title": "Doku pəncərələrin üzərində yerləşdirin",
         "desc": "Doku tətbiq pəncərələrinin üzərində görünən saxlayın"
+      },
+      "smart_autohide": {
+        "title": "Ağıllı avto-gizlətmə",
+        "desc": "Doku yalnız pəncərələr açıq olduqda gizlət, masaüstündə görünən saxla"
       }
     }
   },

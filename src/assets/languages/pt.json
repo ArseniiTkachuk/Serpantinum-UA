@@ -297,7 +297,16 @@
         "battery": "Bateria",
         "focus": "Foco",
         "sysmon": "Monitor do sistema",
-        "timedate": "Hora/data",
+        "timedate": {
+          "name": "Hora e data",
+          "style": {
+            "name": {
+              "classic": "Clássico",
+              "material": "Material",
+              "badge": "Matriz de pontos"
+            }
+          }
+        },
         "info": "Gravação/timer",
         "weather": "Clima"
       },
@@ -357,6 +366,12 @@
       "distinct_pills": {
         "title": "Estilo modular e compacto para widgets",
         "desc": "Dá aos módulos da barra um contorno retangular e reduz o tamanho pro visual modular"
+      },
+      "timedate": {
+        "show_date": {
+          "title": "Mostrar data",
+          "desc": "Exibir o texto da data ao lado do relógio"
+        }
       }
     },
     "theme": {
@@ -617,6 +632,10 @@
       "on_top": {
         "title": "Colocar a dock sobre as janelas",
         "desc": "Manter a dock visível sobre as janelas de aplicativos"
+      },
+      "smart_autohide": {
+        "title": "Ocultação automática inteligente",
+        "desc": "Ocultar a dock apenas quando houver janelas abertas, mantendo-a visível na área de trabalho"
       }
     }
   },

@@ -37,11 +37,9 @@ Rectangle {
 
     property string workspacesStyle: {
         let dummy = configRevision;
-        if (typeof Config !== "undefined" && Config.rawSettings) {
-            if (Config.rawSettings.sideBar && Config.rawSettings.sideBar.workspacesStyle) return Config.rawSettings.sideBar.workspacesStyle;
-            if (Config.rawSettings.bar && Config.rawSettings.bar.sideWorkspacesStyle) return Config.rawSettings.bar.sideWorkspacesStyle;
-            if (Config.rawSettings.bar && Config.rawSettings.bar.workspacesStyle) return Config.rawSettings.bar.workspacesStyle;
-            if (Config.rawSettings.bar && Config.rawSettings.bar.workspaces && Config.rawSettings.bar.workspaces.style) return Config.rawSettings.bar.workspaces.style;
+        if (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar) {
+            if (Config.rawSettings.bar.workspacesStyle) return Config.rawSettings.bar.workspacesStyle;
+            if (Config.rawSettings.bar.workspaces && Config.rawSettings.bar.workspaces.style) return Config.rawSettings.bar.workspaces.style;
         }
         return "pills";
     }
@@ -49,18 +47,6 @@ Rectangle {
     property int baseWorkspaceCount: {
         let dummy = configRevision;
         if (typeof Config !== "undefined" && Config.rawSettings) {
-            if (Config.rawSettings.sideWorkspaceCount !== undefined) {
-                return Math.max(2, Math.min(10, Config.rawSettings.sideWorkspaceCount));
-            }
-            if (Config.rawSettings.sideBar && Config.rawSettings.sideBar.sideWorkspaceCount !== undefined) {
-                return Math.max(2, Math.min(10, Config.rawSettings.sideBar.sideWorkspaceCount));
-            }
-            if (Config.rawSettings.bar && Config.rawSettings.bar.sideWorkspaceCount !== undefined) {
-                return Math.max(2, Math.min(10, Config.rawSettings.bar.sideWorkspaceCount));
-            }
-            if (Config.rawSettings.sideBar && Config.rawSettings.sideBar.workspaceCount !== undefined) {
-                return Math.max(2, Math.min(10, Config.rawSettings.sideBar.workspaceCount));
-            }
             if (Config.rawSettings.bar && Config.rawSettings.bar.workspaceCount !== undefined) {
                 return Math.max(2, Math.min(10, Config.rawSettings.bar.workspaceCount));
             }
@@ -74,13 +60,14 @@ Rectangle {
         return 8;
     }
 
+    property int workspaceCount: Math.max(2, (activeIndex >= baseWorkspaceCount) ? (activeIndex + 1) : baseWorkspaceCount)
+
     ListModel {
         id: workspaceListModel
     }
 
     function syncModel() {
-        let target = (activeIndex >= baseWorkspaceCount) ? (activeIndex + 1) : baseWorkspaceCount;
-        target = Math.max(2, target);
+        let target = workspaceCount;
 
         while (workspaceListModel.count < target) {
             workspaceListModel.append({ "modelData": workspaceListModel.count });
@@ -90,10 +77,7 @@ Rectangle {
         }
     }
 
-    onActiveIndexChanged: syncModel()
-    onBaseWorkspaceCountChanged: syncModel()
-
-    property int workspaceCount: workspaceListModel.count > 0 ? workspaceListModel.count : baseWorkspaceCount
+    onWorkspaceCountChanged: syncModel()
 
     function findRepeater(obj) {
         if (!obj) return null;
@@ -156,7 +140,7 @@ Rectangle {
             swayActiveIndex = index;
             Quickshell.execDetached(["swaymsg", "workspace", "number", wsId.toString()]);
         } else {
-            Hyprland.dispatch("workspace", wsId.toString());
+            Hyprland.dispatch("hl.dsp.focus({ workspace = " + wsId + " })");
         }
     }
 
@@ -390,6 +374,7 @@ Rectangle {
         anchors.fill: parent
         z: 10
         acceptedButtons: Qt.NoButton
+        cursorShape: Qt.PointingHandCursor
         onWheel: wheel => {
             wsWheelTimer.restart();
             workspacesWidgetRoot.wheelAccumulator += wheel.angleDelta.y;
