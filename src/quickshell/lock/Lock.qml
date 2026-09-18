@@ -170,8 +170,9 @@ Scope {
         let mons = [];
         if (Quickshell.screens) {
             for (let i = 0; i < Quickshell.screens.length; i++) {
-                if (Quickshell.screens[i] && Quickshell.screens[i].name) {
-                    mons.push(Quickshell.screens[i].name);
+                let s = Quickshell.screens[i];
+                if (s && s.name && typeof s.name === "string" && s.name.trim().length > 0) {
+                    mons.push(s.name.trim());
                 }
             }
         }
@@ -320,6 +321,37 @@ Scope {
                         return Caching.getRunDir("screenshot") + "/lock_freeze_" + scrName + "_" + root.freezeTimestamp + ".png";
                     }
 
+                    function getBarTimeFormat() {
+                        let bs = Config.getSetting("bar", {});
+                        if (bs && bs.time && bs.time.format !== undefined && bs.time.format !== "") {
+                            return bs.time.format;
+                        }
+                        return "HH:mm";
+                    }
+
+                    function getBarShowDate() {
+                        let bs = Config.getSetting("bar", {});
+                        if (bs && bs.timeShowDate !== undefined) {
+                            return bs.timeShowDate;
+                        }
+                        return true;
+                    }
+
+                    function updateClockDisplay() {
+                        let d = new Date();
+                        let fmt = screenRoot.getBarTimeFormat();
+                        let is12h = (typeof DateTime !== "undefined" && DateTime.is12Hour !== undefined)
+                            ? DateTime.is12Hour
+                            : (fmt.includes("h") || fmt.toLowerCase().includes("ap"));
+
+                        let hourFmt = is12h ? (fmt.includes("hh") ? "hh" : "h") : (fmt.includes("H") && !fmt.includes("HH") ? "H" : "HH");
+                        clockHours.text = Qt.formatDateTime(d, hourFmt);
+                        clockMinutes.text = Qt.formatDateTime(d, "mm");
+                        clockAmPm.text = is12h ? Qt.formatDateTime(d, "AP") : "";
+                        dateText.text = Qt.formatDateTime(d, "dddd, d MMMM").toUpperCase();
+                        dateText.visible = screenRoot.getBarShowDate();
+                    }
+
                     property bool isUnlocking: root.isUnlocking
                     property real foldScaleX: 1.0
                     property real foldScaleY: 1.0
@@ -459,6 +491,14 @@ Scope {
                         target: typeof DateTime !== "undefined" ? DateTime : null
                         function onHourChanged() {
                             screenRoot.updateForecastData();
+                            screenRoot.updateClockDisplay();
+                        }
+                    }
+
+                    Connections {
+                        target: typeof Config !== "undefined" ? Config : null
+                        function onSettingsLoaded() {
+                            screenRoot.updateClockDisplay();
                         }
                     }
 
@@ -719,6 +759,7 @@ Scope {
                     Component.onCompleted: {
                         introSequence.start();
                         screenRoot.updateForecastData();
+                        screenRoot.updateClockDisplay();
                         screenRoot.restoreFocus();
                     }
 
@@ -1129,16 +1170,12 @@ Scope {
 
                                 Timer {
                                     id: clockTimer
-                                    interval: 1000; running: true; repeat: true; triggeredOnStart: true
+                                    interval: 1000
+                                    running: true
+                                    repeat: true
+                                    triggeredOnStart: true
                                     onTriggered: {
-                                        let d = new Date();
-                                        let fmt = (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar && Config.rawSettings.bar.time && Config.rawSettings.bar.time.format !== undefined) ? Config.rawSettings.bar.time.format : "HH:mm:ss";
-                                        let is12h = fmt.includes("h") || fmt.toLowerCase().includes("ap");
-                                        let hourFmt = is12h ? (fmt.includes("hh") ? "hh" : "h") : (fmt.includes("H") && !fmt.includes("HH") ? "H" : "HH");
-                                        clockHours.text = Qt.formatDateTime(d, hourFmt);
-                                        clockMinutes.text = Qt.formatDateTime(d, "mm");
-                                        clockAmPm.text = is12h ? Qt.formatDateTime(d, "AP") : "";
-                                        dateText.text = Qt.formatDateTime(d, "dddd, d MMMM").toUpperCase();
+                                        screenRoot.updateClockDisplay();
                                     }
                                 }
                             }
