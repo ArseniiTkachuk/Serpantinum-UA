@@ -145,7 +145,7 @@ Item {
                             Text {
                                 text: I18n.t("guide.about.version_by", {
                                     version: (Updater.localVersion !== "..." ? Updater.localVersion : (rootObj.dotsVersion !== "Loading..." && rootObj.dotsVersion !== I18n.t("guide.about.loading") ? rootObj.dotsVersion : "2.0.0")),
-                                    author: "@ilyamiro"
+                                    author: "@ArseniiTkachuk"
                                 })
                                 font.family: ThemeBackend.fontFamily
                                 font.pixelSize: rootObj.s(13)
