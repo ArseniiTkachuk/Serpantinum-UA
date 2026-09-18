@@ -264,12 +264,7 @@ Item {
         clip: true
         opacity: root.enabled ? 1.0 : 0.5
         color: root.isHoveredOrHighlighted ? Qt.darker(root.baseColor, 1.14) : root.baseColor
-        border.color: (root.hasFocus || root.action_highlight || root.hasError) ? root.activeSignalColor : (root.isHoveredOrHighlighted ? Qt.lighter(root.borderColor, 1.2) : root.borderColor)
-        border.width: 1
-
         Behavior on color { ColorAnimation { duration: 180 } }
-        Behavior on border.color { ColorAnimation { duration: 180 } }
-        Behavior on opacity { NumberAnimation { duration: 180 } }
 
         scale: (root.hasError ? 1.04 : (root.isBusy ? 0.98 : 1.0)) * root.focusPop
         Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
