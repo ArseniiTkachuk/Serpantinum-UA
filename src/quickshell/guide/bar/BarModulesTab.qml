@@ -31,7 +31,6 @@ Item {
     property string workspacesStyle: {
         let bs = Config.getSetting("bar", {});
         if (bs && bs.workspacesStyle) return bs.workspacesStyle;
-        if (bs && bs.sideWorkspacesStyle) return bs.sideWorkspacesStyle;
         return "pills";
     }
 
@@ -44,7 +43,6 @@ Item {
     property string timeStyle: {
         let bs = Config.getSetting("bar", {});
         if (bs && bs.timeStyle) return bs.timeStyle;
-        if (bs && bs.sideTimeStyle) return bs.sideTimeStyle;
         return "classic";
     }
 
@@ -52,14 +50,12 @@ Item {
         let bs = Config.getSetting("bar", {});
         if (bs && bs.timeShowDate !== undefined) return bs.timeShowDate;
         if (bs && bs.showDate !== undefined) return bs.showDate;
-        if (bs && bs.sideTimeShowDate !== undefined) return bs.sideTimeShowDate;
         return true;
     }
 
     property string timeFormat: {
         let bs = Config.getSetting("bar", {});
         if (bs && bs.time && bs.time.format !== undefined) return bs.time.format;
-        if (bs && bs.sideTime && bs.sideTime.format !== undefined) return bs.sideTime.format;
         return "HH:mm:ss";
     }
 
@@ -152,24 +148,18 @@ Item {
 
         if (bs && bs.workspacesStyle) {
             barModulesRoot.workspacesStyle = bs.workspacesStyle;
-        } else if (bs && bs.sideWorkspacesStyle) {
-            barModulesRoot.workspacesStyle = bs.sideWorkspacesStyle;
         } else {
             barModulesRoot.workspacesStyle = "pills";
         }
 
         if (bs && bs.workspaceCount !== undefined) {
             barModulesRoot.workspaceCount = bs.workspaceCount;
-        } else if (bs && bs.sideWorkspaceCount !== undefined) {
-            barModulesRoot.workspaceCount = bs.sideWorkspaceCount;
         } else {
             barModulesRoot.workspaceCount = 8;
         }
 
         if (bs && bs.timeStyle) {
             barModulesRoot.timeStyle = bs.timeStyle;
-        } else if (bs && bs.sideTimeStyle) {
-            barModulesRoot.timeStyle = bs.sideTimeStyle;
         } else {
             barModulesRoot.timeStyle = "classic";
         }
@@ -178,16 +168,12 @@ Item {
             barModulesRoot.timeShowDate = bs.timeShowDate;
         } else if (bs && bs.showDate !== undefined) {
             barModulesRoot.timeShowDate = bs.showDate;
-        } else if (bs && bs.sideTimeShowDate !== undefined) {
-            barModulesRoot.timeShowDate = bs.sideTimeShowDate;
         } else {
             barModulesRoot.timeShowDate = true;
         }
 
         if (bs && bs.time && bs.time.format !== undefined) {
             barModulesRoot.timeFormat = bs.time.format;
-        } else if (bs && bs.sideTime && bs.sideTime.format !== undefined) {
-            barModulesRoot.timeFormat = bs.sideTime.format;
         } else {
             barModulesRoot.timeFormat = "HH:mm:ss";
         }
@@ -197,12 +183,7 @@ Item {
         barModulesRoot.workspacesStyle = styleName;
         let current = Config.getSetting("bar", {});
         current.workspacesStyle = styleName;
-        current.sideWorkspacesStyle = styleName;
-        let currentSide = Config.getSetting("sideBar", {});
-        if (currentSide) {
-            currentSide.workspacesStyle = styleName;
-            Config.setSetting("sideBar", currentSide);
-        }
+        if (current.sideWorkspacesStyle !== undefined) delete current.sideWorkspacesStyle;
         Config.setSetting("bar", current);
     }
 
@@ -211,12 +192,6 @@ Item {
         let current = Config.getSetting("bar", {});
         current.workspaceCount = count;
         if (current.sideWorkspaceCount !== undefined) delete current.sideWorkspaceCount;
-        let currentSide = Config.getSetting("sideBar", {});
-        if (currentSide) {
-            if (currentSide.workspaceCount !== undefined) delete currentSide.workspaceCount;
-            if (currentSide.sideWorkspaceCount !== undefined) delete currentSide.sideWorkspaceCount;
-            Config.setSetting("sideBar", currentSide);
-        }
         Config.setSetting("bar", current);
     }
 
@@ -224,12 +199,7 @@ Item {
         barModulesRoot.timeStyle = styleName;
         let current = Config.getSetting("bar", {});
         current.timeStyle = styleName;
-        current.sideTimeStyle = styleName;
-        let currentSide = Config.getSetting("sideBar", {});
-        if (currentSide) {
-            currentSide.timeStyle = styleName;
-            Config.setSetting("sideBar", currentSide);
-        }
+        if (current.sideTimeStyle !== undefined) delete current.sideTimeStyle;
         Config.setSetting("bar", current);
     }
 
@@ -237,14 +207,8 @@ Item {
         barModulesRoot.timeShowDate = show;
         let current = Config.getSetting("bar", {});
         current.timeShowDate = show;
-        current.showDate = show;
-        current.sideTimeShowDate = show;
-        let currentSide = Config.getSetting("sideBar", {});
-        if (currentSide) {
-            currentSide.timeShowDate = show;
-            currentSide.showDate = show;
-            Config.setSetting("sideBar", currentSide);
-        }
+        if (current.showDate !== undefined) delete current.showDate;
+        if (current.sideTimeShowDate !== undefined) delete current.sideTimeShowDate;
         Config.setSetting("bar", current);
     }
 
@@ -253,14 +217,7 @@ Item {
         let current = Config.getSetting("bar", {});
         if (!current.time) current.time = {};
         current.time.format = fmt;
-        if (!current.sideTime) current.sideTime = {};
-        current.sideTime.format = fmt;
-        let currentSide = Config.getSetting("sideBar", {});
-        if (currentSide) {
-            if (!currentSide.time) currentSide.time = {};
-            currentSide.time.format = fmt;
-            Config.setSetting("sideBar", currentSide);
-        }
+        if (current.sideTime !== undefined) delete current.sideTime;
         Config.setSetting("bar", current);
     }
 

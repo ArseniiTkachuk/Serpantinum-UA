@@ -37,11 +37,9 @@ Rectangle {
 
     property string workspacesStyle: {
         let dummy = configRevision;
-        if (typeof Config !== "undefined" && Config.rawSettings) {
-            if (Config.rawSettings.sideBar && Config.rawSettings.sideBar.workspacesStyle) return Config.rawSettings.sideBar.workspacesStyle;
-            if (Config.rawSettings.bar && Config.rawSettings.bar.sideWorkspacesStyle) return Config.rawSettings.bar.sideWorkspacesStyle;
-            if (Config.rawSettings.bar && Config.rawSettings.bar.workspacesStyle) return Config.rawSettings.bar.workspacesStyle;
-            if (Config.rawSettings.bar && Config.rawSettings.bar.workspaces && Config.rawSettings.bar.workspaces.style) return Config.rawSettings.bar.workspaces.style;
+        if (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar) {
+            if (Config.rawSettings.bar.workspacesStyle) return Config.rawSettings.bar.workspacesStyle;
+            if (Config.rawSettings.bar.workspaces && Config.rawSettings.bar.workspaces.style) return Config.rawSettings.bar.workspaces.style;
         }
         return "pills";
     }
@@ -51,9 +49,6 @@ Rectangle {
         if (typeof Config !== "undefined" && Config.rawSettings) {
             if (Config.rawSettings.bar && Config.rawSettings.bar.workspaceCount !== undefined) {
                 return Math.max(2, Math.min(10, Config.rawSettings.bar.workspaceCount));
-            }
-            if (Config.rawSettings.sideBar && Config.rawSettings.sideBar.workspaceCount !== undefined) {
-                return Math.max(2, Math.min(10, Config.rawSettings.sideBar.workspaceCount));
             }
             if (Config.rawSettings.general && Config.rawSettings.general.workspaceCount !== undefined) {
                 return Math.max(2, Math.min(10, Config.rawSettings.general.workspaceCount));

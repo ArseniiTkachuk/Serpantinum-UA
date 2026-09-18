@@ -29,26 +29,17 @@ Rectangle {
 
     property string timeStyle: {
         let dummy = configRevision;
-        if (typeof Config !== "undefined" && Config.rawSettings) {
-            let ss = Config.rawSettings.sideBar;
-            if (ss && ss.timeStyle) return ss.timeStyle;
-            let bs = Config.rawSettings.bar;
-            if (bs && bs.sideTimeStyle) return bs.sideTimeStyle;
-            if (bs && bs.timeStyle) return bs.timeStyle;
+        if (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar) {
+            if (Config.rawSettings.bar.timeStyle) return Config.rawSettings.bar.timeStyle;
         }
         return "classic";
     }
 
     property bool showDate: {
         let dummy = configRevision;
-        if (typeof Config !== "undefined" && Config.rawSettings) {
-            let ss = Config.rawSettings.sideBar;
-            if (ss && ss.timeShowDate !== undefined) return ss.timeShowDate;
-            if (ss && ss.showDate !== undefined) return ss.showDate;
-            let bs = Config.rawSettings.bar;
-            if (bs && bs.sideTimeShowDate !== undefined) return bs.sideTimeShowDate;
-            if (bs && bs.timeShowDate !== undefined) return bs.timeShowDate;
-            if (bs && bs.showDate !== undefined) return bs.showDate;
+        if (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar) {
+            if (Config.rawSettings.bar.timeShowDate !== undefined) return Config.rawSettings.bar.timeShowDate;
+            if (Config.rawSettings.bar.showDate !== undefined) return Config.rawSettings.bar.showDate;
         }
         return true;
     }
