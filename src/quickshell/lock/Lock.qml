@@ -170,9 +170,8 @@ Scope {
         let mons = [];
         if (Quickshell.screens) {
             for (let i = 0; i < Quickshell.screens.length; i++) {
-                let s = Quickshell.screens[i];
-                if (s && s.name && typeof s.name === "string" && s.name.trim().length > 0) {
-                    mons.push(s.name.trim());
+                if (Quickshell.screens[i] && Quickshell.screens[i].name) {
+                    mons.push(Quickshell.screens[i].name);
                 }
             }
         }
@@ -321,37 +320,6 @@ Scope {
                         return Caching.getRunDir("screenshot") + "/lock_freeze_" + scrName + "_" + root.freezeTimestamp + ".png";
                     }
 
-                    function getBarTimeFormat() {
-                        let bs = Config.getSetting("bar", {});
-                        if (bs && bs.time && bs.time.format !== undefined && bs.time.format !== "") {
-                            return bs.time.format;
-                        }
-                        return "HH:mm";
-                    }
-
-                    function getBarShowDate() {
-                        let bs = Config.getSetting("bar", {});
-                        if (bs && bs.timeShowDate !== undefined) {
-                            return bs.timeShowDate;
-                        }
-                        return true;
-                    }
-
-                    function updateClockDisplay() {
-                        let d = new Date();
-                        let fmt = screenRoot.getBarTimeFormat();
-                        let is12h = (typeof DateTime !== "undefined" && DateTime.is12Hour !== undefined)
-                            ? DateTime.is12Hour
-                            : (fmt.includes("h") || fmt.toLowerCase().includes("ap"));
-
-                        let hourFmt = is12h ? (fmt.includes("hh") ? "hh" : "h") : (fmt.includes("H") && !fmt.includes("HH") ? "H" : "HH");
-                        clockHours.text = Qt.formatDateTime(d, hourFmt);
-                        clockMinutes.text = Qt.formatDateTime(d, "mm");
-                        clockAmPm.text = is12h ? Qt.formatDateTime(d, "AP") : "";
-                        dateText.text = Qt.formatDateTime(d, "dddd, d MMMM").toUpperCase();
-                        dateText.visible = screenRoot.getBarShowDate();
-                    }
-
                     property bool isUnlocking: root.isUnlocking
                     property real foldScaleX: 1.0
                     property real foldScaleY: 1.0
@@ -491,14 +459,6 @@ Scope {
                         target: typeof DateTime !== "undefined" ? DateTime : null
                         function onHourChanged() {
                             screenRoot.updateForecastData();
-                            screenRoot.updateClockDisplay();
-                        }
-                    }
-
-                    Connections {
-                        target: typeof Config !== "undefined" ? Config : null
-                        function onSettingsLoaded() {
-                            screenRoot.updateClockDisplay();
                         }
                     }
 
@@ -756,11 +716,25 @@ Scope {
                     property string diskUsedText: SysData.diskGb > 0 ? (SysData.diskGb.toFixed(1) + "G") : "..."
                     property string diskTotalText: SysData.diskTotalGb > 0 ? (SysData.diskTotalGb.toFixed(1) + "G") : ""
 
+                    Timer {
+                        id: introStartDelayTimer
+                        interval: 100
+                        repeat: false
+                        onTriggered: {
+                            if (screenRoot.isPlayingIntro && !introSequence.running) {
+                                introSequence.start();
+                            }
+                        }
+                    }
+
                     Component.onCompleted: {
-                        introSequence.start();
                         screenRoot.updateForecastData();
-                        screenRoot.updateClockDisplay();
                         screenRoot.restoreFocus();
+                        if (freezeWallpaperView.status === Image.Ready) {
+                            introSequence.start();
+                        } else {
+                            introStartDelayTimer.start();
+                        }
                     }
 
                     Component.onDestruction: {
@@ -821,8 +795,9 @@ Scope {
                             anchors.fill: parent
                             source: screenRoot.wallpaperSource
                             fillMode: Image.PreserveAspectCrop
-                            asynchronous: false
-                            cache: false
+                            asynchronous: true
+                            cache: true
+                            sourceSize: Qt.size(parent.width, parent.height)
                             onStatusChanged: {
                                 if (status === Image.Error) {
                                     let defaultPath = "file://" + Caching.getCacheDir("wallpaper") + "/current_wallpaper.png";
@@ -839,11 +814,15 @@ Scope {
                             source: (screenRoot.currentFreezePath !== "" && root.freezeTimestamp !== "") ? ("file://" + screenRoot.currentFreezePath) : ""
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: false
-                            cache: false
+                            cache: true
+                            sourceSize: Qt.size(parent.width, parent.height)
                             opacity: (status === Image.Ready && source.toString() !== "") ? 1.0 : 0.0
 
                             onStatusChanged: {
-                                if (status === Image.Error && root.freezeTimestamp !== "") {
+                                if (status === Image.Ready && screenRoot.isPlayingIntro && !introSequence.running) {
+                                    introStartDelayTimer.stop();
+                                    introSequence.start();
+                                } else if (status === Image.Error && root.freezeTimestamp !== "") {
                                     let defaultFreeze = "file://" + Caching.getRunDir("screenshot") + "/lock_freeze_default_" + root.freezeTimestamp + ".png";
                                     if (source.toString() !== defaultFreeze) {
                                         source = defaultFreeze;
@@ -864,7 +843,8 @@ Scope {
                             source: screenRoot.wallpaperSource
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
-                            cache: false
+                            cache: true
+                            sourceSize: Qt.size(parent.width, parent.height)
 
                             onStatusChanged: {
                                 if (status === Image.Error) {
@@ -882,7 +862,8 @@ Scope {
                             source: (screenRoot.currentFreezePath !== "" && root.freezeTimestamp !== "") ? ("file://" + screenRoot.currentFreezePath) : ""
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: false
-                            cache: false
+                            cache: true
+                            sourceSize: Qt.size(parent.width, parent.height)
                             opacity: (screenRoot.inputActive && status === Image.Ready && source.toString() !== "") ? 1.0 : 0.0
 
                             Behavior on opacity {
@@ -914,7 +895,7 @@ Scope {
                             enabled: !screenRoot.isPlayingIntro && !screenRoot.isUnlocking
                             NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
                         }
-                        opacity: screenRoot.contentReveal
+                        opacity: screenRoot.panelReveal
                         visible: opacity > 0.01
                     }
 
@@ -923,7 +904,7 @@ Scope {
                         anchors.fill: parent
                         z: 2
                         color: ThemeBackend.crust
-                        opacity: (screenRoot.inputActive ? 0.72 : 0.32) * screenRoot.contentReveal
+                        opacity: (screenRoot.inputActive ? 0.72 : 0.32) * screenRoot.panelReveal
                         Behavior on opacity {
                             enabled: !screenRoot.isPlayingIntro && !screenRoot.isUnlocking
                             NumberAnimation { duration: 600; easing.type: Easing.OutCubic }
@@ -1170,12 +1151,16 @@ Scope {
 
                                 Timer {
                                     id: clockTimer
-                                    interval: 1000
-                                    running: true
-                                    repeat: true
-                                    triggeredOnStart: true
+                                    interval: 1000; running: true; repeat: true; triggeredOnStart: true
                                     onTriggered: {
-                                        screenRoot.updateClockDisplay();
+                                        let d = new Date();
+                                        let fmt = (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar && Config.rawSettings.bar.time && Config.rawSettings.bar.time.format !== undefined) ? Config.rawSettings.bar.time.format : "HH:mm:ss";
+                                        let is12h = fmt.includes("h") || fmt.toLowerCase().includes("ap");
+                                        let hourFmt = is12h ? (fmt.includes("hh") ? "hh" : "h") : (fmt.includes("H") && !fmt.includes("HH") ? "H" : "HH");
+                                        clockHours.text = Qt.formatDateTime(d, hourFmt);
+                                        clockMinutes.text = Qt.formatDateTime(d, "mm");
+                                        clockAmPm.text = is12h ? Qt.formatDateTime(d, "AP") : "";
+                                        dateText.text = Qt.formatDateTime(d, "dddd, d MMMM").toUpperCase();
                                     }
                                 }
                             }
@@ -2049,6 +2034,8 @@ Scope {
                                                 anchors.fill: parent
                                                 source: (screenRoot.isMediaActive && MprisController.artUrl) ? (MprisController.artUrl.startsWith("file://") ? MprisController.artUrl : "file://" + MprisController.artUrl) : ""
                                                 fillMode: Image.PreserveAspectCrop
+                                                asynchronous: true
+                                                sourceSize: Qt.size(screenRoot.s(60), screenRoot.s(60))
                                                 visible: false
                                             }
 
