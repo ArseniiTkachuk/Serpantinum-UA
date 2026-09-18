@@ -233,7 +233,8 @@ Variants {
                 property bool autohide: rawDockSettings.autohide !== undefined ? rawDockSettings.autohide : false
                 readonly property bool effectiveAutohide: smartAutohide ? isWorkspaceBusy : autohide
 
-                onEffectiveAutohideChanged: dockWindow.checkHideTimer()
+                onEffectiveAutohideChanged: hideTimer.stop()
+                onActiveIndexChanged: hideTimer.stop()
 
                 Timer {
                     id: niriDebounceTimer
@@ -1578,7 +1579,9 @@ Variants {
 
                                         property real targetOffsetY: {
                                             if (dockWindow.isVertical) {
-                                                return animSpread;
+                                                if (dockWindow.dockPosition === "top") return animLift;
+                                                if (dockWindow.dockPosition === "bottom") return -animLift;
+                                                return 0.0;
                                             } else {
                                                 if (dockWindow.dockPosition === "bottom") return -animLift;
                                                 if (dockWindow.dockPosition === "top") return animLift;
