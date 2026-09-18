@@ -1,3 +1,17 @@
+### 2.1.8
+
+- feat: add time-setting styling, move the time string setting into modules, merge the modules and sidemodules subtabs under the bar tab
+- fix: increase the ddc timeout for monitors. Fixes #305
+- style: add a border outline to the input.qml to improve visibility
+- feat: add a smart-hide feature for the dock, hide on active workspaces
+- fix: remove the border on the centered launcher
+- fix: resolve a binding loop of a workspacecount property
+- fix: launcher animation desynchronization
+- style: change the hover cursor for workspaceswidget to pointing hand cursor
+- fix: fix workspaces not working due to a hyprland lua error
+- fix: remove a reupdate animation for workspacewidget on changing to workspaces out of the visible workspacecount, make it smooth
+- fix: don't prevent qs manager from switching workspaces when the workspace count is low, and allow workspacewidgets to extend beyond the configured amount - the workspacecount is now purely visual
+
 ### 2.1.7
 
 - feat: add module settings tab, introduce workspace widget styling
