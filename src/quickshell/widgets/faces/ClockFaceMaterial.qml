@@ -61,6 +61,7 @@ Item {
         onColBChanged: requestPaint()
 
         function drawRoundRect(ctx, rx, ry, rw, rh, rad) {
+            rad = Math.min(rad, rw / 2, rh / 2);
             ctx.beginPath();
             ctx.moveTo(rx + rad, ry);
             ctx.lineTo(rx + rw - rad, ry);
@@ -176,14 +177,16 @@ Item {
                 ctx.lineTo(x + w * 0.34, y + h * 0.24);
                 ctx.lineTo(x + w * 0.34, y + h * 0.46);
                 ctx.lineTo(x + w * 0.60, y + h * 0.46);
-                ctx.arcTo(x + w, y + h * 0.46, x + w, y + h * 0.72, w * 0.42);
-                ctx.lineTo(x + w, y + h * 0.72);
-                ctx.arcTo(x + w, y + h, x + w * 0.50, y + h, w * 0.42);
+                ctx.arcTo(x + w, y + h * 0.46, x + w, y + h * 0.73, h * 0.27);
+                ctx.arcTo(x + w, y + h, x + w * 0.50, y + h, h * 0.27);
                 ctx.lineTo(x, y + h);
                 ctx.lineTo(x, y + h * 0.76);
                 ctx.lineTo(x + w * 0.50, y + h * 0.76);
                 ctx.arcTo(x + w * 0.66, y + h * 0.76, x + w * 0.66, y + h * 0.62, w * 0.16);
-                ctx.lineTo(x, y + h * 0.62);
+                ctx.lineTo(x + w * 0.66, y + h * 0.62);
+                ctx.lineTo(x + w * 0.34, y + h * 0.62);
+                ctx.lineTo(x + w * 0.34, y + h * 0.46);
+                ctx.lineTo(x, y + h * 0.46);
                 ctx.closePath();
                 ctx.fillStyle = color;
                 ctx.fill();
@@ -200,36 +203,40 @@ Item {
                 ctx.fillStyle = color;
                 ctx.fill();
             } else if (ch === '8') {
-                drawRoundRect(ctx, x + w * 0.03, y, w * 0.94, h * 0.52, w * 0.44);
+                drawRoundRect(ctx, x + w * 0.04, y, w * 0.92, h * 0.51, w * 0.30);
                 ctx.fillStyle = color;
                 ctx.fill();
-                drawRoundRect(ctx, x, y + h * 0.48, w, h * 0.52, w * 0.46);
+                drawRoundRect(ctx, x, y + h * 0.49, w, h * 0.51, w * 0.30);
                 ctx.fill();
 
                 ctx.globalCompositeOperation = "destination-out";
-                drawRoundRect(ctx, x + w * 0.31, y + h * 0.18, w * 0.38, h * 0.23, w * 0.16);
+                drawRoundRect(ctx, x + w * 0.31, y + h * 0.15, w * 0.38, h * 0.21, w * 0.10);
                 ctx.fillStyle = "#ffffff";
                 ctx.fill();
-                drawRoundRect(ctx, x + w * 0.29, y + h * 0.57, w * 0.42, h * 0.25, w * 0.16);
+                drawRoundRect(ctx, x + w * 0.29, y + h * 0.64, w * 0.42, h * 0.21, w * 0.10);
                 ctx.fill();
             } else if (ch === '9') {
-                var rOuter = w * 0.48;
-                var cx = x + w * 0.50;
-                var cy = y + rOuter;
-
                 ctx.beginPath();
-                ctx.arc(cx, cy, rOuter, Math.PI, 0, false);
-                ctx.lineTo(x + w * 0.40, y + h);
-                ctx.lineTo(x + w * 0.14, y + h * 0.78);
-                ctx.lineTo(x + w * 0.42, y + h * 0.48);
-                ctx.arc(cx, cy, rOuter, Math.PI * 0.65, Math.PI, false);
+                ctx.moveTo(x, y + h * 0.76);
+                ctx.lineTo(x, y + h);
+                ctx.lineTo(x + w * 0.64, y + h);
+                ctx.arcTo(x + w, y + h, x + w, y + h * 0.70, w * 0.36);
+                ctx.lineTo(x + w, y + h * 0.30);
+                ctx.arcTo(x + w, y, x + w * 0.50, y, w * 0.36);
+                ctx.lineTo(x + w * 0.50, y);
+                ctx.arcTo(x, y, x, y + h * 0.30, w * 0.36);
+                ctx.lineTo(x, y + h * 0.42);
+                ctx.arcTo(x, y + h * 0.62, x + w * 0.50, y + h * 0.62, w * 0.24);
+                ctx.lineTo(x + w * 0.66, y + h * 0.62);
+                ctx.lineTo(x + w * 0.66, y + h * 0.64);
+                ctx.arcTo(x + w * 0.66, y + h * 0.76, x + w * 0.50, y + h * 0.76, w * 0.12);
+                ctx.lineTo(x, y + h * 0.76);
                 ctx.closePath();
                 ctx.fillStyle = color;
                 ctx.fill();
 
                 ctx.globalCompositeOperation = "destination-out";
-                ctx.beginPath();
-                ctx.arc(cx, cy, w * 0.19, 0, Math.PI * 2, false);
+                drawRoundRect(ctx, x + w * 0.32, y + h * 0.22, w * 0.34, h * 0.22, w * 0.14);
                 ctx.fillStyle = "#ffffff";
                 ctx.fill();
             }
