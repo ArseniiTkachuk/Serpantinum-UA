@@ -1035,7 +1035,8 @@
       "continuous": "Անընդհատ",
       "default": "Լռելյայն",
       "material": "Մատերիալ",
-      "materialAnalog": "Մատերիալ անալոգային"
+      "materialAnalog": "Մատերիալ անալոգային",
+      "lumen": "Լյումեն"
     },
     "presets": {
       "minimal": {

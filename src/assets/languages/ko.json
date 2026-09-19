@@ -1035,7 +1035,8 @@
       "continuous": "연속형",
       "default": "기본",
       "material": "머티리얼",
-      "materialAnalog": "머티리얼 아날로그"
+      "materialAnalog": "머티리얼 아날로그",
+      "lumen": "루멘"
     },
     "presets": {
       "minimal": {

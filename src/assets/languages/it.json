@@ -1034,7 +1034,8 @@
       "continuous": "Continuo",
       "default": "Predefinito",
       "material": "Material",
-      "materialAnalog": "Material analogico"
+      "materialAnalog": "Material analogico",
+      "lumen": "Lumen"
     },
     "presets": {
       "minimal": {

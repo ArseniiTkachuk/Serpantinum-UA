@@ -1029,7 +1029,8 @@
       "continuous": "Fasiləsiz",
       "default": "Standart",
       "material": "Material",
-      "materialAnalog": "Material analoq"
+      "materialAnalog": "Material analoq",
+      "lumen": "Lümen"
     },
     "presets": {
       "minimal": {

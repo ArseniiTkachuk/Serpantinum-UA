@@ -1035,7 +1035,8 @@
       "continuous": "Liên tục",
       "default": "Mặc định",
       "material": "Material",
-      "materialAnalog": "Material kim"
+      "materialAnalog": "Material kim",
+      "lumen": "Lumen"
     },
     "presets": {
       "minimal": {

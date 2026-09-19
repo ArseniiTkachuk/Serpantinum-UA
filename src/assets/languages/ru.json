@@ -1079,7 +1079,8 @@
       "continuous": "Сплошной",
       "default": "По умолчанию",
       "material": "Материал",
-      "materialAnalog": "Материал аналоговые"
+      "materialAnalog": "Материал аналоговые",
+      "lumen": "Люмен"
     },
     "presets": {
       "minimal": {
