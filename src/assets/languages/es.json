@@ -1077,7 +1077,10 @@
       "rounded": "Redondeado",
       "bars": "Barras",
       "continuous": "Continuo",
-      "default": "Predeterminado"
+      "default": "Predeterminado",
+      "material": "Material",
+      "materialAnalog": "Material analógico",
+      "lumen": "Lumen"
     },
     "presets": {
       "minimal": {

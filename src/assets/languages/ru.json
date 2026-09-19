@@ -1077,7 +1077,10 @@
       "rounded": "Скругленный",
       "bars": "Полосы",
       "continuous": "Сплошной",
-      "default": "По умолчанию"
+      "default": "По умолчанию",
+      "material": "Материал",
+      "materialAnalog": "Материал аналоговые",
+      "lumen": "Люмен"
     },
     "presets": {
       "minimal": {

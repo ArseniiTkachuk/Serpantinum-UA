@@ -1033,7 +1033,10 @@
       "rounded": "Bo tròn",
       "bars": "Thanh",
       "continuous": "Liên tục",
-      "default": "Mặc định"
+      "default": "Mặc định",
+      "material": "Material",
+      "materialAnalog": "Material kim",
+      "lumen": "Lumen"
     },
     "presets": {
       "minimal": {

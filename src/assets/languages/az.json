@@ -1027,7 +1027,10 @@
       "rounded": "Yuvarlaqlaşdırılmış",
       "bars": "Zolaqlar",
       "continuous": "Fasiləsiz",
-      "default": "Standart"
+      "default": "Standart",
+      "material": "Material",
+      "materialAnalog": "Material analoq",
+      "lumen": "Lümen"
     },
     "presets": {
       "minimal": {
