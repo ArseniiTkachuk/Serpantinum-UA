@@ -1046,7 +1046,11 @@
       "rounded": "Заокруглений",
       "bars": "Смуги",
       "continuous": "Суцільний",
-      "default": "Типовий"
+      "default": "Типовий",
+      "material": "Матеріал",
+      "materialAnalog": "Матеріал Аналоговий",
+      "lumen": "Люмен"
+ 
     },
     "presets": {
       "minimal": {
