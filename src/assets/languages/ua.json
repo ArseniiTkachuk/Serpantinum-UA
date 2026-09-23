@@ -680,7 +680,11 @@
   },
   "applauncher": {
     "search": "Пошук",
-    "placeholder": "Почніть з > для команди..."
+    "placeholder": "Почніть з > для команди...",
+    "tab_applications": "Застосунок",
+    "tab_files": "Файли",
+    "placeholder_files": "Пошук файлів або шлях..."
+
   },
   "calendar": {
     "loading": "Завантаження...",
