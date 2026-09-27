@@ -21,13 +21,55 @@ Item {
     property bool isRound: false
 
     readonly property real widgetRadius: root.isRound ? (Math.min(root.width, root.height) / 2) : (ThemeBackend.borderRadius * 2)
-    readonly property color primaryColor: ThemeBackend.mauve
+
+    function getContrastColor(col) {
+        if (!col) return "#ffffff";
+        let r = Math.round(col.r * 255);
+        let g = Math.round(col.g * 255);
+        let b = Math.round(col.b * 255);
+        let brightness = Math.round((299 * r + 587 * g + 114 * b) / 1000);
+        if (brightness < 70) return "#ffffff";
+        if (brightness < 120) return "#fafafa";
+        if (brightness < 170) return "#f2f2f2";
+        if (brightness < 210) return "#e8e8e8";
+        if (brightness < 235) return "#444444";
+        return "#1e1e2e";
+    }
+
+    readonly property color dynamicTextColor: {
+        let rawCol = (typeof MprisController !== "undefined" && MprisController.textColor) ? MprisController.textColor : "";
+        if (rawCol) {
+            let c = String(rawCol).trim();
+            let match = c.match(/^(#[0-9a-fA-F]{6})/);
+            if (match) return match[1];
+        }
+        if (ThemeBackend.surface0) {
+            return getContrastColor(ThemeBackend.surface0);
+        }
+        return ThemeBackend.text || "#cdd6f4";
+    }
+
+    readonly property color activeLineColor: root.dynamicTextColor
+    readonly property color primaryColor: root.dynamicTextColor
 
     property var player: MprisController.activePlayer
     readonly property bool isMediaActive: player !== null && player.playbackState !== MprisPlaybackState.Stopped && (player.trackTitle || "") !== ""
     readonly property string trackTitle: player ? (player.trackTitle || "") : ""
     readonly property string trackArtist: player ? (player.trackArtist || "") : ""
     readonly property string currentTrackKey: isMediaActive ? (trackArtist.trim() + " - " + trackTitle.trim()) : ""
+
+    property var localCache: ({})
+
+    function getMemCache() {
+        try {
+            if (typeof globalThis !== "undefined" && globalThis) {
+                if (!globalThis._serpantinumLyrics) globalThis._serpantinumLyrics = {};
+                return globalThis._serpantinumLyrics;
+            }
+        } catch(e) {}
+        if (!root.localCache) root.localCache = {};
+        return root.localCache;
+    }
 
     property var lyrics: []
     property bool hasLyrics: false
@@ -138,7 +180,7 @@ Item {
                 break;
             }
         }
-        let highlight = root.primaryColor.toString();
+        let highlight = root.activeLineColor.toString();
         let past = ThemeBackend.text.toString();
         let upcoming = Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.40).toString();
         let html = "";
@@ -255,7 +297,33 @@ Item {
         lastFetchedKey = currentTrackKey;
         activeFetchKey = currentTrackKey;
         activeItemCenterY = 0;
-        fetchLyrics(trackArtist, trackTitle, currentTrackKey);
+        checkCacheAndFetch(currentTrackKey);
+    }
+
+    function checkCacheAndFetch(key) {
+        let mem = getMemCache();
+        if (mem && mem[key] && Array.isArray(mem[key]) && mem[key].length > 0) {
+            applyLyrics(mem[key], key, false);
+            return;
+        }
+
+        root.loading = true;
+        cacheReadProcess.running = false;
+        cacheReadProcess.targetKey = key;
+        cacheReadProcess.running = true;
+    }
+
+    function saveLyricsToDisk(key, parsedList) {
+        if (!key || !parsedList || parsedList.length === 0) return;
+        try {
+            let jsonStr = JSON.stringify(parsedList);
+            if (saveLyricsProcess.running) {
+                saveLyricsProcess.running = false;
+            }
+            saveLyricsProcess.pendingKey = key;
+            saveLyricsProcess.pendingData = jsonStr;
+            saveLyricsProcess.running = true;
+        } catch (e) {}
     }
 
     function cleanString(str) {
@@ -528,12 +596,19 @@ Item {
         return result;
     }
 
-    function applyLyrics(parsedList, key) {
+    function applyLyrics(parsedList, key, shouldSaveToDisk) {
         if (key !== root.activeFetchKey) return;
         searchTimeoutTimer.stop();
         root.lyrics = parsedList;
         root.hasLyrics = parsedList && parsedList.length > 0;
         root.loading = false;
+        if (root.hasLyrics) {
+            let mem = getMemCache();
+            if (mem) mem[key] = parsedList;
+            if (shouldSaveToDisk !== false) {
+                saveLyricsToDisk(key, parsedList);
+            }
+        }
     }
 
     function checkCompletion(session) {
@@ -542,7 +617,7 @@ Item {
             session.done = true;
             searchTimeoutTimer.stop();
             if (session.lineCandidate && session.lineCandidate.length > 0) {
-                applyLyrics(session.lineCandidate, session.key);
+                applyLyrics(session.lineCandidate, session.key, true);
             } else {
                 root.loading = false;
                 root.hasLyrics = false;
@@ -552,6 +627,7 @@ Item {
     }
 
     function fetchLyrics(artist, title, requestKey) {
+        if (requestKey !== root.currentTrackKey) return;
         loading = true;
         hasLyrics = false;
         lyrics = [];
@@ -633,7 +709,7 @@ Item {
                     if (wordLyrics && wordLyrics.length > 0) {
                         session.hasWordLyrics = true;
                         session.done = true;
-                        applyLyrics(wordLyrics, session.key);
+                        applyLyrics(wordLyrics, session.key, true);
                         return;
                     }
 
@@ -677,7 +753,7 @@ Item {
                     if (wordLyrics && wordLyrics.length > 0) {
                         session.hasWordLyrics = true;
                         session.done = true;
-                        applyLyrics(wordLyrics, session.key);
+                        applyLyrics(wordLyrics, session.key, true);
                         return;
                     }
 
@@ -723,7 +799,7 @@ Item {
                             if (wordLyrics && wordLyrics.length > 0) {
                                 session.hasWordLyrics = true;
                                 session.done = true;
-                                applyLyrics(wordLyrics, session.key);
+                                applyLyrics(wordLyrics, session.key, true);
                                 return;
                             }
                         }
@@ -777,8 +853,57 @@ Item {
             }
             root.activeFetchKey = key;
             root.lastFetchedKey = key;
-            applyLyrics(parsed, key);
+            applyLyrics(parsed, key, true);
         }
+    }
+
+    Process {
+        id: cacheReadProcess
+        property string targetKey: ""
+        command: [
+            "bash",
+            "-c",
+            'CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/serpantinum/lyrics"; HASH=$(echo -n "$1" | md5sum | cut -d" " -f1); FILE="$CACHE_DIR/${HASH}.json"; if [ -f "$FILE" ] && [ -s "$FILE" ]; then cat "$FILE"; fi',
+            "--",
+            targetKey
+        ]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let content = this.text.trim();
+                let key = cacheReadProcess.targetKey;
+                if (key !== root.currentTrackKey) return;
+
+                if (content !== "") {
+                    try {
+                        let parsed = JSON.parse(content);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            let mem = root.getMemCache();
+                            if (mem) mem[key] = parsed;
+                            root.applyLyrics(parsed, key, false);
+                            return;
+                        }
+                    } catch(e) {}
+                }
+
+                root.fetchLyrics(root.trackArtist, root.trackTitle, key);
+            }
+        }
+    }
+
+    Process {
+        id: saveLyricsProcess
+        property string pendingKey: ""
+        property string pendingData: ""
+        command: [
+            "bash",
+            "-c",
+            'CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/serpantinum/lyrics"; mkdir -p "$CACHE_DIR"; HASH=$(echo -n "$1" | md5sum | cut -d" " -f1); printf "%s" "$2" > "$CACHE_DIR/${HASH}.json"',
+            "--",
+            pendingKey,
+            pendingData
+        ]
+        running: false
     }
 
     Process {
@@ -928,7 +1053,7 @@ Item {
                                 font.family: ThemeBackend.fontFamily
                                 font.weight: Font.Bold
                                 font.pixelSize: root.baseActiveFont
-                                color: (index === root.currentIndex && (!modelData.words || modelData.words.length === 0)) ? root.primaryColor : ThemeBackend.text
+                                color: (index === root.currentIndex && (!modelData.words || modelData.words.length === 0)) ? root.activeLineColor : ThemeBackend.text
                                 opacity: root.getLineOpacity(index)
                                 scale: {
                                     if (index === root.currentIndex) return 1.0;
@@ -985,7 +1110,7 @@ Item {
                 text: "󰎈"
                 font.family: "Iosevka Nerd Font"
                 font.pixelSize: Scaler.s(26)
-                color: root.primaryColor
+                color: root.dynamicTextColor
                 opacity: 0.75
             }
 
