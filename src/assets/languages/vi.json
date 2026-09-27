@@ -739,7 +739,9 @@
       "jazz": "Jazz",
       "classic": "Cổ điển",
       "custom": "Tùy chỉnh"
-    }
+    },
+    "searching_lyrics": "Đang tìm lời bài hát...",
+    "no_lyrics": "Không tìm thấy lời bài hát"
   },
   "network": {
     "tabs": {
@@ -1039,7 +1041,8 @@
       "default": "Mặc định",
       "material": "Material",
       "materialAnalog": "Material kim",
-      "lumen": "Lumen"
+      "lumen": "Lumen",
+      "lyrics": "Lời bài hát"
     },
     "presets": {
       "minimal": {

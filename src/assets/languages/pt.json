@@ -739,7 +739,9 @@
       "jazz": "Jazz",
       "classic": "Clássica",
       "custom": "Personalizado"
-    }
+    },
+    "searching_lyrics": "Procurando letra...",
+    "no_lyrics": "Nenhuma letra encontrada"
   },
   "network": {
     "tabs": {
@@ -1039,7 +1041,8 @@
       "default": "Padrão",
       "material": "Material",
       "materialAnalog": "Material analógico",
-      "lumen": "Lúmen"
+      "lumen": "Lúmen",
+      "lyrics": "Letra"
     },
     "presets": {
       "minimal": {

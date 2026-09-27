@@ -739,7 +739,9 @@
       "jazz": "Ջազ",
       "classic": "Դասական",
       "custom": "Հատուկ"
-    }
+    },
+    "searching_lyrics": "Բառերի որոնում...",
+    "no_lyrics": "Բառերը չեն գտնվել"
   },
   "network": {
     "tabs": {
@@ -1039,7 +1041,8 @@
       "default": "Լռելյայն",
       "material": "Մատերիալ",
       "materialAnalog": "Մատերիալ անալոգային",
-      "lumen": "Լյումեն"
+      "lumen": "Լյումեն",
+      "lyrics": "Երգի բառեր"
     },
     "presets": {
       "minimal": {

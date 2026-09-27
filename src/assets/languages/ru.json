@@ -783,7 +783,9 @@
       "jazz": "Джаз",
       "classic": "Классика",
       "custom": "Пользовательский"
-    }
+    },
+    "searching_lyrics": "Поиск текста...",
+    "no_lyrics": "Текст не найден"
   },
   "network": {
     "tabs": {
@@ -1083,7 +1085,8 @@
       "default": "По умолчанию",
       "material": "Материал",
       "materialAnalog": "Материал аналоговые",
-      "lumen": "Люмен"
+      "lumen": "Люмен",
+      "lyrics": "Текст песни"
     },
     "presets": {
       "minimal": {

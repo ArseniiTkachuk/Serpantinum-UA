@@ -783,7 +783,9 @@
       "jazz": "Jazz",
       "classic": "Klassik",
       "custom": "Benutzerdefiniert"
-    }
+    },
+    "searching_lyrics": "Suche Songtext...",
+    "no_lyrics": "Kein Songtext gefunden"
   },
   "network": {
     "tabs": {
@@ -1083,7 +1085,8 @@
       "default": "Standard",
       "material": "Material",
       "materialAnalog": "Material analog",
-      "lumen": "Lumen"
+      "lumen": "Lumen",
+      "lyrics": "Songtext"
     },
     "presets": {
       "minimal": {

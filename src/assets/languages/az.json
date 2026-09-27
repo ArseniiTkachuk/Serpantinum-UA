@@ -733,7 +733,9 @@
       "jazz": "Caz",
       "classic": "Klassik",
       "custom": "Xüsusi"
-    }
+    },
+    "searching_lyrics": "Sözlər axtarılır...",
+    "no_lyrics": "Sözlər tapılmadı"
   },
   "network": {
     "tabs": {
@@ -1033,7 +1035,8 @@
       "default": "Standart",
       "material": "Material",
       "materialAnalog": "Material analoq",
-      "lumen": "Lümen"
+      "lumen": "Lümen",
+      "lyrics": "Mahnı sözləri"
     },
     "presets": {
       "minimal": {
