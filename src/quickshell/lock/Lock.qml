@@ -907,7 +907,7 @@ Scope {
                         anchors.fill: parent
                         z: 2
                         color: ThemeBackend.crust
-                        opacity: (screenRoot.inputActive ? 0.14 : 0.05) * screenRoot.panelReveal
+                        opacity: (screenRoot.inputActive ? 0.14 : 0.38) * screenRoot.panelReveal
                         Behavior on opacity {
                             enabled: !screenRoot.isPlayingIntro && !screenRoot.isUnlocking
                             NumberAnimation { duration: 600; easing.type: Easing.OutCubic }
@@ -2060,9 +2060,9 @@ Scope {
                                         }
 
                                         Row {
-                                            anchors.left: parent.left
-                                            anchors.right: parent.right
-                                            anchors.bottom: parent.bottom
+                                            anchors.left: parent
+                                            anchors.right: parent
+                                            anchors.bottom: parent
                                             height: Math.max(30, parent.height * 0.85)
                                             spacing: Math.max(2, Math.floor(parent.width * 0.008))
 
