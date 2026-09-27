@@ -36,9 +36,9 @@ Item {
     property string lastFetchedKey: ""
     property real currentPosition: 0
     property var activeSession: null
+    property real activeItemCenterY: 0
 
     readonly property real sideMargin: Math.max(Scaler.s(12), root.width * 0.05)
-    readonly property real availableContentWidth: Math.max(10, root.width - (sideMargin * 2))
 
     readonly property real refWidth: Scaler.s(320)
     readonly property real refHeight: Scaler.s(100)
@@ -66,9 +66,27 @@ Item {
         return idx;
     }
 
+    onCurrentIndexChanged: {
+        if (currentIndex >= 0 && lyricsRepeater && lyricsRepeater.count > currentIndex) {
+            let item = lyricsRepeater.itemAt(currentIndex);
+            if (item) {
+                root.activeItemCenterY = item.y + item.height / 2;
+            }
+        }
+    }
+
     readonly property real targetY: {
         let center = bgContainer.height * 0.44;
-        if (currentIndex >= 0) {
+        if (currentIndex >= 0 && root.hasLyrics) {
+            if (root.activeItemCenterY > 0) {
+                return center - root.activeItemCenterY;
+            }
+            if (lyricsRepeater && lyricsRepeater.count > currentIndex) {
+                let item = lyricsRepeater.itemAt(currentIndex);
+                if (item) {
+                    return center - (item.y + item.height / 2);
+                }
+            }
             return center - (currentIndex * itemStep + lineHeight / 2);
         }
         return center - (lineHeight / 2);
@@ -96,24 +114,6 @@ Item {
             }
         }
         return best;
-    }
-
-    function computeFontSize(lineText, isActive) {
-        let baseSize = isActive ? root.baseActiveFont : root.baseNormalFont;
-        let str = lineText ? lineText.trim() : "";
-        if (str.length === 0 || root.availableContentWidth <= 0) return baseSize;
-
-        let charFactor = isActive ? 0.58 : 0.52;
-        let estimatedWidth = str.length * baseSize * charFactor;
-
-        if (estimatedWidth <= root.availableContentWidth) {
-            return baseSize;
-        }
-
-        let scaledSize = baseSize * (root.availableContentWidth / estimatedWidth);
-        let minAllowedSize = Math.max(Scaler.s(9), baseNormalFont * 0.55);
-
-        return Math.max(minAllowedSize, scaledSize);
     }
 
     function getLineOpacity(idx) {
@@ -243,6 +243,7 @@ Item {
             lyrics = [];
             hasLyrics = false;
             loading = false;
+            activeItemCenterY = 0;
             searchTimeoutTimer.stop();
             return;
         }
@@ -253,6 +254,7 @@ Item {
 
         lastFetchedKey = currentTrackKey;
         activeFetchKey = currentTrackKey;
+        activeItemCenterY = 0;
         fetchLyrics(trackArtist, trackTitle, currentTrackKey);
     }
 
@@ -837,8 +839,8 @@ Item {
                 layer.enabled: true
                 layer.effect: MultiEffect {
                     blurEnabled: true
-                    blur: 0.40
-                    blurMax: 32
+                    blur: 0.55
+                    blurMax: 36
                 }
 
                 Behavior on opacity {
@@ -852,7 +854,7 @@ Item {
             Rectangle {
                 id: artDarkScrim
                 anchors.fill: parent
-                color: Qt.rgba(ThemeBackend.crust.r, ThemeBackend.crust.g, ThemeBackend.crust.b, 0.45)
+                color: Qt.rgba(ThemeBackend.crust.r, ThemeBackend.crust.g, ThemeBackend.crust.b, 0.40)
             }
         }
 
@@ -865,7 +867,7 @@ Item {
             Item {
                 id: scrollContainer
                 width: parent.width
-                height: root.lyrics.length * root.itemStep
+                height: lyricsColumn.height
                 y: root.targetY
 
                 Behavior on y {
@@ -875,64 +877,94 @@ Item {
                     }
                 }
 
-                Repeater {
-                    model: root.lyrics
+                Column {
+                    id: lyricsColumn
+                    width: parent.width
+                    spacing: root.lineSpacing
 
-                    delegate: Item {
-                        width: scrollContainer.width
-                        height: root.lineHeight
-                        y: index * root.itemStep
+                    Repeater {
+                        id: lyricsRepeater
+                        model: root.lyrics
 
-                        property real calculatedFontSize: root.computeFontSize(modelData.text, index === root.currentIndex)
+                        delegate: Item {
+                            id: lineDelegate
+                            width: lyricsColumn.width
+                            height: Math.max(root.lineHeight, lineText.implicitHeight)
 
-                        Text {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.leftMargin: root.sideMargin
-                            anchors.rightMargin: root.sideMargin
-                            anchors.verticalCenter: parent.verticalCenter
-                            horizontalAlignment: Text.AlignLeft
-                            font.family: ThemeBackend.fontFamily
-                            font.weight: index === root.currentIndex ? Font.Black : Font.Bold
-                            font.pixelSize: parent.calculatedFontSize
-                            color: (index === root.currentIndex && (!modelData.words || modelData.words.length === 0)) ? root.primaryColor : ThemeBackend.text
-                            opacity: root.getLineOpacity(index)
-                            scale: {
-                                if (index === root.currentIndex) return 1.0;
-                                let d = Math.abs(index - root.currentIndex);
-                                if (d === 1) return 0.96;
-                                return 0.92;
-                            }
-                            transformOrigin: Item.Left
-                            elide: Text.ElideRight
+                            readonly property bool isCurrent: index === root.currentIndex
 
-                            textFormat: (index === root.currentIndex && modelData.words && modelData.words.length > 0) ? Text.StyledText : Text.PlainText
-
-                            text: {
-                                if (index === root.currentIndex && modelData.words && modelData.words.length > 0) {
-                                    return root.renderActiveLineText(modelData, root.currentPosition);
-                                }
-                                return modelData.text !== "" ? modelData.text : "♪";
-                            }
-
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: 320
-                                    easing.type: Easing.OutCubic
+                            Component.onCompleted: {
+                                if (isCurrent) {
+                                    root.activeItemCenterY = y + height / 2;
                                 }
                             }
 
-                            Behavior on opacity {
-                                NumberAnimation {
-                                    duration: 380
-                                    easing.type: Easing.OutCubic
+                            onIsCurrentChanged: {
+                                if (isCurrent) {
+                                    root.activeItemCenterY = y + height / 2;
                                 }
                             }
 
-                            Behavior on scale {
-                                NumberAnimation {
-                                    duration: 380
-                                    easing.type: Easing.OutQuart
+                            onYChanged: {
+                                if (isCurrent) {
+                                    root.activeItemCenterY = y + height / 2;
+                                }
+                            }
+
+                            onHeightChanged: {
+                                if (isCurrent) {
+                                    root.activeItemCenterY = y + height / 2;
+                                }
+                            }
+
+                            Text {
+                                id: lineText
+                                width: parent.width - (root.sideMargin * 2)
+                                x: root.sideMargin
+                                anchors.verticalCenter: parent.verticalCenter
+                                horizontalAlignment: Text.AlignLeft
+                                wrapMode: Text.WordWrap
+                                font.family: ThemeBackend.fontFamily
+                                font.weight: index === root.currentIndex ? Font.Black : Font.Bold
+                                font.pixelSize: index === root.currentIndex ? root.baseActiveFont : root.baseNormalFont
+                                color: (index === root.currentIndex && (!modelData.words || modelData.words.length === 0)) ? root.primaryColor : ThemeBackend.text
+                                opacity: root.getLineOpacity(index)
+                                scale: {
+                                    if (index === root.currentIndex) return 1.0;
+                                    let d = Math.abs(index - root.currentIndex);
+                                    if (d === 1) return 0.96;
+                                    return 0.92;
+                                }
+                                transformOrigin: Item.Left
+
+                                textFormat: (index === root.currentIndex && modelData.words && modelData.words.length > 0) ? Text.StyledText : Text.PlainText
+
+                                text: {
+                                    if (index === root.currentIndex && modelData.words && modelData.words.length > 0) {
+                                        return root.renderActiveLineText(modelData, root.currentPosition);
+                                    }
+                                    return modelData.text !== "" ? modelData.text : "♪";
+                                }
+
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: 320
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+
+                                Behavior on opacity {
+                                    NumberAnimation {
+                                        duration: 380
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+
+                                Behavior on scale {
+                                    NumberAnimation {
+                                        duration: 380
+                                        easing.type: Easing.OutQuart
+                                    }
                                 }
                             }
                         }
