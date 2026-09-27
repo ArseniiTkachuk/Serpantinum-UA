@@ -120,9 +120,9 @@ Item {
         if (root.currentIndex < 0) return 0.50;
         if (idx === root.currentIndex) return 1.0;
         let d = Math.abs(idx - root.currentIndex);
-        if (d === 1) return 0.56;
-        if (d === 2) return 0.32;
-        return Math.max(0.14, 0.32 - ((d - 2) * 0.08));
+        if (d === 1) return 0.60;
+        if (d === 2) return 0.38;
+        return Math.max(0.20, 0.38 - ((d - 2) * 0.08));
     }
 
     function renderActiveLineText(modelData, pos) {
@@ -832,6 +832,7 @@ Item {
             Image {
                 id: bgArtImg
                 anchors.fill: parent
+                anchors.margins: -Scaler.s(36)
                 source: (root.isMediaActive && MprisController.artUrl) ? (MprisController.artUrl.startsWith("file://") || MprisController.artUrl.startsWith("http") ? MprisController.artUrl : "file://" + MprisController.artUrl) : ""
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
@@ -872,8 +873,8 @@ Item {
 
                 Behavior on y {
                     NumberAnimation {
-                        duration: 520
-                        easing.type: Easing.OutQuart
+                        duration: 650
+                        easing.type: Easing.OutCubic
                     }
                 }
 
@@ -925,15 +926,15 @@ Item {
                                 horizontalAlignment: Text.AlignLeft
                                 wrapMode: Text.WordWrap
                                 font.family: ThemeBackend.fontFamily
-                                font.weight: index === root.currentIndex ? Font.Black : Font.Bold
-                                font.pixelSize: index === root.currentIndex ? root.baseActiveFont : root.baseNormalFont
+                                font.weight: Font.Bold
+                                font.pixelSize: root.baseActiveFont
                                 color: (index === root.currentIndex && (!modelData.words || modelData.words.length === 0)) ? root.primaryColor : ThemeBackend.text
                                 opacity: root.getLineOpacity(index)
                                 scale: {
                                     if (index === root.currentIndex) return 1.0;
                                     let d = Math.abs(index - root.currentIndex);
-                                    if (d === 1) return 0.96;
-                                    return 0.92;
+                                    if (d === 1) return 0.86;
+                                    return 0.80;
                                 }
                                 transformOrigin: Item.Left
 
@@ -948,22 +949,22 @@ Item {
 
                                 Behavior on color {
                                     ColorAnimation {
-                                        duration: 320
+                                        duration: 650
                                         easing.type: Easing.OutCubic
                                     }
                                 }
 
                                 Behavior on opacity {
                                     NumberAnimation {
-                                        duration: 380
+                                        duration: 650
                                         easing.type: Easing.OutCubic
                                     }
                                 }
 
                                 Behavior on scale {
                                     NumberAnimation {
-                                        duration: 380
-                                        easing.type: Easing.OutQuart
+                                        duration: 650
+                                        easing.type: Easing.OutCubic
                                     }
                                 }
                             }
@@ -971,15 +972,6 @@ Item {
                     }
                 }
             }
-        }
-
-        Rectangle {
-            anchors.fill: parent
-            radius: root.widgetRadius
-            color: "transparent"
-            border.width: 1
-            border.color: Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.08)
-            z: 10
         }
 
         ColumnLayout {
