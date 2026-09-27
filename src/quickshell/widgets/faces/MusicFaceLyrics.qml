@@ -36,21 +36,134 @@ Item {
         return "#1e1e2e";
     }
 
-    readonly property color dynamicTextColor: {
-        let rawCol = (typeof MprisController !== "undefined" && MprisController.textColor) ? MprisController.textColor : "";
-        if (rawCol) {
-            let c = String(rawCol).trim();
-            let match = c.match(/^(#[0-9a-fA-F]{6})/);
-            if (match) return match[1];
+    function getEffectiveBackgroundColor() {
+        let baseBg = (typeof ThemeBackend !== "undefined" && ThemeBackend.surface0) ? ThemeBackend.surface0 : Qt.color("#313244");
+        if (root.isMediaActive && Boolean(MprisController.artUrl)) {
+            let artCol = (typeof MprisController !== "undefined" && (MprisController.dominantColor || MprisController.backgroundColor)) ? (MprisController.dominantColor || MprisController.backgroundColor) : "";
+            let crust = (typeof ThemeBackend !== "undefined" && ThemeBackend.crust) ? ThemeBackend.crust : Qt.color("#11111b");
+            if (artCol) {
+                let c = Qt.color(artCol);
+                return Qt.rgba(
+                    c.r * 0.6 + crust.r * 0.4,
+                    c.g * 0.6 + crust.g * 0.4,
+                    c.b * 0.6 + crust.b * 0.4,
+                    1.0
+                );
+            }
+            return Qt.rgba(
+                baseBg.r * 0.6 + crust.r * 0.4,
+                baseBg.g * 0.6 + crust.g * 0.4,
+                baseBg.b * 0.6 + crust.b * 0.4,
+                1.0
+            );
         }
-        if (ThemeBackend.surface0) {
-            return getContrastColor(ThemeBackend.surface0);
-        }
-        return ThemeBackend.text || "#cdd6f4";
+        return baseBg;
     }
 
+    function getThemePrimaryColor() {
+        if (typeof ThemeBackend !== "undefined") {
+            if (ThemeBackend.primary) return Qt.color(ThemeBackend.primary);
+            if (ThemeBackend.blue) return Qt.color(ThemeBackend.blue);
+            if (ThemeBackend.mauve) return Qt.color(ThemeBackend.mauve);
+        }
+        if (typeof MprisController !== "undefined" && MprisController.primaryColor) {
+            return Qt.color(MprisController.primaryColor);
+        }
+        return Qt.color("#89b4fa");
+    }
+
+    function getLuminance(col) {
+        if (!col) return 0;
+        let c = Qt.color(col);
+        let s = [c.r, c.g, c.b].map(function(v) {
+            return v <= 0.03928 ? (v / 12.92) : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * s[0] + 0.7152 * s[1] + 0.0722 * s[2];
+    }
+
+    function getContrastRatio(col1, col2) {
+        let l1 = getLuminance(col1);
+        let l2 = getLuminance(col2);
+        let lighter = Math.max(l1, l2);
+        let darker = Math.min(l1, l2);
+        return (lighter + 0.05) / (darker + 0.05);
+    }
+
+    function areColorsTooSimilar(c1, c2) {
+        let col1 = Qt.color(c1);
+        let col2 = Qt.color(c2);
+        let dr = Math.abs(col1.r - col2.r);
+        let dg = Math.abs(col1.g - col2.g);
+        let db = Math.abs(col1.b - col2.b);
+        let dist = Math.sqrt(dr * dr + dg * dg + db * db);
+        if (dist < 0.28) return true;
+
+        let isCol1Blue = (col1.b > col1.r + 0.08 && col1.b > col1.g + 0.04);
+        let isCol2Blue = (col2.b > col2.r + 0.08 && col2.b > col2.g + 0.04);
+        if (isCol1Blue && isCol2Blue && dist < 0.45) return true;
+
+        return false;
+    }
+
+    function blendColors(c1, c2, ratio) {
+        let col1 = Qt.color(c1);
+        let col2 = Qt.color(c2);
+        let t = Math.max(0.0, Math.min(1.0, ratio));
+        let r = col1.r * (1.0 - t) + col2.r * t;
+        let g = col1.g * (1.0 - t) + col2.g * t;
+        let b = col1.b * (1.0 - t) + col2.b * t;
+        return Qt.rgba(r, g, b, 1.0);
+    }
+
+    function getAdjustedLyricColor() {
+        let bg = getEffectiveBackgroundColor();
+        let primary = getThemePrimaryColor();
+        let targetWhitish = Qt.color(getContrastColor(bg));
+
+        let contrast = getContrastRatio(primary, bg);
+        let tooSimilar = areColorsTooSimilar(primary, bg);
+
+        if (contrast >= 5.0 && !tooSimilar) {
+            return primary;
+        }
+
+        let ratios = [0.25, 0.45, 0.65, 0.80, 0.92, 1.0];
+        for (let i = 0; i < ratios.length; i++) {
+            let blended = blendColors(primary, targetWhitish, ratios[i]);
+            let cr = getContrastRatio(blended, bg);
+            let sim = areColorsTooSimilar(blended, bg);
+            if (cr >= 4.5 && !sim) {
+                return blended;
+            }
+        }
+
+        if (typeof ThemeBackend !== "undefined") {
+            let palette = [
+                ThemeBackend.peach,
+                ThemeBackend.yellow,
+                ThemeBackend.teal,
+                ThemeBackend.green,
+                ThemeBackend.sapphire,
+                ThemeBackend.mauve,
+                ThemeBackend.pink
+            ];
+            for (let i = 0; i < palette.length; i++) {
+                if (!palette[i]) continue;
+                let c = Qt.color(palette[i]);
+                let cr = getContrastRatio(c, bg);
+                let sim = areColorsTooSimilar(c, bg);
+                if (cr >= 5.0 && !sim) {
+                    return c;
+                }
+            }
+        }
+
+        return targetWhitish;
+    }
+
+    readonly property color primaryColor: getThemePrimaryColor()
+    readonly property color dynamicTextColor: getAdjustedLyricColor()
     readonly property color activeLineColor: root.dynamicTextColor
-    readonly property color primaryColor: root.dynamicTextColor
 
     property var player: MprisController.activePlayer
     readonly property bool isMediaActive: player !== null && player.playbackState !== MprisPlaybackState.Stopped && (player.trackTitle || "") !== ""
