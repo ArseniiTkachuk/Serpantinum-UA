@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Mpris
 import "../../reusables"
 import "../../"
@@ -139,7 +140,6 @@ Item {
         let html = "";
         for (let i = 0; i < modelData.words.length; i++) {
             let w = modelData.words[i];
-            let escaped = w.text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
             let end = (w.endTime !== undefined && w.endTime > w.time) ? w.endTime : (i < modelData.words.length - 1 ? modelData.words[i + 1].time : (w.time + 0.8));
 
             let space = "";
@@ -151,6 +151,8 @@ Item {
                     }
                 }
             }
+
+            let escaped = w.text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
             if (i === activeIdx) {
                 html += "<font color='" + highlight + "'>" + escaped + "</font>" + space;
@@ -226,6 +228,10 @@ Item {
     Component.onCompleted: triggerSearch()
 
     function triggerSearch() {
+        if (lyricsPickerPopup.visible || lyricsPickerPopup.opened) {
+            lyricsPickerPopup.closePicker();
+        }
+
         if (!isMediaActive || currentTrackKey === "") {
             lastFetchedKey = "";
             activeFetchKey = "";
@@ -736,6 +742,61 @@ Item {
         xhr.send();
     }
 
+    function loadLocalLyricsFile(filePath) {
+        if (!filePath || filePath.trim() === "" || !root.isMediaActive) return;
+        let cleanPath = filePath.toString();
+        if (cleanPath.startsWith("file://")) {
+            cleanPath = cleanPath.substring(7);
+        }
+        try {
+            cleanPath = decodeURIComponent(cleanPath);
+        } catch (e) {}
+
+        let key = root.currentTrackKey;
+        fileReadProcess.targetKey = key;
+        fileReadProcess.command = ["cat", cleanPath];
+        fileReadProcess.running = false;
+        fileReadProcess.running = true;
+    }
+
+    function loadLocalLyricsContent(content, key) {
+        if (!content || key !== root.currentTrackKey) return;
+        let parsed = parseWordLevelLyrics(content);
+        if (!parsed || parsed.length === 0) {
+            parsed = parseLrc(content);
+        }
+        if (parsed && parsed.length > 0) {
+            if (root.activeSession) {
+                root.activeSession.done = true;
+            }
+            root.activeFetchKey = key;
+            root.lastFetchedKey = key;
+            applyLyrics(parsed, key);
+        }
+    }
+
+    Process {
+        id: fileReadProcess
+        property string targetKey: ""
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let content = this.text;
+                if (fileReadProcess.targetKey === root.currentTrackKey && content.trim() !== "") {
+                    root.loadLocalLyricsContent(content, fileReadProcess.targetKey);
+                }
+            }
+        }
+    }
+
+    LyricsPicker {
+        id: lyricsPickerPopup
+        targetScreen: (root.Window && root.Window.window) ? root.Window.window.screen : null
+        onLyricsSelected: function(filePath, fileName) {
+            root.loadLocalLyricsFile(filePath);
+        }
+    }
+
     Rectangle {
         id: bgContainer
         anchors.fill: parent
@@ -911,6 +972,25 @@ Item {
                 font.weight: Font.DemiBold
                 font.pixelSize: Scaler.s(12)
                 color: ThemeBackend.subtext0
+            }
+
+            ClickButton {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: Scaler.s(4)
+                visible: root.isMediaActive && !root.loading
+                implicitHeight: Scaler.s(28)
+                horizontalPadding: Scaler.s(14)
+                cornerRadius: Scaler.s(8)
+                buttonIcon: "󰈔"
+                buttonText: typeof I18n !== "undefined" ? I18n.t("music.select_local_file", "Select a local file") : "Select a local file"
+                iconFontSize: Scaler.s(14)
+                textFontSize: Scaler.s(11)
+                accentColor: ThemeBackend.surface0
+                textColor: ThemeBackend.text
+                onClicked: {
+                    lyricsPickerPopup.targetScreen = (root.Window && root.Window.window) ? root.Window.window.screen : null;
+                    lyricsPickerPopup.openPicker();
+                }
             }
         }
     }
