@@ -40,12 +40,16 @@ Item {
     readonly property real sideMargin: Math.max(Scaler.s(12), root.width * 0.05)
     readonly property real availableContentWidth: Math.max(10, root.width - (sideMargin * 2))
 
-    readonly property real dynBaseFont: Math.min(root.height * 0.15, root.width * 0.065)
-    readonly property real baseActiveFont: Math.max(Scaler.s(13), Math.min(Scaler.s(22), dynBaseFont))
-    readonly property real baseNormalFont: Math.max(Scaler.s(10), Math.min(Scaler.s(16), baseActiveFont * 0.82))
+    readonly property real refWidth: Scaler.s(320)
+    readonly property real refHeight: Scaler.s(100)
+    readonly property real effectiveSize: Math.sqrt((root.width / Math.max(1, refWidth)) * (root.height / Math.max(1, refHeight)))
+    readonly property real fontScale: Math.pow(Math.max(0.3, effectiveSize), 0.38)
 
-    readonly property real lineHeight: Math.max(Scaler.s(18), Math.min(Scaler.s(30), root.height * 0.125))
-    readonly property real lineSpacing: Math.max(Scaler.s(2), Math.min(Scaler.s(6), root.height * 0.024))
+    readonly property real baseActiveFont: Math.max(Scaler.s(11), Math.min(root.height * 0.24, Scaler.s(15) * fontScale))
+    readonly property real baseNormalFont: Math.max(Scaler.s(9), baseActiveFont * 0.82)
+
+    readonly property real lineHeight: Math.max(Scaler.s(18), baseActiveFont * 1.4)
+    readonly property real lineSpacing: Math.max(Scaler.s(2), baseActiveFont * 0.25)
     readonly property real itemStep: lineHeight + lineSpacing
 
     readonly property int currentIndex: {
@@ -107,7 +111,7 @@ Item {
         }
 
         let scaledSize = baseSize * (root.availableContentWidth / estimatedWidth);
-        let minAllowedSize = Math.max(Scaler.s(9), Math.min(Scaler.s(11), root.height * 0.07));
+        let minAllowedSize = Math.max(Scaler.s(9), baseNormalFont * 0.55);
 
         return Math.max(minAllowedSize, scaledSize);
     }
