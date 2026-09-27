@@ -889,7 +889,7 @@ Scope {
                         z: 1
                         autoPaddingEnabled: false
                         blurEnabled: true
-                        blurMax: screenRoot.s(84)
+                        blurMax: screenRoot.s(64)
                         saturation: 0.25
                         contrast: 0.06
                         brightness: 0.02
@@ -1221,43 +1221,13 @@ Scope {
                                 }
                             }
 
-                            Item {
-                                id: shellShadowBuffer
-                                anchors.fill: mainDashboardShell
-                                anchors.margins: -screenRoot.s(70)
-                                visible: false
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    anchors.margins: screenRoot.s(70)
-                                    anchors.topMargin: screenRoot.s(86)
-                                    anchors.bottomMargin: screenRoot.s(54)
-                                    radius: mainDashboardShell.radius
-                                    color: Qt.rgba(0, 0, 0, 0.6)
-                                }
-                            }
-
-                            MultiEffect {
-                                id: mainDashboardShellBlurShadow
-                                anchors.fill: shellShadowBuffer
-                                source: shellShadowBuffer
-                                autoPaddingEnabled: false
-                                blurEnabled: true
-                                blurMax: screenRoot.s(56)
-                                blur: 1.0
-                                opacity: mainDashboardShell.opacity
-                                scale: mainDashboardShell.scale
-                                visible: opacity > 0.01
-                                transform: mainDashboardShell.transform
-                            }
-
                             Rectangle {
-                                id: mainDashboardShellContactShadow
+                                id: mainDashboardShellShadow
                                 anchors.fill: mainDashboardShell
-                                anchors.topMargin: screenRoot.s(2)
-                                anchors.bottomMargin: -screenRoot.s(2)
+                                anchors.topMargin: screenRoot.s(1.5)
+                                anchors.bottomMargin: -screenRoot.s(1.5)
                                 radius: mainDashboardShell.radius
-                                color: Qt.rgba(0, 0, 0, 0.22)
+                                color: Qt.rgba(0, 0, 0, 0.14)
                                 opacity: mainDashboardShell.opacity
                                 scale: mainDashboardShell.scale
                                 visible: mainDashboardShell.visible
@@ -2060,9 +2030,9 @@ Scope {
                                         }
 
                                         Row {
-                                            anchors.left: parent
-                                            anchors.right: parent
-                                            anchors.bottom: parent
+                                            anchors.left: parent.left
+                                            anchors.right: parent.right
+                                            anchors.bottom: parent.bottom
                                             height: Math.max(30, parent.height * 0.85)
                                             spacing: Math.max(2, Math.floor(parent.width * 0.008))
 
