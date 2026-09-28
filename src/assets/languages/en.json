@@ -1032,7 +1032,8 @@
       "visualizer": "Visualizer",
       "user": "User",
       "usage": "Usage",
-      "battery": "Battery"
+      "battery": "Battery",
+      "github": "Github"
     },
     "variants": {
       "digital": "Digital",
@@ -1061,6 +1062,17 @@
       "dashboard": {
         "name": "Dashboard"
       }
+    },
+    "github": {
+      "set_user": "Set user",
+      "error": "Error",
+      "commit": "commit",
+      "commits": "commits",
+      "no_day_selected": "No day selected",
+      "fetching": "Fetching GitHub contributions...",
+      "fetch_error": "Could not fetch user @{user}",
+      "enter_username": "Enter a GitHub username",
+      "no_contributions": "No contributions found"
     }
   },
   "cli": {

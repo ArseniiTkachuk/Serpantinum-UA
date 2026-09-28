@@ -1076,7 +1076,8 @@
       "visualizer": "Visualisierer",
       "user": "Benutzer",
       "usage": "Auslastung",
-      "battery": "Akku"
+      "battery": "Akku",
+      "github": "Github"
     },
     "variants": {
       "digital": "Digital",
@@ -1108,6 +1109,17 @@
         "name": "Dashboard",
         "desc": "Umfassender Systemmonitor mit Digitaluhr, Hardware-Auslastung und Akkustand."
       }
+    },
+    "github": {
+      "set_user": "Benutzer festlegen",
+      "error": "Fehler",
+      "commit": "Commit",
+      "commits": "Commits",
+      "no_day_selected": "Kein Tag ausgewählt",
+      "fetching": "GitHub-Beiträge werden geladen...",
+      "fetch_error": "Benutzer @{user} konnte nicht geladen werden",
+      "enter_username": "GitHub-Benutzernamen eingeben",
+      "no_contributions": "Keine Beiträge gefunden"
     }
   },
   "cli": {

@@ -208,6 +208,17 @@ QtObject {
             variants: {
                 "default": { file: "faces/BatteryFace.qml", icon: "1", label: I18n.t("widgets.variants.default") }
             }
+        },
+        "github": {
+            name: typeof I18n !== "undefined" ? I18n.t("widgets.types.github", "GitHub") : "GitHub",
+            icon: "󰊤",
+            iconOffsetX: -1,
+            defaultWidth: 540,
+            defaultHeight: 180,
+            defaultVariant: "default",
+            variants: {
+                "default": { file: "faces/GithubFace.qml", icon: "1", label: typeof I18n !== "undefined" ? I18n.t("widgets.variants.default", "Default") : "Default" }
+            }
         }
     })
 

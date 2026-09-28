@@ -1026,7 +1026,8 @@
       "visualizer": "Səs görüntüləyicisi",
       "user": "İstifadəçi",
       "usage": "İstifadə",
-      "battery": "Batareya"
+      "battery": "Batareya",
+      "github": "Github"
     },
     "variants": {
       "digital": "Rəqəmsal",
@@ -1058,6 +1059,17 @@
         "name": "İdarəetmə Paneli",
         "desc": "Rəqəmsal saat, sistem resursları və batareya vəziyyətini göstərən tam iş paneli."
       }
+    },
+    "github": {
+      "set_user": "İstifadəçi təyin et",
+      "error": "Xəta",
+      "commit": "commit",
+      "commits": "commit",
+      "no_day_selected": "Gün seçilməyib",
+      "fetching": "GitHub töhfələri yüklənir...",
+      "fetch_error": "@{user} istifadəçisi yüklənmədi",
+      "enter_username": "GitHub istifadəçi adını daxil edin",
+      "no_contributions": "Heç bir töhfə tapılmadı"
     }
   },
   "cli": {

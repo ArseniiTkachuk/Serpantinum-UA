@@ -1032,7 +1032,8 @@
       "visualizer": "시각화 도구",
       "user": "사용자",
       "usage": "사용량",
-      "battery": "배터리"
+      "battery": "배터리",
+      "github": "Github"
     },
     "variants": {
       "digital": "디지털",
@@ -1064,6 +1065,17 @@
         "name": "대시보드",
         "desc": "디지털 시계, 하드웨어 리소스 사용량 및 배터리 상태를 보여주는 대시보드입니다."
       }
+    },
+    "github": {
+      "set_user": "사용자 설정",
+      "error": "오류",
+      "commit": "커밋",
+      "commits": "커밋",
+      "no_day_selected": "선택된 날짜 없음",
+      "fetching": "GitHub 기여 내역 가져오는 중...",
+      "fetch_error": "@{user} 사용자를 가져올 수 없습니다",
+      "enter_username": "GitHub 사용자명을 입력하세요",
+      "no_contributions": "기여 내역이 없습니다"
     }
   },
   "cli": {
