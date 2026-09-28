@@ -490,8 +490,6 @@ Item {
         anchors.fill: parent
         color: ThemeBackend.surface0
         radius: ThemeBackend.clampedBorderRadius !== undefined ? ThemeBackend.clampedBorderRadius : ThemeBackend.borderRadius
-        border.width: 1
-        border.color: Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.06)
         clip: true
 
         ColumnLayout {
