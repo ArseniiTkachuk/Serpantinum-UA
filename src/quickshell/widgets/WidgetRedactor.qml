@@ -257,7 +257,6 @@ Scope {
                         root.targetSelectedWidgetId = "";
                         activeWidgetsModel.clear();
                         WidgetSync.clearWidgets(redactorWindow.safeMonitorName);
-                        redactorWindow.sendIpc("clear", []);
                         redactorMode.updateToolbarObscured();
                     }
 
@@ -606,10 +605,8 @@ Scope {
                         redactorMode.topZ += 1;
                         redactorMode.selectedId = newId;
                         root.targetSelectedWidgetId = newId;
-                        WidgetSync.addWidget(redactorWindow.safeMonitorName, newId, typeKey, spawnX, spawnY, defW, defH, 1.0, "", 0);
+                        WidgetSync.addWidget(redactorWindow.safeMonitorName, newId, typeKey, spawnX, spawnY, defW, defH, 1.0, "", 0, defVar);
                         WidgetSync.bringToFront(redactorWindow.safeMonitorName, newId);
-                        redactorWindow.sendIpc("add", [newId, typeKey, spawnX.toString(), spawnY.toString(), defW.toString(), defH.toString(), "1.0", "", "0"]);
-                        redactorWindow.sendIpc("bringToFront", [newId]);
                         redactorMode.updateToolbarObscured();
                     }
 
@@ -743,7 +740,6 @@ Scope {
                                     redactorMode.topZ += 1;
                                     widgetProxy.currentZ = redactorMode.topZ;
                                     WidgetSync.bringToFront(redactorWindow.safeMonitorName, String(widgetProxy.wId));
-                                    redactorWindow.sendIpc("bringToFront", [String(widgetProxy.wId)]);
                                 }
 
                                 property real selectionGap: s(20)
@@ -907,7 +903,6 @@ Scope {
                                     model.wY = newY;
 
                                     WidgetSync.setRotation(redactorWindow.safeMonitorName, String(widgetProxy.wId), nextRot);
-                                    redactorWindow.sendIpc("rotate", [String(widgetProxy.wId), nextRot.toString()]);
                                     finalizeSync();
                                 }
 
@@ -947,7 +942,6 @@ Scope {
                                     }
 
                                     WidgetSync.setVariant(redactorWindow.safeMonitorName, String(widgetProxy.wId), variantId);
-                                    redactorWindow.sendIpc("variant", [String(widgetProxy.wId), variantId]);
                                     finalizeSync();
                                 }
 
@@ -987,7 +981,6 @@ Scope {
                                     model.wY = newY;
 
                                     WidgetSync.setRotation(redactorWindow.safeMonitorName, String(widgetProxy.wId), 0);
-                                    redactorWindow.sendIpc("rotate", [String(widgetProxy.wId), "0"]);
                                     finalizeSync();
                                 }
 
@@ -1027,10 +1020,6 @@ Scope {
                                     WidgetSync.setOpacity(redactorWindow.safeMonitorName, String(widgetProxy.wId), curOp);
                                     WidgetSync.setRotation(redactorWindow.safeMonitorName, String(widgetProxy.wId), curRot);
                                     WidgetSync.bringToFront(redactorWindow.safeMonitorName, String(widgetProxy.wId));
-                                    redactorWindow.sendIpc("geometry", [String(widgetProxy.wId), model.wX.toString(), model.wY.toString(), model.wWidth.toString(), model.wHeight.toString(), curOp.toString(), curRot.toString()]);
-                                    redactorWindow.sendIpc("opacity", [String(widgetProxy.wId), curOp.toString()]);
-                                    redactorWindow.sendIpc("rotate", [String(widgetProxy.wId), curRot.toString()]);
-                                    redactorWindow.sendIpc("bringToFront", [String(widgetProxy.wId)]);
                                     redactorMode.updateToolbarObscured();
                                 }
 
@@ -1721,8 +1710,11 @@ Scope {
                                                     root.targetSelectedWidgetId = "";
                                                 }
                                                 WidgetSync.removeWidget(redactorWindow.safeMonitorName, rmId);
-                                                redactorWindow.sendIpc("remove", [rmId]);
-                                                activeWidgetsModel.remove(widgetProxy.wIndex, 1);
+                                                for (let i = activeWidgetsModel.count - 1; i >= 0; i--) {
+                                                    if (String(activeWidgetsModel.get(i).wId) === rmId) {
+                                                        activeWidgetsModel.remove(i, 1);
+                                                    }
+                                                }
                                                 if (activeWidgetsModel.count === 0) {
                                                     redactorMode.selectedId = "";
                                                     root.targetSelectedWidgetId = "";
@@ -2079,9 +2071,13 @@ Scope {
 
                             onImageSelected: (filePath, fileName) => {
                                 if (targetWidgetIndex >= 0 && targetWidgetId !== "") {
-                                    activeWidgetsModel.setProperty(targetWidgetIndex, "wImagePath", filePath);
+                                    for (let i = 0; i < activeWidgetsModel.count; i++) {
+                                        if (String(activeWidgetsModel.get(i).wId) === targetWidgetId) {
+                                            activeWidgetsModel.setProperty(i, "wImagePath", filePath);
+                                            break;
+                                        }
+                                    }
                                     WidgetSync.setImagePath(redactorWindow.safeMonitorName, targetWidgetId, filePath);
-                                    redactorWindow.sendIpc("imagePath", [targetWidgetId, filePath]);
                                     targetWidgetIndex = -1;
                                     targetWidgetId = "";
                                 } else if (filePath !== "") {
@@ -2100,9 +2096,11 @@ Scope {
                                         defH = snapped.h;
                                     }
 
+                                    let defVar = WidgetRegistry.defaultVariant("image");
+
                                     activeWidgetsModel.append({
                                         "wType": "image",
-                                        "wVariant": WidgetRegistry.defaultVariant("image"),
+                                        "wVariant": defVar,
                                         "wX": spawnX,
                                         "wY": spawnY,
                                         "wWidth": defW,
@@ -2116,10 +2114,8 @@ Scope {
                                     redactorMode.topZ += 1;
                                     redactorMode.selectedId = newId;
                                     root.targetSelectedWidgetId = newId;
-                                    WidgetSync.addWidget(redactorWindow.safeMonitorName, newId, "image", spawnX, spawnY, defW, defH, 1.0, filePath, 0);
+                                    WidgetSync.addWidget(redactorWindow.safeMonitorName, newId, "image", spawnX, spawnY, defW, defH, 1.0, filePath, 0, defVar);
                                     WidgetSync.bringToFront(redactorWindow.safeMonitorName, newId);
-                                    redactorWindow.sendIpc("add", [newId, "image", spawnX.toString(), spawnY.toString(), defW.toString(), defH.toString(), "1.0", filePath, "0"]);
-                                    redactorWindow.sendIpc("bringToFront", [newId]);
                                     redactorMode.updateToolbarObscured();
                                 }
                             }
