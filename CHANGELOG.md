@@ -1,3 +1,22 @@
+### 2.2.0
+
+- fix: add a debounce timer for a reload action in the desktopmenu
+- feat: add a redactor opening script
+- fix: replace the widget redactor ipc calls with a script call
+- feat: add a desktop menu popup to get activated on a right click on desktop and widgets for quick access to functionality
+- fix: make sure widgetredactor doesn't talk over ipc calls with the loader but uses widgetsync singleton instead
+- style: redesign the pacman face for the workspaceswidget
+- feat: make the widget redactor a separate scope window to activate on an ipc call to speed up and improve the redactor
+- feat: add a new github face widget
+- fix: fixes #328
+- fix: improve the readability of the lyrics
+- style: add lyrics caching to the lyrics widget
+- style: improve the animations and the visuals of the lyrics widget
+- fix: remove the black background box that reduced performance from the lockscreen
+- style: instead of truncating a lyric, move it to the next line in the music lyric widget
+- style: make the font size of lyrics change with widget scale
+- style: increase the dimming in the clockview in the lockscreen
+
 ### 2.1.10
 
 - fix: switch the power performance profile position in the systempanel with the power saver profile for a more logical positioning from left to right
