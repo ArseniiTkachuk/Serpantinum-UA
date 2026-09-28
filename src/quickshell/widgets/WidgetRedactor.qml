@@ -343,38 +343,39 @@ Scope {
                         let w = Math.max(c.minW, Math.min(c.maxW, rawW));
                         let h = Math.max(c.minH, Math.min(c.maxH, rawH));
 
+                        let hasMinA = c.minA !== undefined && c.minA > 0;
+                        let hasMaxA = c.maxA !== undefined && c.maxA > 0 && c.maxA < 9999;
+
                         if (!isCorner) {
                             if (dx !== 0) {
-                                let effMinW = Math.max(c.minW, h * c.minA);
-                                let effMaxW = Math.min(c.maxW, h * c.minA);
+                                let effMinW = Math.max(c.minW, hasMinA ? h * c.minA : c.minW);
+                                let effMaxW = Math.min(c.maxW, hasMaxA ? h * c.maxA : c.maxW);
                                 if (effMinW <= effMaxW) {
                                     w = Math.max(effMinW, Math.min(effMaxW, w));
                                 } else {
-                                    h = Math.max(c.minH, Math.min(c.maxH, w / (c.minA > 0 ? c.minA : 1)));
-                                    w = Math.max(c.minW, Math.min(c.maxW, h * c.minA));
+                                    w = Math.max(c.minW, Math.min(c.maxW, w));
                                 }
                             } else {
-                                let effMinH = Math.max(c.minH, c.maxA > 0 ? w / c.maxA : 0);
-                                let effMaxH = Math.min(c.maxH, c.minA > 0 ? w / c.minA : 9999);
+                                let effMinH = Math.max(c.minH, hasMaxA ? w / c.maxA : c.minH);
+                                let effMaxH = Math.min(c.maxH, hasMinA ? w / c.minA : c.maxH);
                                 if (effMinH <= effMaxH) {
                                     h = Math.max(effMinH, Math.min(effMaxH, h));
                                 } else {
-                                    w = Math.max(c.minW, Math.min(c.maxW, h * c.minA));
-                                    h = Math.max(c.minH, Math.min(c.maxH, c.minA > 0 ? w / c.minA : h));
+                                    h = Math.max(c.minH, Math.min(c.maxH, h));
                                 }
                             }
                             return { w: w, h: h };
                         }
 
                         let ratio = w / h;
-                        if (ratio < c.minA && c.minA > 0) {
+                        if (hasMinA && ratio < c.minA) {
                             let mA = c.minA;
                             let hProj = (w * mA + h) / (mA * mA + 1);
                             let hMin = Math.max(c.minH, c.minW / mA);
                             let hMax = Math.min(c.maxH, c.maxW / mA);
                             h = Math.max(hMin, Math.min(hMax, hProj));
                             w = h * mA;
-                        } else if (ratio > c.maxA && c.maxA > 0) {
+                        } else if (hasMaxA && ratio > c.maxA) {
                             let mA = c.maxA;
                             let hProj = (w * mA + h) / (mA * mA + 1);
                             let hMin = Math.max(c.minH, c.minW / mA);
