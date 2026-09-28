@@ -21,6 +21,9 @@ PanelWindow {
     property bool isRedacting: false
     property bool initialized: false
 
+    property bool wantsKeyboardFocus: false
+    readonly property bool effectiveKeyboardFocus: wantsKeyboardFocus || (faceLoader.item && (faceLoader.item.wantsKeyboardFocus || faceLoader.item.keyboardFocus || faceLoader.item.isEditingUser)) || false
+
     property real animX: wX
     property real animY: wY
     Behavior on animX {
@@ -48,10 +51,16 @@ PanelWindow {
 
     WlrLayershell.namespace: "qs-widget-" + wType + "-" + wId
     WlrLayershell.layer: WlrLayer.Bottom
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: effectiveKeyboardFocus ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     exclusionMode: ExclusionMode.Ignore
-    focusable: false
+    focusable: effectiveKeyboardFocus
+
+    onEffectiveKeyboardFocusChanged: {
+        if (effectiveKeyboardFocus && typeof root.requestActivate === "function") {
+            root.requestActivate();
+        }
+    }
 
     anchors.top: true
     anchors.left: true
@@ -140,6 +149,20 @@ PanelWindow {
                 }
             }
             root.updateEffectiveSize();
+        }
+    }
+
+    MouseArea {
+        id: widgetMenuArea
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton | (DesktopMenuController.isVisible ? Qt.LeftButton : 0)
+        enabled: !root.isRedacting
+        onClicked: mouse => {
+            if (mouse.button === Qt.RightButton) {
+                DesktopMenuController.toggle(root.screen, root.animX + mouse.x, root.animY + mouse.y, "widget", root.wId);
+            } else {
+                DesktopMenuController.hide();
+            }
         }
     }
 }
