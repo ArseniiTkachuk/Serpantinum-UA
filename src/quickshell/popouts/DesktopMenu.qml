@@ -150,6 +150,13 @@ PanelWindow {
 
     visible: isVisible || menuContainer.animProgress > 0.001
 
+    Timer {
+        id: reloadTimer
+        interval: 50
+        repeat: false
+        onTriggered: desktopMenuWindow.reloadShell()
+    }
+
     Process {
         id: shuffleProcess
         running: false
@@ -320,7 +327,7 @@ PanelWindow {
         let dir = (typeof Caching !== "undefined" && Caching.serpantinumDir) ? Caching.serpantinumDir : "";
         let args = "toggle guide" + (targetTab ? (" " + targetTab) : "");
         let cmd = (dir ? ("if [ -f '" + dir + "/scripts/qs_manager.sh' ]; then bash '" + dir + "/scripts/qs_manager.sh' " + args + "; else ") : "")
-            + "if command -v serpantinum >/dev/null 2>&1; then serpantinum " + args + "; elif command -v qs_manager.sh >/dev/null 2>&1; then qs_manager.sh " + args + "; fi"
+            + "if command -v serpantinum >/dev/null 2>&1; then serpantinum " + args + "; elif command -v qs_manager.sh >/dev/null 2>&1; then qs_manager. " + args + "; fi"
             + (dir ? "; fi" : "");
         Quickshell.execDetached(["bash", "-c", cmd]);
     }
@@ -479,7 +486,7 @@ PanelWindow {
                                 iconFontSize: desktopMenuWindow.s(16)
                                 onClicked: {
                                     DesktopMenuController.hide();
-                                    desktopMenuWindow.reloadShell();
+                                    reloadTimer.restart();
                                 }
                             }
 
