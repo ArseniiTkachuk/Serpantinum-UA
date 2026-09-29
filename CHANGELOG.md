@@ -1,3 +1,16 @@
+### 2.2.1
+
+- feat: add a on-hover caffein duration in the systempanel
+- feat: add lyrics singleton, add lyrics to the music popup, rework the progress bar style
+- fix: fix the path for refactor of the notificationbox
+- fix: fix a path bug after the refactor of notificationbox
+- chore: change file permittions after a merge
+- feat: add option to hide empty workspace indicators (#333)
+- refactor: replace all hardcoded settings in the guide popup tabs with the settingsrow reusable
+- refactor: separate all reusables into folders for proper structure, add a new settingsrow reusable
+- fix: fix a typo in the math for widget redactor
+- style: remove the border from the github face widget
+
 ### 2.2.0
 
 - fix: add a debounce timer for a reload action in the desktopmenu
