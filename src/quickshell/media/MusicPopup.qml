@@ -1337,7 +1337,6 @@ Item {
                                 to: root.targetPlayer ? root.targetPlayer.length : 100.0
                                 value: root.currentLivePosition
                                 playing: root.targetPlayer ? root.targetPlayer.isPlaying : false
-                                energy: root.bassLevel
                                 waveColor: ThemeBackend.mauve || "#cba6f7"
 
                                 property bool seekPending: false
@@ -2223,7 +2222,6 @@ Item {
         property real to: 100.0
         property real value: 0.0
         property bool playing: false
-        property real energy: 0.0
 
         property color waveColor: ThemeBackend.mauve || "#cba6f7"
         Behavior on waveColor { ColorAnimation { duration: 600 } }
@@ -2241,31 +2239,19 @@ Item {
         property real strokeWidth: root.s(9)
         property real amplitude: root.s(20)
         property int cycleMs: 8000
-        property real reactivity: 0.35
-        property real baseLevel: 0.72
         property real restingLevel: 0.0
-
-        property real barFaintness: (bar.playing || bar.isDragging || mouseArea.containsMouse) ? 1.0 : 0.55
-        Behavior on barFaintness {
-            NumberAnimation { duration: 500; easing.type: Easing.OutQuad }
-        }
 
         readonly property real cy: height - handleSize * 0.7
         property real pad: handleSize / 2
         property bool isDragging: mouseArea.pressed
         signal moved(real val)
 
-        property real energySmooth: energy
-        Behavior on energySmooth {
-            NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
-        }
-
         property real ampFactor: playing ? 1.0 : restingLevel
         Behavior on ampFactor {
             NumberAnimation { duration: 600; easing.type: Easing.OutQuad }
         }
 
-        readonly property real liveAmp: Math.min(1.0, ampFactor * (baseLevel + reactivity * energySmooth))
+        readonly property real liveAmp: ampFactor
 
         property real progressFraction: (to > from) ? Math.max(0.0, Math.min(1.0, (value - from) / (to - from))) : 0.0
         property real shownFraction: progressFraction
@@ -2286,19 +2272,18 @@ Item {
         }
 
         property var layers: [
-            { color: bar.primaryColor, amp: 0.86, alpha: 0.32, taper: root.s(26), comps: [
+            { color: bar.primaryColor, amp: 0.86, alpha: 0.32, taper: root.s(70), comps: [
                 { len: root.s(245), mult: 1, off: 1.10, w: 0.65 },
                 { len: root.s(145), mult: 2, off: 1.90, w: 0.35 } ] },
-            { color: bar.primaryColor, amp: 0.93, alpha: 0.56, taper: root.s(30), comps: [
+            { color: bar.primaryColor, amp: 0.93, alpha: 0.56, taper: root.s(80), comps: [
                 { len: root.s(300), mult: 1, off: 0.55, w: 0.65 },
                 { len: root.s(180), mult: 2, off: 1.25, w: 0.35 } ] },
-            { color: bar.primaryColor, amp: 1.00, alpha: 0.82, taper: root.s(34), comps: [
+            { color: bar.primaryColor, amp: 1.00, alpha: 0.82, taper: root.s(90), comps: [
                 { len: root.s(360), mult: 1, off: 0.00, w: 0.68 },
                 { len: root.s(225), mult: 2, off: 0.60, w: 0.32 } ] }
         ]
 
         onLiveAmpChanged: cv.requestPaint()
-        onBarFaintnessChanged: cv.requestPaint()
         onWaveColorChanged: cv.requestPaint()
         onPrimaryColorChanged: cv.requestPaint()
         onSecondaryColorChanged: cv.requestPaint()
@@ -2311,6 +2296,11 @@ Item {
             id: cv
             anchors.fill: parent
             renderTarget: Canvas.FramebufferObject
+
+            opacity: (bar.isDragging || mouseArea.containsMouse) ? 1.0 : (bar.playing ? 1.0 : 0.55)
+            Behavior on opacity {
+                NumberAnimation { duration: 350; easing.type: Easing.OutQuad }
+            }
 
             onPaint: {
                 var ctx = getContext("2d");
@@ -2327,11 +2317,11 @@ Item {
                 }
                 function easeStart(t) {
                     t = Math.max(0, Math.min(1, t));
-                    return 0.5 * (1 - Math.cos(t * Math.PI));
+                    return t * t * t * (t * (t * 6 - 15) + 10);
                 }
                 function easeEnd(t) {
                     t = Math.max(0, Math.min(1, t));
-                    return 0.5 * (1 - Math.cos(t * Math.PI));
+                    return t * t * t * (t * (t * 6 - 15) + 10);
                 }
                 function hill(x, ly) {
                     var n = 0;
@@ -2350,7 +2340,7 @@ Item {
                 ctx.lineWidth = bar.strokeWidth;
                 ctx.globalAlpha = 1.0;
 
-                ctx.strokeStyle = rgbaCol(bar.waveColor, bar.trackAlpha * bar.barFaintness);
+                ctx.strokeStyle = rgbaCol(bar.waveColor, bar.trackAlpha);
                 ctx.beginPath();
                 ctx.moveTo(endX, cy);
                 ctx.lineTo(right, cy);
@@ -2363,17 +2353,18 @@ Item {
                         var A = bar.amplitude * ly.amp * bar.liveAmp;
                         if (A < 0.3) continue;
 
+                        var endTaperLen = Math.max(1.0, ly.taper * Math.min(1.0, (endX - pad) / (ly.taper * 1.5)));
                         var curCol = ly.color || bar.primaryColor;
                         var g = ctx.createLinearGradient(0, top - A, 0, top);
-                        g.addColorStop(0.0, rgbaCol(curCol, ly.alpha * 0.55 * bar.barFaintness));
-                        g.addColorStop(1.0, rgbaCol(curCol, ly.alpha * bar.barFaintness));
+                        g.addColorStop(0.0, rgbaCol(curCol, ly.alpha * 0.55));
+                        g.addColorStop(1.0, rgbaCol(curCol, ly.alpha));
                         ctx.fillStyle = g;
 
                         ctx.beginPath();
                         ctx.moveTo(pad, cy);
                         for (var x = pad; x <= endX; x += step) {
                             var curX = Math.min(x, endX);
-                            var env = easeStart((curX - pad) / startTaper) * easeEnd((endX - curX) / ly.taper);
+                            var env = easeStart((curX - pad) / startTaper) * easeEnd((endX - curX) / endTaperLen);
                             var yPos = top - hill(curX, ly) * A * env;
                             ctx.lineTo(curX, yPos);
                             if (curX === endX) break;
@@ -2385,7 +2376,7 @@ Item {
                     }
                 }
 
-                ctx.strokeStyle = rgbaCol(bar.waveColor, bar.barFaintness);
+                ctx.strokeStyle = rgbaCol(bar.waveColor, 1.0);
                 ctx.beginPath();
                 ctx.moveTo(pad, cy);
                 ctx.lineTo(endX, cy);
@@ -2401,11 +2392,8 @@ Item {
             height: bar.handleSize
             radius: width / 2
             color: bar.isDragging ? bar.handleHoverColor : (mouseArea.containsMouse ? bar.handleHoverColor : bar.waveColor)
-            opacity: (bar.isDragging || mouseArea.containsMouse) ? 1.0 : (0.45 + 0.55 * bar.barFaintness)
+            opacity: 1.0
             scale: bar.isDragging ? 1.25 : (mouseArea.containsMouse ? 1.15 : 1.0)
-            Behavior on opacity {
-                NumberAnimation { duration: 350; easing.type: Easing.OutQuad }
-            }
             Behavior on scale {
                 NumberAnimation { duration: 150; easing.type: Easing.OutBack }
             }
