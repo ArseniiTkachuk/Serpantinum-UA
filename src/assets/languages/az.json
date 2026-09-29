@@ -746,7 +746,8 @@
     },
     "searching_lyrics": "Sözlər axtarılır...",
     "no_lyrics": "Sözlər tapılmadı",
-    "select_local_file": "Lokal fayl seçin"
+    "select_local_file": "Lokal fayl seçin",
+    "lyrics": "Mahnı sözləri"
   },
   "network": {
     "tabs": {

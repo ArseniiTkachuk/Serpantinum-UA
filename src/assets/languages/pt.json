@@ -752,7 +752,8 @@
     },
     "searching_lyrics": "Procurando letra...",
     "no_lyrics": "Nenhuma letra encontrada",
-    "select_local_file": "Selecionar um arquivo local"
+    "select_local_file": "Selecionar um arquivo local",
+    "lyrics": "Letra"
   },
   "network": {
     "tabs": {

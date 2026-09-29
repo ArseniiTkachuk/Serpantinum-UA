@@ -796,7 +796,8 @@
     },
     "searching_lyrics": "Поиск текста...",
     "no_lyrics": "Текст не найден",
-    "select_local_file": "Выбрать локальный файл"
+    "select_local_file": "Выбрать локальный файл",
+    "lyrics": "Текст песни"
   },
   "network": {
     "tabs": {

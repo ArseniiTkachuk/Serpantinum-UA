@@ -796,7 +796,8 @@
     },
     "searching_lyrics": "Suche Songtext...",
     "no_lyrics": "Kein Songtext gefunden",
-    "select_local_file": "Lokale Datei auswählen"
+    "select_local_file": "Lokale Datei auswählen",
+    "lyrics": "Songtext"
   },
   "network": {
     "tabs": {

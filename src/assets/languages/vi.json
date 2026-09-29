@@ -752,7 +752,8 @@
     },
     "searching_lyrics": "Đang tìm lời bài hát...",
     "no_lyrics": "Không tìm thấy lời bài hát",
-    "select_local_file": "Chọn tệp cục bộ"
+    "select_local_file": "Chọn tệp cục bộ",
+    "lyrics": "Lời bài hát"
   },
   "network": {
     "tabs": {

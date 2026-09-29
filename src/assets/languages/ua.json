@@ -765,7 +765,8 @@
     },
     "searching_lyrics": "Пошук тексту...",
     "no_lyrics": "Текст не знайдено",
-    "select_local_file": "Вибрати локальний файл"
+    "select_local_file": "Вибрати локальний файл",
+    "lyrics": "Текст пісні"
   },
   "network": {
     "tabs": {

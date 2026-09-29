@@ -752,7 +752,8 @@
     },
     "searching_lyrics": "Բառերի որոնում...",
     "no_lyrics": "Բառերը չեն գտնվել",
-    "select_local_file": "Ընտրել լոկալ ֆայլ"
+    "select_local_file": "Ընտրել լոկալ ֆայլ",
+    "lyrics": "Երգի բառեր"
   },
   "network": {
     "tabs": {

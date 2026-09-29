@@ -39,11 +39,48 @@ Item {
         chargeAnim.restart();
     }
 
+    property bool lyricsSubscribed: false
+
+    function updateLyricsSubscription() {
+        let shouldSub = root.visible && (bottomSectionSwitch.currentIndex === 1);
+        if (shouldSub && !lyricsSubscribed) {
+            lyricsSubscribed = true;
+            Lyrics.customPlayer = root.targetPlayer;
+            Lyrics.subscribe();
+        } else if (!shouldSub && lyricsSubscribed) {
+            lyricsSubscribed = false;
+            Lyrics.customPlayer = null;
+            Lyrics.unsubscribe();
+        } else if (shouldSub && lyricsSubscribed) {
+            Lyrics.customPlayer = root.targetPlayer;
+        }
+    }
+
+    Shortcut {
+        sequence: "Tab"
+        enabled: root.visible
+        onActivated: {
+            bottomSectionSwitch.currentIndex = (bottomSectionSwitch.currentIndex === 0 ? 1 : 0);
+            root.updateLyricsSubscription();
+        }
+    }
+
+    Shortcut {
+        sequence: "Backtab"
+        enabled: root.visible
+        onActivated: {
+            bottomSectionSwitch.currentIndex = (bottomSectionSwitch.currentIndex === 0 ? 1 : 0);
+            root.updateLyricsSubscription();
+        }
+    }
+
     onVisibleChanged: {
+        updateLyricsSubscription();
         if (visible) {
             forceActiveFocus();
             resetAndPlayIntro();
             Cava.registerConsumer();
+            triggerLocalArtFetch();
             if (!eqProc.running) eqProc.running = true;
             if (titleTextMain.implicitWidth > titleClipRect.width) {
                 marqueeContainer.x = 0;
@@ -53,19 +90,97 @@ Item {
             Cava.unregisterConsumer();
             titleAnim.stop();
             marqueeContainer.x = 0;
+            if (lyricsPickerPopup.visible || lyricsPickerPopup.opened) {
+                lyricsPickerPopup.closePicker();
+            }
+            if (root.eqData && root.eqData.pending) {
+                root.restoreLastSavedEqualizer();
+            }
         }
     }
 
     Component.onCompleted: {
+        if (root.eqData) {
+            root.savedEqData = Object.assign({}, root.eqData);
+        }
         if (visible) {
             forceActiveFocus();
             resetAndPlayIntro();
             Cava.registerConsumer();
+            triggerLocalArtFetch();
+            updateLyricsSubscription();
         }
     }
 
     Component.onDestruction: {
         Cava.unregisterConsumer();
+        if (lyricsSubscribed) {
+            lyricsSubscribed = false;
+            Lyrics.unsubscribe();
+        }
+    }
+
+    Text {
+        id: eqMeasureText
+        visible: false
+        text: root.eqData && root.eqData.pending ? (typeof I18n !== "undefined" ? I18n.t("music.eq.apply") : "Apply") : (typeof I18n !== "undefined" ? I18n.t("music.eq.saved") : "Saved")
+        font.family: ThemeBackend.fontFamily
+        font.pixelSize: root.s(11.5)
+        font.bold: true
+    }
+
+    Text {
+        id: lyricsMeasureText
+        visible: false
+        text: typeof I18n !== "undefined" ? I18n.t("music.select_local_file", "Select file") : "Select file"
+        font.family: ThemeBackend.fontFamily
+        font.pixelSize: root.s(11.5)
+        font.bold: true
+    }
+
+    property real actionBtnMorph: 0.0
+    property real presetSlideProgress: 0.0
+
+    readonly property real eqActionBtnWidth: Math.max(root.s(68), eqMeasureText.implicitWidth + root.s(26))
+    readonly property real lyricsActionBtnWidth: Math.max(root.s(116), lyricsMeasureText.implicitWidth + root.s(44))
+    readonly property real actionBtnCurrentWidth: eqActionBtnWidth + (lyricsActionBtnWidth - eqActionBtnWidth) * actionBtnMorph
+
+    ParallelAnimation {
+        id: toLyricsAnim
+        running: false
+        NumberAnimation {
+            target: root
+            property: "actionBtnMorph"
+            to: 1.0
+            duration: 420
+            easing.type: Easing.OutCubic
+        }
+        NumberAnimation {
+            target: root
+            property: "presetSlideProgress"
+            to: 1.0
+            duration: 400
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    ParallelAnimation {
+        id: toEqAnim
+        running: false
+        NumberAnimation {
+            target: root
+            property: "actionBtnMorph"
+            to: 0.0
+            duration: 420
+            easing.type: Easing.OutCubic
+        }
+        NumberAnimation {
+            target: root
+            property: "presetSlideProgress"
+            to: 0.0
+            duration: 400
+            easing.type: Easing.OutCubic
+        }
     }
 
     property int barCount: 60
@@ -193,6 +308,7 @@ Item {
     onTargetPlayerChanged: {
         if (targetPlayer) currentLivePosition = targetPlayer.position;
         triggerLocalArtFetch();
+        updateLyricsSubscription();
     }
 
     Timer {
@@ -247,6 +363,10 @@ Item {
         if (root.targetPlayer && root.targetPlayer !== MprisController.activePlayer) {
             customArtFetchProc.running = false;
             customArtFetchProc.running = true;
+        } else if (root.targetPlayer && root.targetPlayer === MprisController.activePlayer) {
+            if (!MprisController.artUrl) {
+                MprisController.queueFetch();
+            }
         }
     }
 
@@ -261,6 +381,41 @@ Item {
         "b1": 0, "b2": 0, "b3": 0, "b4": 0, "b5": 0,
         "b6": 0, "b7": 0, "b8": 0, "b9": 0, "b10": 0,
         "preset": "Flat", "pending": false
+    }
+
+    property var savedEqData: ({
+        "b1": 0, "b2": 0, "b3": 0, "b4": 0, "b5": 0,
+        "b6": 0, "b7": 0, "b8": 0, "b9": 0, "b10": 0,
+        "preset": "Flat", "pending": false
+    })
+
+    function restoreLastSavedEqualizer() {
+        if (!root.savedEqData) return;
+        var wasPending = root.eqData && root.eqData.pending;
+        var needsRestore = wasPending;
+        if (!needsRestore && root.eqData) {
+            for (var i = 1; i <= 10; i++) {
+                if (root.eqData["b" + i] !== root.savedEqData["b" + i]) {
+                    needsRestore = true;
+                    break;
+                }
+            }
+        }
+        var restored = Object.assign({}, root.savedEqData);
+        restored.pending = false;
+        root.eqData = restored;
+        if (needsRestore) {
+            root.lastEqUpdate = Date.now();
+            if (root.savedEqData.preset && root.savedEqData.preset !== "Custom") {
+                root.execCmd(Caching.qsDir + `/media/equalizer.sh preset ${root.savedEqData.preset}`);
+            } else {
+                for (var b = 1; b <= 10; b++) {
+                    if (root.savedEqData["b" + b] !== undefined) {
+                        root.execCmd(Caching.qsDir + `/media/equalizer.sh set_band ${b} ${root.savedEqData["b" + b]}`);
+                    }
+                }
+            }
+        }
     }
 
     property color eqAccentColor: ThemeBackend.mauve || "#cba6f7"
@@ -422,6 +577,7 @@ Item {
             temp.preset = presetName;
             temp.pending = false;
             root.eqData = temp;
+            root.savedEqData = Object.assign({}, temp);
             
             root.lastEqUpdate = Date.now();
             
@@ -451,10 +607,24 @@ Item {
 
                     var outStr = this.text.trim();
                     if (outStr.length > 0) {
-                        try { root.eqData = JSON.parse(outStr); } catch(e) {}
+                        try {
+                            var parsed = JSON.parse(outStr);
+                            root.eqData = parsed;
+                            if (!parsed.pending) {
+                                root.savedEqData = Object.assign({}, parsed);
+                            }
+                        } catch(e) {}
                     }
                 }
             }
+        }
+    }
+
+    LyricsPicker {
+        id: lyricsPickerPopup
+        targetScreen: (root.Window && root.Window.window) ? root.Window.window.screen : null
+        onLyricsSelected: function(filePath, fileName) {
+            Lyrics.loadLocalLyricsFile(filePath);
         }
     }
 
@@ -580,7 +750,6 @@ Item {
                 anchors.fill: parent
                 radius: ThemeBackend.borderRadius
                 visible: false
-                
                 layer.enabled: true 
             }
 
@@ -597,7 +766,7 @@ Item {
                 Item {
                     id: blurCrossfader
                     anchors.fill: parent
-                    property string blurUrl: root.activeBlur ? "file://" + root.activeBlur : ""
+                    property string blurUrl: root.activeBlur ? (root.activeBlur.startsWith("file://") || root.activeBlur.startsWith("http") ? root.activeBlur : "file://" + root.activeBlur) : ""
                     property bool showingA: true
 
                     Image {
@@ -1152,36 +1321,27 @@ Item {
 
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: root.s(4)
+                            Layout.topMargin: -root.s(6)
+                            spacing: root.s(2)
                             opacity: root.introControls
                             transform: Translate { x: root.s(18) * (1 - root.introControls); y: root.s(9) * (1 - root.introControls) }
 
-                            Draggable {
+                            WavySeekBar {
                                 id: progBar
                                 Layout.fillWidth: true
-                                Layout.preferredHeight: root.s(15)
+                                Layout.preferredHeight: root.s(50)
+                                Layout.topMargin: -root.s(16)
+                                Layout.bottomMargin: -root.s(2)
                                 Layout.alignment: Qt.AlignVCenter
                                 from: 0.0
                                 to: root.targetPlayer ? root.targetPlayer.length : 100.0
                                 value: root.currentLivePosition
-                                showValueBubble: false
-                                showTooltip: false
-                                valueFormatter: function(v) { return "" }
-                                backgroundColor: ThemeBackend.surface0 || "#313244"
-                                accentColor: ThemeBackend.mauve || "#cba6f7"
-                                gradColor1: Qt.lighter(ThemeBackend.blue || "#89b4fa", 1.2)
-                                gradColor2: Qt.lighter(ThemeBackend.mauve || "#cba6f7", 1.15)
-                                gradColor3: Qt.lighter(ThemeBackend.mauve || "#cba6f7", 1.15)
-                                cornerRadius: ThemeBackend.borderRadius
-                                handleSize: root.s(15)
-
-                                handleColor: Qt.lighter(ThemeBackend.blue || "#89b4fa", 1.15)
-                                handleHoverColor: Qt.lighter(ThemeBackend.mauve || "#cba6f7", 1.65)
-                                handleDragColor: Qt.lighter(ThemeBackend.mauve || "#cba6f7", 1.65)
-                                handleBorderColor: Qt.rgba(0, 0, 0, 0.2)
+                                playing: root.targetPlayer ? root.targetPlayer.isPlaying : false
+                                energy: root.bassLevel
+                                waveColor: ThemeBackend.mauve || "#cba6f7"
 
                                 property bool seekPending: false
-                                
+
                                 Timer {
                                     id: seekTimer
                                     interval: 1000
@@ -1214,7 +1374,7 @@ Item {
                                     color: root.dynamicTextColor; 
                                     font.family: ThemeBackend.fontFamily; 
                                     font.bold: true; 
-                                    font.pixelSize: root.s(12);
+                                    font.pixelSize: root.s(12); 
                                     Behavior on color { ColorAnimation { duration: 600 } }
                                 }
                                 Item { Layout.fillWidth: true }
@@ -1223,7 +1383,7 @@ Item {
                                     color: root.dynamicTextColor; 
                                     font.family: ThemeBackend.fontFamily; 
                                     font.bold: true; 
-                                    font.pixelSize: root.s(12);
+                                    font.pixelSize: root.s(12); 
                                     Behavior on color { ColorAnimation { duration: 600 } }
                                 }
                             }
@@ -1299,462 +1459,979 @@ Item {
                         opacity: root.introEqHeader
                         transform: Translate { y: root.s(12) * (1 - root.introEqHeader) }
 
-                        Text { text: I18n.t("music.equalizer"); color: ThemeBackend.mauve || "#cba6f7"; font.family: ThemeBackend.fontFamily; font.pixelSize: root.s(15); font.bold: true; Layout.fillWidth: true }
-                        
-                        ClickButton {
-                            id: applyBtn
+                        Switch {
+                            id: bottomSectionSwitch
                             Layout.preferredHeight: root.s(26)
+                            Layout.preferredWidth: root.s(180)
+                            implicitHeight: root.s(26)
+                            implicitWidth: root.s(180)
+                            options: [
+                                typeof I18n !== "undefined" ? I18n.t("music.equalizer", "Equalizer") : "Equalizer",
+                                typeof I18n !== "undefined" ? I18n.t("music.lyrics", "Lyrics") : "Lyrics"
+                            ]
+                            currentIndex: 0
+                            accentColor: ThemeBackend.mauve || "#cba6f7"
+                            baseColor: ThemeBackend.surface0 || "#313244"
+                            textColor: ThemeBackend.subtext0 || "#a6adc8"
+                            activeTextColor: ThemeBackend.base || "#1e1e2e"
+                            cornerRadius: ThemeBackend.borderRadius
+                            fontPixelSize: root.s(11.5)
+                            onCurrentIndexChanged: {
+                                root.updateLyricsSubscription();
+                                if (currentIndex === 1) {
+                                    toEqAnim.stop();
+                                    toLyricsAnim.restart();
+                                    root.restoreLastSavedEqualizer();
+                                } else {
+                                    toLyricsAnim.stop();
+                                    root.restoreLastSavedEqualizer();
+                                    toEqAnim.restart();
+                                }
+                            }
+                            onValueChanged: (index, val) => {
+                                currentIndex = index;
+                            }
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        ClickButton {
+                            id: actionBtn
+                            Layout.preferredHeight: root.s(26)
+                            Layout.preferredWidth: root.actionBtnCurrentWidth
+                            implicitWidth: root.actionBtnCurrentWidth
                             cornerRadius: ThemeBackend.borderRadius
                             horizontalPadding: root.s(12)
-                            buttonText: root.eqData.pending ? I18n.t("music.eq.apply") : I18n.t("music.eq.saved")
+                            buttonIcon: bottomSectionSwitch.currentIndex === 1 && root.actionBtnMorph > 0.45 ? "󰈔" : ""
+                            buttonText: {
+                                if (bottomSectionSwitch.currentIndex === 1 && root.actionBtnMorph > 0.35) {
+                                    return typeof I18n !== "undefined" ? I18n.t("music.select_local_file", "Select file") : "Select file";
+                                }
+                                return root.eqData && root.eqData.pending ? I18n.t("music.eq.apply") : I18n.t("music.eq.saved");
+                            }
                             textFontSize: root.s(11.5)
-                            accentColor: root.eqData.pending ? (ThemeBackend.mauve || "#cba6f7") : (ThemeBackend.surface1 || "#45475a")
-                            textColor: root.eqData.pending ? (ThemeBackend.base || "#1e1e2e") : (ThemeBackend.subtext0 || "#a6adc8")
-                            enabled: root.eqData.pending
+                            iconFontSize: root.s(13)
+                            accentColor: {
+                                if (root.actionBtnMorph >= 0.5) {
+                                    return ThemeBackend.surface0 || "#313244";
+                                }
+                                return root.eqData && root.eqData.pending ? (ThemeBackend.mauve || "#cba6f7") : (ThemeBackend.surface0 || "#313244");
+                            }
+                            textColor: {
+                                if (root.actionBtnMorph >= 0.5) {
+                                    return ThemeBackend.text || "#cdd6f4";
+                                }
+                                return root.eqData && root.eqData.pending ? (ThemeBackend.base || "#1e1e2e") : (ThemeBackend.text || "#cdd6f4");
+                            }
+                            enabled: bottomSectionSwitch.currentIndex === 1 ? (root.hasTargetPlayer && !Lyrics.loading) : true
+                            opacity: bottomSectionSwitch.currentIndex === 1 ? (root.hasTargetPlayer && !Lyrics.loading ? 1.0 : 0.45) : 1.0
+                            Behavior on opacity { NumberAnimation { duration: 300 } }
+                            Behavior on accentColor { ColorAnimation { duration: 320 } }
+                            Behavior on textColor { ColorAnimation { duration: 320 } }
                             onClicked: {
-                                if (root.eqData.pending) {
+                                if (bottomSectionSwitch.currentIndex === 1) {
+                                    lyricsPickerPopup.targetScreen = (root.Window && root.Window.window) ? root.Window.window.screen : null;
+                                    lyricsPickerPopup.openPicker();
+                                } else if (root.eqData && root.eqData.pending) {
                                     var temp = Object.assign({}, root.eqData);
                                     temp.pending = false;
                                     root.eqData = temp;
-                                    
+                                    root.savedEqData = Object.assign({}, temp);
                                     root.lastEqUpdate = Date.now();
-                                    
                                     root.triggerEqLightning();
                                     root.execCmd(Caching.qsDir + "/media/equalizer.sh apply");
                                 }
                             }
                         }
-                        Text { text: root.eqData.preset ? I18n.t("music.presets." + root.eqData.preset.toLowerCase()) : I18n.t("music.presets.flat"); color: ThemeBackend.subtext0 || "#a6adc8"; font.family: ThemeBackend.fontFamily; font.pixelSize: root.s(13); font.bold: true; Layout.leftMargin: root.s(12) }
+
+                        Item {
+                            id: presetTextContainer
+                            Layout.preferredHeight: root.s(26)
+                            Layout.preferredWidth: (presetLabelText.implicitWidth + root.s(12)) * Math.max(0.0, 1.0 - root.presetSlideProgress)
+                            implicitWidth: Layout.preferredWidth
+                            visible: root.presetSlideProgress < 0.99
+                            opacity: Math.max(0.0, 1.0 - root.presetSlideProgress)
+                            clip: true
+
+                            Text {
+                                id: presetLabelText
+                                anchors.verticalCenter: parent.verticalCenter
+                                x: root.s(12) + (root.s(24) * root.presetSlideProgress)
+                                text: root.eqData && root.eqData.preset ? I18n.t("music.presets." + root.eqData.preset.toLowerCase()) : I18n.t("music.presets.flat")
+                                color: ThemeBackend.subtext0 || "#a6adc8"
+                                font.family: ThemeBackend.fontFamily
+                                font.pixelSize: root.s(13)
+                                font.bold: true
+                            }
+                        }
                     }
 
                     Item {
+                        id: bottomViewsContainer
                         Layout.fillWidth: true
-                        Layout.preferredHeight: root.s(155)
+                        Layout.preferredHeight: root.s(235)
 
-                        Row {
-                            id: eqSliderRow
-                            anchors.fill: parent
-                            z: 1
+                        Item {
+                            id: eqView
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            width: parent.width
+                            x: bottomSectionSwitch.currentIndex === 0 ? 0 : -parent.width - root.s(24)
+                            opacity: bottomSectionSwitch.currentIndex === 0 ? 1.0 : 0.0
+                            visible: opacity > 0.0
 
-                            Repeater {
-                                model: [
-                                    {"idx": 1, "lbl": "31"}, {"idx": 2, "lbl": "63"}, {"idx": 3, "lbl": "125"},
-                                    {"idx": 4, "lbl": "250"}, {"idx": 5, "lbl": "500"}, {"idx": 6, "lbl": "1k"},
-                                    {"idx": 7, "lbl": "2k"}, {"idx": 8, "lbl": "4k"}, {"idx": 9, "lbl": "8k"},
-                                    {"idx": 10, "lbl": "16k"}
-                                ]
-                                delegate: Item {
-                                    id: sliderDelegate
-                                    width: eqSliderRow.width / 10
-                                    height: eqSliderRow.height
+                            Behavior on x { NumberAnimation { duration: 420; easing.type: Easing.OutQuart } }
+                            Behavior on opacity { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
 
-                                    opacity: root.introEqSliders
-                                    transform: Translate {
-                                        y: root.s(25) * (1 - root.introEqSliders) + (index * root.s(7) * (1 - root.introEqSliders))
-                                    }
+                            ColumnLayout {
+                                anchors.fill: parent
+                                spacing: root.s(12)
 
-                                    property real dist: root.eqLightningProgress - (modelData.idx - 1)
-                                    property real hitPulse: dist >= 0 && dist < 1.0 ? Math.sin((dist) * Math.PI) : 0.0
-                                    
-                                    property real trackPulse: 0.0
-                                    property real ringPulse: 0.0
-                                    property real flashFade: 0.0
-                                    property bool hasFired: false
+                                Item {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: root.s(155)
 
-                                    onDistChanged: {
-                                        if (dist <= 0.05) {
-                                            hasFired = false;
-                                        } else if (dist > 0.4 && !hasFired) {
-                                            hasFired = true;
-                                            trackPulseAnim.restart();
-                                            ringPulseAnim.restart();
-                                            flashFadeAnim.restart();
-                                        }
-                                    }
-
-                                    SequentialAnimation {
-                                        id: trackPulseAnim
-                                        NumberAnimation { target: sliderDelegate; property: "trackPulse"; from: 0.0; to: 1.0; duration: 1000; easing.type: Easing.OutQuart }
-                                    }
-                                    SequentialAnimation {
-                                        id: ringPulseAnim
-                                        NumberAnimation { target: sliderDelegate; property: "ringPulse"; from: 1.0; to: 0.0; duration: 1500; easing.type: Easing.OutExpo }
-                                    }
-                                    SequentialAnimation {
-                                        id: flashFadeAnim
-                                        NumberAnimation { target: sliderDelegate; property: "flashFade"; from: 1.0; to: 0.0; duration: 1500; easing.type: Easing.OutSine }
-                                    }
-
-                                    ColumnLayout {
+                                    Row {
+                                        id: eqSliderRow
                                         anchors.fill: parent
-                                        spacing: root.s(4)
-                                        Slider {
-                                            id: eqSlider
-                                            Layout.fillHeight: true
-                                            Layout.alignment: Qt.AlignHCenter
-                                            orientation: Qt.Vertical
-                                            from: -12; to: 12
-                                            stepSize: 1
-                                            hoverEnabled: true
+                                        z: 1
 
-                                            Connections {
-                                                target: root
-                                                function onEqDataChanged() {
-                                                    if (!eqSlider.pressed) {
-                                                        if (root.eqData && root.eqData["b" + modelData.idx] !== undefined) {
-                                                            var p = Number(root.eqData["b" + modelData.idx]);
-                                                            if (!isNaN(p)) eqSlider.value = p;
-                                                        }
-                                                    }
+                                        Repeater {
+                                            model: [
+                                                {"idx": 1, "lbl": "31"}, {"idx": 2, "lbl": "63"}, {"idx": 3, "lbl": "125"},
+                                                {"idx": 4, "lbl": "250"}, {"idx": 5, "lbl": "500"}, {"idx": 6, "lbl": "1k"},
+                                                {"idx": 7, "lbl": "2k"}, {"idx": 8, "lbl": "4k"}, {"idx": 9, "lbl": "8k"},
+                                                {"idx": 10, "lbl": "16k"}
+                                            ]
+                                            delegate: Item {
+                                                id: sliderDelegate
+                                                width: eqSliderRow.width / 10
+                                                height: eqSliderRow.height
+
+                                                opacity: root.introEqSliders
+                                                transform: Translate {
+                                                    y: root.s(25) * (1 - root.introEqSliders) + (index * root.s(7) * (1 - root.introEqSliders))
                                                 }
-                                            }
 
-                                            Behavior on value {
-                                                enabled: !eqSlider.pressed
-                                                NumberAnimation {
-                                                    duration: 350
-                                                    easing.type: Easing.OutQuart
-                                                }
-                                            }
-
-                                            onPressedChanged: {
-                                                if (!pressed) {
-                                                    var temp = Object.assign({}, root.eqData);
-                                                    temp["b" + modelData.idx] = Math.round(value);
-                                                    temp.preset = "Custom";
-                                                    temp.pending = true;
-                                                    root.eqData = temp;
-                                                    
-                                                    root.lastEqUpdate = Date.now();
-                                                    
-                                                    root.execCmd(Caching.qsDir + `/media/equalizer.sh set_band ${modelData.idx} ${Math.round(value)}`);
-                                                }
-                                            }
-
-                                            background: Rectangle {
-                                                id: trackBg
-                                                x: eqSlider.leftPadding + (eqSlider.availableWidth - width) / 2
-                                                y: eqSlider.topPadding
-                                                implicitWidth: root.s(12)
-                                                implicitHeight: root.s(130)
-                                                width: root.s(12); height: eqSlider.availableHeight
-                                                radius: ThemeBackend.borderRadius
+                                                property real dist: root.eqLightningProgress - (modelData.idx - 1)
+                                                property real hitPulse: dist >= 0 && dist < 1.0 ? Math.sin((dist) * Math.PI) : 0.0
                                                 
-                                                color: Qt.rgba((ThemeBackend.surface0 ? ThemeBackend.surface0.r : 0.2), (ThemeBackend.surface0 ? ThemeBackend.surface0.g : 0.2), (ThemeBackend.surface0 ? ThemeBackend.surface0.b : 0.3), 0.7)
+                                                property real trackPulse: 0.0
+                                                property real ringPulse: 0.0
+                                                property real flashFade: 0.0
+                                                property bool hasFired: false
 
-                                                layer.enabled: true
-                                                layer.effect: MultiEffect {
-                                                    id: trackEffect
-                                                    shadowEnabled: true
-                                                    shadowColor: "#000000"
-                                                    shadowOpacity: 0.9
-                                                    shadowBlur: 0.5
-                                                    shadowVerticalOffset: 1
-                                                }
-
-                                                Rectangle {
-                                                    z: -1
-                                                    anchors.centerIn: parent
-                                                    width: parent.width + root.s(17) + sliderDelegate.ringPulse * root.s(34)
-                                                    height: parent.height + root.s(17) + sliderDelegate.ringPulse * root.s(51)
-                                                    radius: parent.radius + root.s(8) + sliderDelegate.ringPulse * root.s(17)
-                                                    color: "transparent"
-                                                    border.color: root.eqAccentColor
-                                                    border.width: root.s(2) + sliderDelegate.ringPulse * root.s(4)
-                                                    opacity: sliderDelegate.ringPulse * 0.8 * (1.0 - root.eqLightningFade)
-                                                    
-                                                    layer.enabled: true
-                                                    layer.effect: MultiEffect { blurEnabled: true; blurMax: 32; blur: 1.0 }
-                                                }
-
-                                                Item {
-                                                    width: parent.width
-                                                    height: (1 - eqSlider.visualPosition) * parent.height
-                                                    y: eqSlider.visualPosition * parent.height
-                                                    
-                                                    layer.enabled: true
-                                                    layer.effect: MultiEffect {
-                                                        maskEnabled: true
-                                                        maskSource: eqFillMask
-                                                    }
-
-                                                    Rectangle {
-                                                        id: eqFillMask
-                                                        anchors.fill: parent
-                                                        radius: ThemeBackend.borderRadius
-                                                        visible: false
-                                                        layer.enabled: true 
-                                                    }
-
-                                                    Rectangle {
-                                                        anchors.fill: parent
-                                                        color: root.eqAccentColor
-
-                                                        Rectangle {
-                                                            anchors.fill: parent
-                                                            opacity: sliderDelegate.flashFade
-                                                            gradient: Gradient {
-                                                                orientation: Gradient.Vertical
-                                                                GradientStop { position: 0.0; color: Qt.lighter(root.eqAccentColor, 1.3) }
-                                                                GradientStop { position: 0.5; color: root.eqAccentColor }
-                                                                GradientStop { position: 1.0; color: "transparent" }
-                                                            }
-                                                        }
-
-                                                        Rectangle {
-                                                            width: parent.width
-                                                            height: root.s(70)
-                                                            y: (sliderDelegate.trackPulse * (parent.height + height)) - height
-                                                            opacity: Math.sin(sliderDelegate.trackPulse * Math.PI) * 2.0 * (1.0 - root.eqLightningFade)
-                                                            
-                                                            gradient: Gradient {
-                                                                orientation: Gradient.Vertical
-                                                                GradientStop { position: 0.0; color: "transparent" }
-                                                                GradientStop { position: 0.2; color: root.eqAccentColor }
-                                                                GradientStop { position: 0.5; color: ThemeBackend.text || "#ffffff" }
-                                                                GradientStop { position: 0.8; color: Qt.lighter(root.eqAccentColor, 1.2) }
-                                                                GradientStop { position: 1.0; color: "transparent" }
-                                                            }
-                                                            
-                                                            layer.enabled: true
-                                                            layer.effect: MultiEffect {
-                                                                shadowEnabled: true; shadowColor: root.eqAccentColor; shadowBlur: 1.0; shadowOpacity: 1.0
-                                                            }
-                                                        }
+                                                onDistChanged: {
+                                                    if (dist <= 0.05) {
+                                                        hasFired = false;
+                                                    } else if (dist > 0.4 && !hasFired) {
+                                                        hasFired = true;
+                                                        trackPulseAnim.restart();
+                                                        ringPulseAnim.restart();
+                                                        flashFadeAnim.restart();
                                                     }
                                                 }
-                                            }
-
-                                            handle: Rectangle {
-                                                id: eqHandle
-                                                x: eqSlider.leftPadding + (eqSlider.availableWidth - width) / 2
-                                                y: eqSlider.topPadding + eqSlider.visualPosition * (eqSlider.availableHeight - height)
-                                                implicitWidth: root.s(16)
-                                                implicitHeight: root.s(16)
-                                                width: root.s(16); height: root.s(16)
-                                                radius: root.s(8)
-
-                                                property color handleColor: ThemeBackend.text || "#cdd6f4"
-                                                property color handleHoverColor: Qt.lighter(root.eqAccentColor, 1.15)
-                                                property color handleDragColor: Qt.lighter(root.eqAccentColor, 1.30)
-
-                                                color: eqSlider.pressed ? handleDragColor : (eqSlider.hovered ? handleHoverColor : handleColor)
-                                                Behavior on color { ColorAnimation { duration: 150 } }
-
-                                                property real targetScale: {
-                                                    if (eqSlider.pressed) return 1.25;
-                                                    if (eqSlider.hovered) return 1.08;
-                                                    return 1.0;
-                                                }
-
-                                                Behavior on targetScale {
-                                                    NumberAnimation {
-                                                        duration: 150
-                                                        easing.type: Easing.OutBack
-                                                    }
-                                                }
-
-                                                property real popScale: 1.0
-                                                property real flashOpacity: 0.0
 
                                                 SequentialAnimation {
-                                                    id: eqHandlePopAnim
-                                                    NumberAnimation { target: eqHandle; property: "popScale"; to: 1.12; duration: 100; easing.type: Easing.OutQuad }
-                                                    NumberAnimation { target: eqHandle; property: "popScale"; to: 1.0; duration: 200; easing.type: Easing.OutCubic }
+                                                    id: trackPulseAnim
+                                                    NumberAnimation { target: sliderDelegate; property: "trackPulse"; from: 0.0; to: 1.0; duration: 1000; easing.type: Easing.OutQuart }
+                                                }
+                                                SequentialAnimation {
+                                                    id: ringPulseAnim
+                                                    NumberAnimation { target: sliderDelegate; property: "ringPulse"; from: 1.0; to: 0.0; duration: 1500; easing.type: Easing.OutExpo }
+                                                }
+                                                SequentialAnimation {
+                                                    id: flashFadeAnim
+                                                    NumberAnimation { target: sliderDelegate; property: "flashFade"; from: 1.0; to: 0.0; duration: 1500; easing.type: Easing.OutSine }
                                                 }
 
-                                                Connections {
-                                                    target: eqSlider
-                                                    function onMoved() {
-                                                        eqHandlePopAnim.restart();
+                                                ColumnLayout {
+                                                    anchors.fill: parent
+                                                    spacing: root.s(4)
+                                                    Slider {
+                                                        id: eqSlider
+                                                        Layout.fillHeight: true
+                                                        Layout.alignment: Qt.AlignHCenter
+                                                        orientation: Qt.Vertical
+                                                        from: -12; to: 12
+                                                        stepSize: 1
+                                                        hoverEnabled: true
+
+                                                        Connections {
+                                                            target: root
+                                                            function onEqDataChanged() {
+                                                                if (!eqSlider.pressed) {
+                                                                    if (root.eqData && root.eqData["b" + modelData.idx] !== undefined) {
+                                                                        var p = Number(root.eqData["b" + modelData.idx]);
+                                                                        if (!isNaN(p)) eqSlider.value = p;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+
+                                                        Behavior on value {
+                                                            enabled: !eqSlider.pressed
+                                                            NumberAnimation {
+                                                                duration: 350
+                                                                easing.type: Easing.OutQuart
+                                                            }
+                                                        }
+
+                                                        onPressedChanged: {
+                                                            if (!pressed) {
+                                                                var temp = Object.assign({}, root.eqData);
+                                                                temp["b" + modelData.idx] = Math.round(value);
+                                                                temp.preset = "Custom";
+                                                                temp.pending = true;
+                                                                root.eqData = temp;
+                                                                
+                                                                root.lastEqUpdate = Date.now();
+                                                                
+                                                                root.execCmd(Caching.qsDir + `/media/equalizer.sh set_band ${modelData.idx} ${Math.round(value)}`);
+                                                            }
+                                                        }
+
+                                                        background: Rectangle {
+                                                            id: trackBg
+                                                            x: eqSlider.leftPadding + (eqSlider.availableWidth - width) / 2
+                                                            y: eqSlider.topPadding
+                                                            implicitWidth: root.s(12)
+                                                            implicitHeight: root.s(130)
+                                                            width: root.s(12); height: eqSlider.availableHeight
+                                                            radius: ThemeBackend.borderRadius
+                                                            
+                                                            color: Qt.rgba((ThemeBackend.surface0 ? ThemeBackend.surface0.r : 0.2), (ThemeBackend.surface0 ? ThemeBackend.surface0.g : 0.2), (ThemeBackend.surface0 ? ThemeBackend.surface0.b : 0.3), 0.7)
+
+                                                            layer.enabled: true
+                                                            layer.effect: MultiEffect {
+                                                                id: trackEffect
+                                                                shadowEnabled: true
+                                                                shadowColor: "#000000"
+                                                                shadowOpacity: 0.9
+                                                                shadowBlur: 0.5
+                                                                shadowVerticalOffset: 1
+                                                            }
+
+                                                            Rectangle {
+                                                                z: -1
+                                                                anchors.centerIn: parent
+                                                                width: parent.width + root.s(17) + sliderDelegate.ringPulse * root.s(34)
+                                                                height: parent.height + root.s(17) + sliderDelegate.ringPulse * root.s(51)
+                                                                radius: parent.radius + root.s(8) + sliderDelegate.ringPulse * root.s(17)
+                                                                color: "transparent"
+                                                                border.color: root.eqAccentColor
+                                                                border.width: root.s(2) + sliderDelegate.ringPulse * root.s(4)
+                                                                opacity: sliderDelegate.ringPulse * 0.8 * (1.0 - root.eqLightningFade)
+                                                                
+                                                                layer.enabled: true
+                                                                layer.effect: MultiEffect { blurEnabled: true; blurMax: 32; blur: 1.0 }
+                                                            }
+
+                                                            Item {
+                                                                width: parent.width
+                                                                height: (1 - eqSlider.visualPosition) * parent.height
+                                                                y: eqSlider.visualPosition * parent.height
+                                                                
+                                                                layer.enabled: true
+                                                                layer.effect: MultiEffect {
+                                                                    maskEnabled: true
+                                                                    maskSource: eqFillMask
+                                                                }
+
+                                                                Rectangle {
+                                                                    id: eqFillMask
+                                                                    anchors.fill: parent
+                                                                    radius: ThemeBackend.borderRadius
+                                                                    visible: false
+                                                                    layer.enabled: true 
+                                                                }
+
+                                                                Rectangle {
+                                                                    anchors.fill: parent
+                                                                    color: root.eqAccentColor
+
+                                                                    Rectangle {
+                                                                        anchors.fill: parent
+                                                                        opacity: sliderDelegate.flashFade
+                                                                        gradient: Gradient {
+                                                                            orientation: Gradient.Vertical
+                                                                            GradientStop { position: 0.0; color: Qt.lighter(root.eqAccentColor, 1.3) }
+                                                                            GradientStop { position: 0.5; color: root.eqAccentColor }
+                                                                            GradientStop { position: 1.0; color: "transparent" }
+                                                                        }
+                                                                    }
+
+                                                                    Rectangle {
+                                                                        width: parent.width
+                                                                        height: root.s(70)
+                                                                        y: (sliderDelegate.trackPulse * (parent.height + height)) - height
+                                                                        opacity: Math.sin(sliderDelegate.trackPulse * Math.PI) * 2.0 * (1.0 - root.eqLightningFade)
+                                                                        
+                                                                        gradient: Gradient {
+                                                                            orientation: Gradient.Vertical
+                                                                            GradientStop { position: 0.0; color: "transparent" }
+                                                                            GradientStop { position: 0.2; color: root.eqAccentColor }
+                                                                            GradientStop { position: 0.5; color: ThemeBackend.text || "#ffffff" }
+                                                                            GradientStop { position: 0.8; color: Qt.lighter(root.eqAccentColor, 1.2) }
+                                                                            GradientStop { position: 1.0; color: "transparent" }
+                                                                        }
+                                                                        
+                                                                        layer.enabled: true
+                                                                        layer.effect: MultiEffect {
+                                                                            shadowEnabled: true; shadowColor: root.eqAccentColor; shadowBlur: 1.0; shadowOpacity: 1.0
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+
+                                                        handle: Rectangle {
+                                                            id: eqHandle
+                                                            x: eqSlider.leftPadding + (eqSlider.availableWidth - width) / 2
+                                                            y: eqSlider.topPadding + eqSlider.visualPosition * (eqSlider.availableHeight - height)
+                                                            implicitWidth: root.s(16)
+                                                            implicitHeight: root.s(16)
+                                                            width: root.s(16); height: root.s(16)
+                                                            radius: root.s(8)
+
+                                                            property color handleColor: ThemeBackend.text || "#cdd6f4"
+                                                            property color handleHoverColor: Qt.lighter(root.eqAccentColor, 1.15)
+                                                            property color handleDragColor: Qt.lighter(root.eqAccentColor, 1.30)
+
+                                                            color: eqSlider.pressed ? handleDragColor : (eqSlider.hovered ? handleHoverColor : handleColor)
+                                                            Behavior on color { ColorAnimation { duration: 150 } }
+
+                                                            property real targetScale: {
+                                                                if (eqSlider.pressed) return 1.25;
+                                                                if (eqSlider.hovered) return 1.08;
+                                                                return 1.0;
+                                                            }
+
+                                                            Behavior on targetScale {
+                                                                NumberAnimation {
+                                                                    duration: 150
+                                                                    easing.type: Easing.OutBack
+                                                                }
+                                                            }
+
+                                                            property real popScale: 1.0
+                                                            property real flashOpacity: 0.0
+
+                                                            SequentialAnimation {
+                                                                id: eqHandlePopAnim
+                                                                NumberAnimation { target: eqHandle; property: "popScale"; to: 1.12; duration: 100; easing.type: Easing.OutQuad }
+                                                                NumberAnimation { target: eqHandle; property: "popScale"; to: 1.0; duration: 200; easing.type: Easing.OutCubic }
+                                                            }
+
+                                                            Connections {
+                                                                target: eqSlider
+                                                                function onMoved() {
+                                                                    eqHandlePopAnim.restart();
+                                                                }
+                                                                function onPressedChanged() {
+                                                                    if (!eqSlider.pressed) {
+                                                                        eqHandle.flashOpacity = 0.35;
+                                                                        eqHandleFlashAnim.restart();
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            property var catColors: [
+                                                                root.eqAccentColor,
+                                                                ThemeBackend.pink || "#f5c2e7",
+                                                                ThemeBackend.lavender || "#b4befe",
+                                                                root.eqAccentColor,
+                                                                ThemeBackend.blue || "#89b4fa"
+                                                            ]
+
+                                                            Rectangle {
+                                                                anchors.centerIn: parent
+                                                                width: parent.width + root.s(31) * sliderDelegate.hitPulse
+                                                                height: width
+                                                                radius: width / 2
+                                                                color: (parent.catColors && parent.catColors.length > 0) ? (parent.catColors[(typeof index !== "undefined" ? index : 0) % parent.catColors.length] || root.eqAccentColor) : root.eqAccentColor
+                                                                opacity: sliderDelegate.hitPulse * (1.0 - root.eqLightningFade)
+                                                                layer.enabled: true
+                                                                layer.effect: MultiEffect { blurEnabled: true; blurMax: 32; blur: 1.0 }
+                                                            }
+
+                                                            Rectangle {
+                                                                anchors.fill: parent
+                                                                radius: parent.radius
+                                                                color: "#ffffff"
+                                                                opacity: eqHandle.flashOpacity
+                                                                PropertyAnimation on opacity { id: eqHandleFlashAnim; to: 0; duration: 300; easing.type: Easing.OutCubic }
+                                                            }
+
+                                                            scale: (targetScale * popScale) + (sliderDelegate.hitPulse * 0.4 * (1.0 - root.eqLightningFade))
+                                                        }
                                                     }
-                                                    function onPressedChanged() {
-                                                        if (!eqSlider.pressed) {
-                                                            eqHandle.flashOpacity = 0.35;
-                                                            eqHandleFlashAnim.restart();
+                                                    Text {
+                                                        text: modelData.lbl
+                                                        color: ThemeBackend.overlay1 || "#7f849c"
+                                                        font.family: ThemeBackend.fontFamily
+                                                        font.pixelSize: root.s(9.5)
+                                                        font.bold: true
+                                                        Layout.alignment: Qt.AlignHCenter
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Canvas {
+                                        id: lightningCanvas
+                                        anchors.fill: parent
+                                        opacity: 1.0 - root.eqLightningFade
+                                        z: 0
+
+                                        renderTarget: Canvas.FramebufferObject
+
+                                        layer.enabled: true
+                                        layer.effect: MultiEffect {
+                                            shadowEnabled: true
+                                            shadowColor: root.eqAccentColor
+                                            shadowBlur: 1.0
+                                            shadowOpacity: 0.8
+                                            shadowVerticalOffset: 0
+                                            shadowHorizontalOffset: 0
+                                        }
+
+                                        Timer {
+                                            interval: 16
+                                            running: root.eqLightningFade < 1.0 && root.eqLightningProgress > 0.0
+                                            repeat: true
+                                            onTriggered: lightningCanvas.requestPaint()
+                                        }
+
+                                        onPaint: {
+                                            var ctx = getContext("2d");
+                                            ctx.clearRect(0, 0, width, height);
+
+                                            if (root.eqLightningProgress <= 0.0 || root.eqLightningFade >= 1.0) return;
+
+                                            var time = Date.now() / 1000;
+                                            var maxIdx = root.eqLightningProgress;
+
+                                            ctx.lineJoin = "round";
+                                            ctx.lineCap = "round";
+
+                                            var pts = [];
+                                            for (var i = 1; i <= 10; i++) {
+                                                var val = root.eqData["b" + i] !== undefined ? Number(root.eqData["b" + i]) : 0;
+                                                var norm = 1.0 - ((val + 12) / 24);
+                                                
+                                                var py = root.s(10) + norm * (height - root.s(30));
+                                                var px = (i - 0.5) * (width / 10);
+                                                pts.push({ x: px, y: py });
+                                            }
+
+                                            for (var s = 0; s < 4; s++) {
+                                                ctx.beginPath();
+                                                ctx.moveTo(pts[0].x, pts[0].y);
+
+                                                for (var i = 0; i < pts.length - 1; i++) {
+                                                    if (i > maxIdx) break;
+
+                                                    var p1 = pts[i];
+                                                    var p2 = pts[i+1];
+
+                                                    var fraction = 1.0;
+                                                    if (maxIdx < i + 1) {
+                                                        fraction = maxIdx - i;
+                                                    }
+
+                                                    var steps = s === 3 ? 6 : 8;
+                                                    for (var j = 1; j <= steps; j++) {
+                                                        var t = j / steps;
+                                                        if (t > fraction) t = fraction;
+
+                                                        var cx = p1.x + (p2.x - p1.x) * t;
+                                                        var cy = p1.y + (p2.y - p1.y) * t;
+
+                                                        var envelope = Math.sin(t * Math.PI);
+
+                                                        var noiseAmpX = s === 3 ? 1.0 : (4 - s) * 4;
+                                                        var noiseAmpY = s === 3 ? 1.0 : (4 - s) * 5;
+                                                        
+                                                        var sepWaveX = (s < 2) ? Math.sin(time * 3 + i + j + s) * root.s(9) * envelope : 0;
+                                                        var sepWaveY = (s < 2) ? Math.cos(time * 2.5 + i - j - s) * root.s(13.5) * envelope : 0;
+
+                                                        var noiseX = Math.sin(time * (10+s) + i + j) * Math.cos(time * 8 - i + j) * noiseAmpX * envelope * (1 - root.eqLightningFade);
+                                                        var noiseY = Math.cos(time * (9-s) + i - j) * Math.sin(time * 7 + i - j) * noiseAmpY * envelope * (1 - root.eqLightningFade);
+
+                                                        ctx.lineTo(cx + sepWaveX + noiseX, cy + sepWaveY + noiseY);
+
+                                                        if (t === fraction) break;
+                                                    }
+                                                }
+
+                                                if (s === 0) {
+                                                    ctx.lineWidth = root.s(18);
+                                                    ctx.strokeStyle = root.eqAccentColor;
+                                                    ctx.globalAlpha = 0.35;
+                                                } else if (s === 1) {
+                                                    ctx.lineWidth = root.s(9);
+                                                    ctx.strokeStyle = Qt.lighter(root.eqAccentColor, 1.25);
+                                                    ctx.globalAlpha = 0.65;
+                                                } else if (s === 2) {
+                                                    ctx.lineWidth = root.s(4.5);
+                                                    ctx.strokeStyle = Qt.lighter(root.eqAccentColor, 1.5);
+                                                    ctx.globalAlpha = 0.9;
+                                                } else if (s === 3) {
+                                                    ctx.lineWidth = root.s(2.2);
+                                                    ctx.strokeStyle = "#ffffff";
+                                                    ctx.globalAlpha = 1.0;
+                                                }
+
+                                                ctx.stroke();
+                                            }
+                                        }
+                                    }
+                                }
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: root.s(7)
+                                    
+                                    opacity: root.introPresets
+                                    transform: Translate { y: root.s(18) * (1 - root.introPresets) }
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: root.s(8)
+                                        Repeater {
+                                            model: ["Flat", "Bass", "Treble", "Vocal"]
+                                            delegate: PresetButton { name: modelData }
+                                        }
+                                    }
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: root.s(8)
+                                        Repeater {
+                                            model: ["Pop", "Rock", "Jazz", "Classic"]
+                                            delegate: PresetButton { name: modelData }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Item {
+                            id: lyricsView
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            width: parent.width
+                            x: bottomSectionSwitch.currentIndex === 1 ? 0 : parent.width + root.s(24)
+                            opacity: bottomSectionSwitch.currentIndex === 1 ? 1.0 : 0.0
+                            visible: opacity > 0.0
+                            clip: true
+
+                            Behavior on x { NumberAnimation { duration: 420; easing.type: Easing.OutQuart } }
+                            Behavior on opacity { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
+
+                            Item {
+                                id: popupLyricsViewport
+                                anchors.fill: parent
+                                visible: Lyrics.hasLyrics
+                                clip: true
+
+                                property real popupActiveItemCenterY: 0
+                                readonly property real popupSideMargin: root.s(4)
+                                readonly property real popupBaseActiveFont: root.s(18)
+                                readonly property real popupLineHeight: Math.max(root.s(30), popupBaseActiveFont * 1.4)
+                                readonly property real popupLineSpacing: Math.max(root.s(6), popupBaseActiveFont * 0.25)
+                                readonly property real popupItemStep: popupLineHeight + popupLineSpacing
+
+                                Connections {
+                                    target: Lyrics
+                                    function onCurrentIndexChanged() {
+                                        if (Lyrics.currentIndex >= 0 && popupLyricsRepeater && popupLyricsRepeater.count > Lyrics.currentIndex) {
+                                            let it = popupLyricsRepeater.itemAt(Lyrics.currentIndex);
+                                            if (it) {
+                                                popupLyricsViewport.popupActiveItemCenterY = it.y + it.height / 2;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                readonly property real popupTargetY: {
+                                    let center = popupLyricsViewport.height * 0.44;
+                                    if (Lyrics.currentIndex >= 0 && Lyrics.hasLyrics) {
+                                        if (popupActiveItemCenterY > 0) {
+                                            return center - popupActiveItemCenterY;
+                                        }
+                                        if (popupLyricsRepeater && popupLyricsRepeater.count > Lyrics.currentIndex) {
+                                            let it = popupLyricsRepeater.itemAt(Lyrics.currentIndex);
+                                            if (it) {
+                                                return center - (it.y + it.height / 2);
+                                            }
+                                        }
+                                        return center - (Lyrics.currentIndex * popupItemStep + popupLineHeight / 2);
+                                    }
+                                    return center - (popupLineHeight / 2);
+                                }
+
+                                Item {
+                                    id: popupScrollContainer
+                                    width: parent.width
+                                    height: popupLyricsColumn.height
+                                    y: popupLyricsViewport.popupTargetY
+
+                                    Behavior on y {
+                                        NumberAnimation {
+                                            duration: 650
+                                            easing.type: Easing.OutCubic
+                                        }
+                                    }
+
+                                    Column {
+                                        id: popupLyricsColumn
+                                        width: parent.width
+                                        spacing: popupLyricsViewport.popupLineSpacing
+
+                                        Repeater {
+                                            id: popupLyricsRepeater
+                                            model: Lyrics.lyrics
+
+                                            delegate: Item {
+                                                id: popupLineDelegate
+                                                width: popupLyricsColumn.width
+                                                height: Math.max(popupLyricsViewport.popupLineHeight, popupLineText.implicitHeight)
+
+                                                readonly property bool isCurrent: index === Lyrics.currentIndex
+
+                                                Component.onCompleted: {
+                                                    if (isCurrent) {
+                                                        popupLyricsViewport.popupActiveItemCenterY = y + height / 2;
+                                                    }
+                                                }
+
+                                                onIsCurrentChanged: {
+                                                    if (isCurrent) {
+                                                        popupLyricsViewport.popupActiveItemCenterY = y + height / 2;
+                                                    }
+                                                }
+
+                                                onYChanged: {
+                                                    if (isCurrent) {
+                                                        popupLyricsViewport.popupActiveItemCenterY = y + height / 2;
+                                                    }
+                                                }
+
+                                                onHeightChanged: {
+                                                    if (isCurrent) {
+                                                        popupLyricsViewport.popupActiveItemCenterY = y + height / 2;
+                                                    }
+                                                }
+
+                                                Text {
+                                                    id: popupLineText
+                                                    width: parent.width - (popupLyricsViewport.popupSideMargin * 2)
+                                                    x: popupLyricsViewport.popupSideMargin
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    horizontalAlignment: Text.AlignLeft
+                                                    wrapMode: Text.WordWrap
+                                                    font.family: ThemeBackend.fontFamily
+                                                    font.weight: Font.Bold
+                                                    font.pixelSize: popupLyricsViewport.popupBaseActiveFont
+                                                    color: (index === Lyrics.currentIndex && (!modelData.words || modelData.words.length === 0)) ? (ThemeBackend.mauve || root.dynamicTextColor) : ThemeBackend.text
+                                                    opacity: Lyrics.getLineOpacity(index, Lyrics.currentIndex)
+                                                    scale: {
+                                                        if (index === Lyrics.currentIndex) return 1.0;
+                                                        let d = Math.abs(index - Lyrics.currentIndex);
+                                                        if (d === 1) return 0.86;
+                                                        return 0.80;
+                                                    }
+                                                    transformOrigin: Item.Left
+
+                                                    textFormat: (index === Lyrics.currentIndex && modelData.words && modelData.words.length > 0) ? Text.StyledText : Text.PlainText
+
+                                                    text: {
+                                                        if (index === Lyrics.currentIndex && modelData.words && modelData.words.length > 0) {
+                                                            return Lyrics.renderActiveLineText(modelData, Lyrics.currentPosition, (ThemeBackend.mauve || root.dynamicTextColor), ThemeBackend.text);
+                                                        }
+                                                        return modelData.text !== "" ? modelData.text : "♪";
+                                                    }
+
+                                                    Behavior on color {
+                                                        ColorAnimation {
+                                                            duration: 650
+                                                            easing.type: Easing.OutCubic
+                                                        }
+                                                    }
+
+                                                    Behavior on opacity {
+                                                        NumberAnimation {
+                                                            duration: 650
+                                                            easing.type: Easing.OutCubic
+                                                        }
+                                                    }
+
+                                                    Behavior on scale {
+                                                        NumberAnimation {
+                                                            duration: 650
+                                                            easing.type: Easing.OutCubic
                                                         }
                                                     }
                                                 }
-
-                                                property var catColors: [
-                                                    root.eqAccentColor,
-                                                    ThemeBackend.pink || "#f5c2e7",
-                                                    ThemeBackend.lavender || "#b4befe",
-                                                    root.eqAccentColor,
-                                                    ThemeBackend.blue || "#89b4fa"
-                                                ]
-
-                                                Rectangle {
-                                                    anchors.centerIn: parent
-                                                    width: parent.width + root.s(31) * sliderDelegate.hitPulse
-                                                    height: width
-                                                    radius: width / 2
-                                                    color: (parent.catColors && parent.catColors.length > 0) ? (parent.catColors[(typeof index !== "undefined" ? index : 0) % parent.catColors.length] || root.eqAccentColor) : root.eqAccentColor
-                                                    opacity: sliderDelegate.hitPulse * (1.0 - root.eqLightningFade)
-                                                    layer.enabled: true
-                                                    layer.effect: MultiEffect { blurEnabled: true; blurMax: 32; blur: 1.0 }
-                                                }
-
-                                                Rectangle {
-                                                    anchors.fill: parent
-                                                    radius: parent.radius
-                                                    color: "#ffffff"
-                                                    opacity: eqHandle.flashOpacity
-                                                    PropertyAnimation on opacity { id: eqHandleFlashAnim; to: 0; duration: 300; easing.type: Easing.OutCubic }
-                                                }
-
-                                                scale: (targetScale * popScale) + (sliderDelegate.hitPulse * 0.4 * (1.0 - root.eqLightningFade))
                                             }
                                         }
-                                        Text {
-                                            text: modelData.lbl
-                                            color: ThemeBackend.overlay1 || "#7f849c"
-                                            font.family: ThemeBackend.fontFamily
-                                            font.pixelSize: root.s(9.5)
-                                            font.bold: true
-                                            Layout.alignment: Qt.AlignHCenter
-                                        }
                                     }
                                 }
                             }
-                        }
 
-                        Canvas {
-                            id: lightningCanvas
-                            anchors.fill: parent
-                            opacity: 1.0 - root.eqLightningFade
-                            z: 0
+                            ColumnLayout {
+                                anchors.centerIn: parent
+                                spacing: root.s(6)
+                                visible: !Lyrics.hasLyrics
+                                z: 5
 
-                            renderTarget: Canvas.FramebufferObject
-
-                            layer.enabled: true
-                            layer.effect: MultiEffect {
-                                shadowEnabled: true
-                                shadowColor: root.eqAccentColor
-                                shadowBlur: 1.0
-                                shadowOpacity: 0.8
-                                shadowVerticalOffset: 0
-                                shadowHorizontalOffset: 0
-                            }
-
-                            Timer {
-                                interval: 16
-                                running: root.eqLightningFade < 1.0 && root.eqLightningProgress > 0.0
-                                repeat: true
-                                onTriggered: lightningCanvas.requestPaint()
-                            }
-
-                            onPaint: {
-                                var ctx = getContext("2d");
-                                ctx.clearRect(0, 0, width, height);
-
-                                if (root.eqLightningProgress <= 0.0 || root.eqLightningFade >= 1.0) return;
-
-                                var time = Date.now() / 1000;
-                                var maxIdx = root.eqLightningProgress;
-
-                                ctx.lineJoin = "round";
-                                ctx.lineCap = "round";
-
-                                var pts = [];
-                                for (var i = 1; i <= 10; i++) {
-                                    var val = root.eqData["b" + i] !== undefined ? Number(root.eqData["b" + i]) : 0;
-                                    var norm = 1.0 - ((val + 12) / 24);
-                                    
-                                    var py = root.s(10) + norm * (height - root.s(30));
-                                    var px = (i - 0.5) * (width / 10);
-                                    pts.push({ x: px, y: py });
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: "󰎈"
+                                    font.family: "Iosevka Nerd Font"
+                                    font.pixelSize: root.s(28)
+                                    color: root.dynamicTextColor
+                                    opacity: 0.75
                                 }
 
-                                for (var s = 0; s < 4; s++) {
-                                    ctx.beginPath();
-                                    ctx.moveTo(pts[0].x, pts[0].y);
-
-                                    for (var i = 0; i < pts.length - 1; i++) {
-                                        if (i > maxIdx) break;
-
-                                        var p1 = pts[i];
-                                        var p2 = pts[i+1];
-
-                                        var fraction = 1.0;
-                                        if (maxIdx < i + 1) {
-                                            fraction = maxIdx - i;
-                                        }
-
-                                        var steps = s === 3 ? 6 : 8;
-                                        for (var j = 1; j <= steps; j++) {
-                                            var t = j / steps;
-                                            if (t > fraction) t = fraction;
-
-                                            var cx = p1.x + (p2.x - p1.x) * t;
-                                            var cy = p1.y + (p2.y - p1.y) * t;
-
-                                            var envelope = Math.sin(t * Math.PI);
-
-                                            var noiseAmpX = s === 3 ? 1.0 : (4 - s) * 4;
-                                            var noiseAmpY = s === 3 ? 1.0 : (4 - s) * 5;
-                                            
-                                            var sepWaveX = (s < 2) ? Math.sin(time * 3 + i + j + s) * root.s(9) * envelope : 0;
-                                            var sepWaveY = (s < 2) ? Math.cos(time * 2.5 + i - j - s) * root.s(13.5) * envelope : 0;
-
-                                            var noiseX = Math.sin(time * (10+s) + i + j) * Math.cos(time * 8 - i + j) * noiseAmpX * envelope * (1 - root.eqLightningFade);
-                                            var noiseY = Math.cos(time * (9-s) + i - j) * Math.sin(time * 7 + i - j) * noiseAmpY * envelope * (1 - root.eqLightningFade);
-
-                                            ctx.lineTo(cx + sepWaveX + noiseX, cy + sepWaveY + noiseY);
-
-                                            if (t === fraction) break;
-                                        }
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: {
+                                        if (!root.hasTargetPlayer || !root.targetPlayer.trackTitle) return I18n.t("music.nothing_playing");
+                                        if (Lyrics.loading) return I18n.t("music.searching_lyrics");
+                                        return I18n.t("music.no_lyrics");
                                     }
-
-                                    if (s === 0) {
-                                        ctx.lineWidth = root.s(18);
-                                        ctx.strokeStyle = root.eqAccentColor;
-                                        ctx.globalAlpha = 0.35;
-                                    } else if (s === 1) {
-                                        ctx.lineWidth = root.s(9);
-                                        ctx.strokeStyle = Qt.lighter(root.eqAccentColor, 1.25);
-                                        ctx.globalAlpha = 0.65;
-                                    } else if (s === 2) {
-                                        ctx.lineWidth = root.s(4.5);
-                                        ctx.strokeStyle = Qt.lighter(root.eqAccentColor, 1.5);
-                                        ctx.globalAlpha = 0.9;
-                                    } else if (s === 3) {
-                                        ctx.lineWidth = root.s(2.2);
-                                        ctx.strokeStyle = "#ffffff";
-                                        ctx.globalAlpha = 1.0;
-                                    }
-
-                                    ctx.stroke();
+                                    font.family: ThemeBackend.fontFamily
+                                    font.weight: Font.DemiBold
+                                    font.pixelSize: root.s(12)
+                                    color: ThemeBackend.subtext0 || "#a6adc8"
                                 }
-                            }
-                        }
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: root.s(7)
-                        
-                        opacity: root.introPresets
-                        transform: Translate { y: root.s(18) * (1 - root.introPresets) }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: root.s(8)
-                            Repeater {
-                                model: ["Flat", "Bass", "Treble", "Vocal"]
-                                delegate: PresetButton { name: modelData }
-                            }
-                        }
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: root.s(8)
-                            Repeater {
-                                model: ["Pop", "Rock", "Jazz", "Classic"]
-                                delegate: PresetButton { name: modelData }
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+
+    component WavySeekBar : Item {
+        id: bar
+
+        property real from: 0.0
+        property real to: 100.0
+        property real value: 0.0
+        property bool playing: false
+        property real energy: 0.0
+
+        property color waveColor: ThemeBackend.mauve || "#cba6f7"
+        Behavior on waveColor { ColorAnimation { duration: 600 } }
+        property color primaryColor: waveColor
+        Behavior on primaryColor { ColorAnimation { duration: 600 } }
+        property color secondaryColor: ThemeBackend.lavender || "#b4befe"
+        Behavior on secondaryColor { ColorAnimation { duration: 600 } }
+        property color tertiaryColor: ThemeBackend.blue || "#89b4fa"
+        Behavior on tertiaryColor { ColorAnimation { duration: 600 } }
+
+        property real trackAlpha: 0.28
+        property color handleHoverColor: Qt.lighter(waveColor, 1.15)
+
+        property real handleSize: root.s(17)
+        property real strokeWidth: root.s(9)
+        property real amplitude: root.s(20)
+        property int cycleMs: 8000
+        property real reactivity: 0.35
+        property real baseLevel: 0.72
+        property real restingLevel: 0.0
+
+        property real barFaintness: (bar.playing || bar.isDragging || mouseArea.containsMouse) ? 1.0 : 0.55
+        Behavior on barFaintness {
+            NumberAnimation { duration: 500; easing.type: Easing.OutQuad }
+        }
+
+        readonly property real cy: height - handleSize * 0.7
+        property real pad: handleSize / 2
+        property bool isDragging: mouseArea.pressed
+        signal moved(real val)
+
+        property real energySmooth: energy
+        Behavior on energySmooth {
+            NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
+        }
+
+        property real ampFactor: playing ? 1.0 : restingLevel
+        Behavior on ampFactor {
+            NumberAnimation { duration: 600; easing.type: Easing.OutQuad }
+        }
+
+        readonly property real liveAmp: Math.min(1.0, ampFactor * (baseLevel + reactivity * energySmooth))
+
+        property real progressFraction: (to > from) ? Math.max(0.0, Math.min(1.0, (value - from) / (to - from))) : 0.0
+        property real shownFraction: progressFraction
+        Behavior on shownFraction {
+            enabled: !bar.isDragging
+            NumberAnimation { duration: 250; easing.type: Easing.Linear }
+        }
+
+        readonly property real progressX: pad + shownFraction * (width - 2 * pad)
+
+        property real phase: 0
+        NumberAnimation on phase {
+            from: 0
+            to: Math.PI * 2
+            duration: bar.cycleMs
+            loops: Animation.Infinite
+            running: bar.visible && (bar.playing || bar.ampFactor > 0.001)
+        }
+
+        property var layers: [
+            { color: bar.primaryColor, amp: 0.86, alpha: 0.32, taper: root.s(26), comps: [
+                { len: root.s(245), mult: 1, off: 1.10, w: 0.65 },
+                { len: root.s(145), mult: 2, off: 1.90, w: 0.35 } ] },
+            { color: bar.primaryColor, amp: 0.93, alpha: 0.56, taper: root.s(30), comps: [
+                { len: root.s(300), mult: 1, off: 0.55, w: 0.65 },
+                { len: root.s(180), mult: 2, off: 1.25, w: 0.35 } ] },
+            { color: bar.primaryColor, amp: 1.00, alpha: 0.82, taper: root.s(34), comps: [
+                { len: root.s(360), mult: 1, off: 0.00, w: 0.68 },
+                { len: root.s(225), mult: 2, off: 0.60, w: 0.32 } ] }
+        ]
+
+        onLiveAmpChanged: cv.requestPaint()
+        onBarFaintnessChanged: cv.requestPaint()
+        onWaveColorChanged: cv.requestPaint()
+        onPrimaryColorChanged: cv.requestPaint()
+        onSecondaryColorChanged: cv.requestPaint()
+        onTertiaryColorChanged: cv.requestPaint()
+        onPhaseChanged: cv.requestPaint()
+        onShownFractionChanged: cv.requestPaint()
+        onWidthChanged: cv.requestPaint()
+
+        Canvas {
+            id: cv
+            anchors.fill: parent
+            renderTarget: Canvas.FramebufferObject
+
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+
+                var cy = bar.cy, pad = bar.pad, right = width - pad;
+                var endX = Math.max(pad, bar.progressX);
+                var top = cy - bar.strokeWidth / 2;
+                var step = Math.max(2, root.s(2.5));
+                var startTaper = Math.max(root.s(24), Math.min(root.s(64), (endX - pad) * 0.6));
+
+                function rgbaCol(col, a) {
+                    return "rgba(" + Math.round(col.r * 255) + "," + Math.round(col.g * 255) + "," + Math.round(col.b * 255) + "," + a + ")";
+                }
+                function easeStart(t) {
+                    t = Math.max(0, Math.min(1, t));
+                    return 0.5 * (1 - Math.cos(t * Math.PI));
+                }
+                function easeEnd(t) {
+                    t = Math.max(0, Math.min(1, t));
+                    return 0.5 * (1 - Math.cos(t * Math.PI));
+                }
+                function hill(x, ly) {
+                    var n = 0;
+                    for (var k = 0; k < ly.comps.length; k++) {
+                        var p = ly.comps[k];
+                        n += p.w * Math.sin((2 * Math.PI / p.len) * x - bar.phase * p.mult + p.off);
+                    }
+                    var base = (n + 0.85) / 1.85;
+                    if (base <= 0) return 0;
+                    if (base >= 1) base = 1;
+                    return 0.5 * (1 - Math.cos(base * Math.PI));
+                }
+
+                ctx.lineCap = "round";
+                ctx.lineJoin = "round";
+                ctx.lineWidth = bar.strokeWidth;
+                ctx.globalAlpha = 1.0;
+
+                ctx.strokeStyle = rgbaCol(bar.waveColor, bar.trackAlpha * bar.barFaintness);
+                ctx.beginPath();
+                ctx.moveTo(endX, cy);
+                ctx.lineTo(right, cy);
+                ctx.stroke();
+
+                if (endX > pad + 1) {
+                    var L = bar.layers;
+                    for (var li = 0; li < L.length; li++) {
+                        var ly = L[li];
+                        var A = bar.amplitude * ly.amp * bar.liveAmp;
+                        if (A < 0.3) continue;
+
+                        var curCol = ly.color || bar.primaryColor;
+                        var g = ctx.createLinearGradient(0, top - A, 0, top);
+                        g.addColorStop(0.0, rgbaCol(curCol, ly.alpha * 0.55 * bar.barFaintness));
+                        g.addColorStop(1.0, rgbaCol(curCol, ly.alpha * bar.barFaintness));
+                        ctx.fillStyle = g;
+
+                        ctx.beginPath();
+                        ctx.moveTo(pad, cy);
+                        for (var x = pad; x <= endX; x += step) {
+                            var curX = Math.min(x, endX);
+                            var env = easeStart((curX - pad) / startTaper) * easeEnd((endX - curX) / ly.taper);
+                            var yPos = top - hill(curX, ly) * A * env;
+                            ctx.lineTo(curX, yPos);
+                            if (curX === endX) break;
+                        }
+                        ctx.lineTo(endX, top);
+                        ctx.lineTo(endX, cy);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                }
+
+                ctx.strokeStyle = rgbaCol(bar.waveColor, bar.barFaintness);
+                ctx.beginPath();
+                ctx.moveTo(pad, cy);
+                ctx.lineTo(endX, cy);
+                ctx.stroke();
+            }
+        }
+
+        Rectangle {
+            id: handle
+            x: Math.max(0, Math.min(bar.width - width, bar.progressX - width / 2))
+            y: bar.cy - height / 2
+            width: bar.handleSize
+            height: bar.handleSize
+            radius: width / 2
+            color: bar.isDragging ? bar.handleHoverColor : (mouseArea.containsMouse ? bar.handleHoverColor : bar.waveColor)
+            opacity: (bar.isDragging || mouseArea.containsMouse) ? 1.0 : (0.45 + 0.55 * bar.barFaintness)
+            scale: bar.isDragging ? 1.25 : (mouseArea.containsMouse ? 1.15 : 1.0)
+            Behavior on opacity {
+                NumberAnimation { duration: 350; easing.type: Easing.OutQuad }
+            }
+            Behavior on scale {
+                NumberAnimation { duration: 150; easing.type: Easing.OutBack }
+            }
+            Behavior on color {
+                ColorAnimation { duration: 150 }
+            }
+        }
+
+        MouseArea {
+            id: mouseArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+
+            function updatePos(mx) {
+                var avail = bar.width - 2 * bar.pad;
+                if (avail <= 0) return;
+                var frac = Math.max(0.0, Math.min(1.0, (mx - bar.pad) / avail));
+                var newVal = bar.from + frac * (bar.to - bar.from);
+                bar.value = newVal;
+                bar.moved(newVal);
+            }
+
+            onPressed: mouse => updatePos(mouse.x)
+            onPositionChanged: mouse => {
+                if (pressed) updatePos(mouse.x);
             }
         }
     }

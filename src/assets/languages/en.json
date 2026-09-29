@@ -752,7 +752,8 @@
     },
     "searching_lyrics": "Searching lyrics...",
     "no_lyrics": "No lyrics found",
-    "select_local_file": "Select a local file"
+    "select_local_file": "Select a local file",
+    "lyrics": "Lyrics"
   },
   "network": {
     "tabs": {

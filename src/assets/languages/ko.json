@@ -752,7 +752,8 @@
     },
     "searching_lyrics": "가사 검색 중...",
     "no_lyrics": "가사를 찾을 수 없음",
-    "select_local_file": "로컬 파일 선택"
+    "select_local_file": "로컬 파일 선택",
+    "lyrics": "가사"
   },
   "network": {
     "tabs": {
