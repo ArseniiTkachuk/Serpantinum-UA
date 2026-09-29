@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import "../"
+import "../../"
 
 Item {
     id: root

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import "../../"
 import "../"
 
 Item {
@@ -11,23 +12,27 @@ Item {
     property int size: 44
     property int cornerRadius: 12
 
+    property int iconSize: 18
+
     property color accentColor: "#89b4fa"
     property color textColor: "#11111b"
-    property color iconColor: textColor
 
-    property bool flipped: false
-    property bool autoToggle: true
     property bool action_highlight: false
     property string clickSound: "reusables/iconbutton/click.wav"
 
+    property var paintCanvas: function(ctx, canvas) {}
+
     signal clicked()
     signal triggered()
-    signal toggled(bool flipped)
 
     property real flashOpacity: 0.0
     property real popScale: 1.0
 
     property bool isHoveredOrHighlighted: (btnMa.containsMouse || root.action_highlight) && root.enabled
+
+    function requestPaint() {
+        iconCanvas.requestPaint()
+    }
 
     Rectangle {
         id: btnShape
@@ -49,61 +54,24 @@ Item {
             NumberAnimation { target: root; property: "popScale"; to: 1.0; duration: 420; easing.type: Easing.OutQuint }
         }
 
-        Item {
-            id: chevronWrapper
+        Canvas {
+            id: iconCanvas
             anchors.centerIn: parent
-            width: root.size * 0.38
-            height: root.size * 0.38
+            width: root.iconSize
+            height: root.iconSize
 
-            rotation: root.flipped ? 90 : -90
-            Behavior on rotation { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
-
-            property real armThickness: Math.max(1.5, root.size * 0.048)
-            property real armLength: Math.max(5, root.size * 0.19)
-            property real dotSize: armThickness
-
-            Item {
-                id: pivotNode
-                x: (chevronWrapper.width - (chevronWrapper.armLength * 0.766)) / 2
-                y: chevronWrapper.height / 2
-                width: 0
-                height: 0
-
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: chevronWrapper.dotSize
-                    height: chevronWrapper.dotSize
-                    radius: width / 2
-                    color: root.iconColor
-                    antialiasing: true
-                    Behavior on color { ColorAnimation { duration: 180 } }
+            onPaint: {
+                var ctx = getContext("2d")
+                ctx.reset()
+                if (root.paintCanvas) {
+                    root.paintCanvas(ctx, iconCanvas)
                 }
+            }
 
-                Rectangle {
-                    x: 0
-                    y: -chevronWrapper.armThickness / 2
-                    width: chevronWrapper.armLength
-                    height: chevronWrapper.armThickness
-                    radius: height / 2
-                    transformOrigin: Item.Left
-                    rotation: 40
-                    color: root.iconColor
-                    antialiasing: true
-                    Behavior on color { ColorAnimation { duration: 180 } }
-                }
-
-                Rectangle {
-                    x: 0
-                    y: -chevronWrapper.armThickness / 2
-                    width: chevronWrapper.armLength
-                    height: chevronWrapper.armThickness
-                    radius: height / 2
-                    transformOrigin: Item.Left
-                    rotation: -40
-                    color: root.iconColor
-                    antialiasing: true
-                    Behavior on color { ColorAnimation { duration: 180 } }
-                }
+            Connections {
+                target: root
+                function onTextColorChanged() { iconCanvas.requestPaint() }
+                function onIconSizeChanged() { iconCanvas.requestPaint() }
             }
         }
 
@@ -124,9 +92,6 @@ Item {
 
             onClicked: {
                 if (!root.enabled) return;
-                if (root.autoToggle) {
-                    root.flipped = !root.flipped;
-                }
                 btnPopAnim.start();
                 root.flashOpacity = 0.4;
                 btnFlashAnim.start();
@@ -135,7 +100,6 @@ Item {
                 }
                 root.clicked();
                 root.triggered();
-                root.toggled(root.flipped);
             }
         }
     }
