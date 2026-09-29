@@ -916,10 +916,10 @@ Item {
                                                     if (!memberData) return "";
                                                     let appn = memberData.appName || displayName || "";
                                                     let app = appn.toLowerCase().trim();
-                                                    if (app === "weather") return "../notifications/types/Weather.qml";
-                                                    if (app === "screenshot" || app === "screen recorder") return "../notifications/types/Screenshot.qml";
-                                                    if (app === "update" || app === "updater" || app === "serpantinum updater") return "../notifications/types/Update.qml";
-                                                    return "../notifications/types/Default.qml";
+                                                    if (app === "weather") return "../../notifications/types/Weather.qml";
+                                                    if (app === "screenshot" || app === "screen recorder") return "../../notifications/types/Screenshot.qml";
+                                                    if (app === "update" || app === "updater" || app === "serpantinum updater") return "../../notifications/types/Update.qml";
+                                                    return "../../notifications/types/Default.qml";
                                                 }
 
                                                 onLoaded: {
