@@ -1044,291 +1044,169 @@ Item {
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: rowWpDirLayout.implicitHeight + rootObj.s(24)
-                radius: ThemeBackend.borderRadius
-                color: Qt.alpha(ThemeBackend.surface0, 0.4)
-                border.width: 0
+            SettingsRow {
+                rootObj: themeTabRoot.rootObj
+                icon: "󰸉"
+                title: I18n.t("guide.theme.wallpaper.title") || "Wallpaper Directory"
+                description: I18n.t("guide.theme.wallpaper.desc") || "Directory to search for wallpapers"
 
-                RowLayout {
-                    id: rowWpDirLayout
-                    anchors.left: parent.left
-                    anchors.leftMargin: rootObj.s(14)
-                    anchors.right: parent.right
-                    anchors.rightMargin: rootObj.s(14)
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: rootObj.s(12)
-
-                    IconButton {
-                        enabled: false
-                        size: rootObj.s(32)
-                        Layout.preferredWidth: rootObj.s(32)
-                        Layout.preferredHeight: rootObj.s(32)
-                        Layout.alignment: Qt.AlignVCenter
-                        cornerRadius: ThemeBackend.borderRadius
-                        buttonIcon: "󰸉"
-                        iconFontSize: rootObj.s(16)
-                        accentColor: ThemeBackend.surface0
-                        textColor: "#ffffff"
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: rootObj.s(2)
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.theme.wallpaper.title") || "Wallpaper Directory"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(13)
-                            color: ThemeBackend.text
-                        }
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.theme.wallpaper.desc") || "Directory to search for wallpapers"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(11)
-                            color: ThemeBackend.subtext0
+                IconButton {
+                    Layout.preferredWidth: rootObj.s(32)
+                    Layout.preferredHeight: rootObj.s(32)
+                    Layout.alignment: Qt.AlignVCenter
+                    cornerRadius: rootObj.s(6)
+                    buttonIcon: "󰉋"
+                    iconOffsetX: -2
+                    iconFontSize: rootObj.s(14)
+                    accentColor: ThemeBackend.surface0
+                    textColor: isHoveredOrHighlighted ? ThemeBackend.text : ThemeBackend.overlay2
+                    onClicked: {
+                        if (themeTabRoot.currentWallpaperDir && themeTabRoot.currentWallpaperDir !== "") {
+                            let escapeBash = function(str) { return String(str).replace(/(["\\$`])/g, '\\$1'); };
+                            Quickshell.execDetached(["bash", "-c", "mkdir -p \"" + escapeBash(themeTabRoot.currentWallpaperDir) + "\" && xdg-open \"" + escapeBash(themeTabRoot.currentWallpaperDir) + "\""]);
                         }
                     }
+                }
 
-                    RowLayout {
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        spacing: rootObj.s(8)
-
-                        IconButton {
-                            Layout.preferredWidth: rootObj.s(32)
-                            Layout.preferredHeight: rootObj.s(32)
-                            Layout.alignment: Qt.AlignVCenter
-                            cornerRadius: rootObj.s(6)
-                            buttonIcon: "󰉋"
-                            iconOffsetX: -2
-                            iconFontSize: rootObj.s(14)
-                            accentColor: ThemeBackend.surface0
-                            textColor: isHoveredOrHighlighted ? ThemeBackend.text : ThemeBackend.overlay2
-                            onClicked: {
-                                if (themeTabRoot.currentWallpaperDir && themeTabRoot.currentWallpaperDir !== "") {
-                                    let escapeBash = function(str) { return String(str).replace(/(["\\$`])/g, '\\$1'); };
-                                    Quickshell.execDetached(["bash", "-c", "mkdir -p \"" + escapeBash(themeTabRoot.currentWallpaperDir) + "\" && xdg-open \"" + escapeBash(themeTabRoot.currentWallpaperDir) + "\""]);
-                                }
-                            }
-                        }
-
-                        Dropdown {
-                            id: wpDirDropdown
-                            Layout.preferredWidth: rootObj.s(260)
-                            Layout.preferredHeight: rootObj.s(32)
-                            Layout.alignment: Qt.AlignVCenter
-                            options: themeTabRoot.availableWallpaperDirs
-                            isPathSelector: true
-                            fuzzySearch: true
-                            currentIndex: options.indexOf(themeTabRoot.currentWallpaperDir) >= 0 ? options.indexOf(themeTabRoot.currentWallpaperDir) : 0
-                            placeholderText: I18n.t("guide.theme.wallpaper.select_dir") || "Select directory..."
-                            fontFamily: ThemeBackend.fontFamily
-                            accentColor: ThemeBackend.mauve
-                            baseColor: ThemeBackend.surface0
-                            hoverColor: ThemeBackend.surface1
-                            dropdownColor: ThemeBackend.surface0
-                            borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
-                            textColor: ThemeBackend.text
-                            activeTextColor: ThemeBackend.crust
-                            cornerRadius: ThemeBackend.borderRadius
-                            fontPixelSize: rootObj.s(11)
-                            onValueChanged: function(index, value) {
-                                themeTabRoot.currentWallpaperDir = value;
-                                themeTabRoot.updateWallpaperDirSetting();
-                            }
-                            onSelected: function(index, value) {
-                                themeTabRoot.currentWallpaperDir = value;
-                                themeTabRoot.updateWallpaperDirSetting();
-                            }
-                            onClicked: {
-                                wallpaperDirScanner.running = false;
-                                wallpaperDirScanner.running = true;
-                            }
-                        }
+                Dropdown {
+                    id: wpDirDropdown
+                    Layout.preferredWidth: rootObj.s(260)
+                    Layout.preferredHeight: rootObj.s(32)
+                    Layout.alignment: Qt.AlignVCenter
+                    options: themeTabRoot.availableWallpaperDirs
+                    isPathSelector: true
+                    fuzzySearch: true
+                    currentIndex: options.indexOf(themeTabRoot.currentWallpaperDir) >= 0 ? options.indexOf(themeTabRoot.currentWallpaperDir) : 0
+                    placeholderText: I18n.t("guide.theme.wallpaper.select_dir") || "Select directory..."
+                    fontFamily: ThemeBackend.fontFamily
+                    accentColor: ThemeBackend.mauve
+                    baseColor: ThemeBackend.surface0
+                    hoverColor: ThemeBackend.surface1
+                    dropdownColor: ThemeBackend.surface0
+                    borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
+                    textColor: ThemeBackend.text
+                    activeTextColor: ThemeBackend.crust
+                    cornerRadius: ThemeBackend.borderRadius
+                    fontPixelSize: rootObj.s(11)
+                    onValueChanged: function(index, value) {
+                        themeTabRoot.currentWallpaperDir = value;
+                        themeTabRoot.updateWallpaperDirSetting();
+                    }
+                    onSelected: function(index, value) {
+                        themeTabRoot.currentWallpaperDir = value;
+                        themeTabRoot.updateWallpaperDirSetting();
+                    }
+                    onClicked: {
+                        wallpaperDirScanner.running = false;
+                        wallpaperDirScanner.running = true;
                     }
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: row0Layout.implicitHeight + rootObj.s(24)
-                radius: ThemeBackend.borderRadius
-                color: Qt.alpha(ThemeBackend.surface0, 0.4)
-                border.width: 0
+            SettingsRow {
+                rootObj: themeTabRoot.rootObj
+                icon: "󰛖"
+                title: I18n.t("guide.theme.font.title")
+                description: I18n.t("guide.theme.font.desc")
 
-                RowLayout {
-                    id: row0Layout
-                    anchors.left: parent.left
-                    anchors.leftMargin: rootObj.s(14)
-                    anchors.right: parent.right
-                    anchors.rightMargin: rootObj.s(14)
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: rootObj.s(12)
-
-                    IconButton {
-                        enabled: false
-                        size: rootObj.s(32)
-                        Layout.preferredWidth: rootObj.s(32)
-                        Layout.preferredHeight: rootObj.s(32)
-                        Layout.alignment: Qt.AlignVCenter
-                        cornerRadius: ThemeBackend.borderRadius
-                        buttonIcon: "󰛖"
-                        iconFontSize: rootObj.s(16)
-                        accentColor: ThemeBackend.surface0
-                        textColor: "#ffffff"
+                IconButton {
+                    Layout.preferredWidth: rootObj.s(32)
+                    Layout.preferredHeight: rootObj.s(32)
+                    Layout.alignment: Qt.AlignVCenter
+                    cornerRadius: rootObj.s(6)
+                    buttonIcon: "󰉋"
+                    iconOffsetX: -2
+                    iconFontSize: rootObj.s(14)
+                    accentColor: ThemeBackend.surface0
+                    textColor: isHoveredOrHighlighted ? ThemeBackend.text : ThemeBackend.overlay2
+                    onClicked: {
+                        let userFontsPath = Caching.stateDir ? (Caching.stateDir + "/fonts") : (Caching.home + "/.local/state/serpantinum/fonts");
+                        let escapeBash = function(str) { return String(str).replace(/(["\\$`])/g, '\\$1'); };
+                        Quickshell.execDetached(["bash", "-c", "mkdir -p \"" + escapeBash(userFontsPath) + "\" && xdg-open \"" + escapeBash(userFontsPath) + "\""]);
                     }
+                }
 
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: rootObj.s(2)
+                IconButton {
+                    Layout.preferredWidth: rootObj.s(32)
+                    Layout.preferredHeight: rootObj.s(32)
+                    Layout.alignment: Qt.AlignVCenter
+                    cornerRadius: rootObj.s(6)
+                    buttonIcon: "󰐕"
+                    iconFontSize: rootObj.s(14)
+                    accentColor: ThemeBackend.surface0
+                    textColor: isHoveredOrHighlighted ? ThemeBackend.text : ThemeBackend.overlay2
+                    onClicked: fontPickerPopup.openPicker()
+                }
 
-                        Text { Layout.fillWidth: true; text: I18n.t("guide.theme.font.title"); font.family: ThemeBackend.fontFamily; font.pixelSize: rootObj.s(13); color: ThemeBackend.text }
-                        Text { Layout.fillWidth: true; text: I18n.t("guide.theme.font.desc"); font.family: ThemeBackend.fontFamily; font.pixelSize: rootObj.s(11); color: ThemeBackend.subtext0 }
+                Dropdown {
+                    id: fontDropdown
+                    Layout.preferredWidth: rootObj.s(220)
+                    Layout.preferredHeight: rootObj.s(32)
+                    Layout.alignment: Qt.AlignVCenter
+                    options: themeTabRoot.availableFonts
+                    currentIndex: options.indexOf(themeTabRoot.currentFontFamily) >= 0 ? options.indexOf(themeTabRoot.currentFontFamily) : 0
+                    placeholderText: I18n.t("guide.theme.font.select")
+                    fontFamily: ThemeBackend.fontFamily
+                    useOptionAsFontFamily: true
+                    accentColor: ThemeBackend.mauve
+                    baseColor: ThemeBackend.surface0
+                    hoverColor: ThemeBackend.surface1
+                    dropdownColor: ThemeBackend.surface0
+                    borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
+                    textColor: ThemeBackend.text
+                    activeTextColor: ThemeBackend.crust
+                    cornerRadius: ThemeBackend.borderRadius
+                    fontPixelSize: rootObj.s(11)
+                    onValueChanged: function(index, value) {
+                        themeTabRoot.currentFontFamily = value;
+                        themeTabRoot.updateFontSetting();
                     }
-
-                    RowLayout {
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        spacing: rootObj.s(8)
-
-                        IconButton {
-                            Layout.preferredWidth: rootObj.s(32)
-                            Layout.preferredHeight: rootObj.s(32)
-                            Layout.alignment: Qt.AlignVCenter
-                            cornerRadius: rootObj.s(6)
-                            buttonIcon: "󰉋"
-                            iconOffsetX: -2
-                            iconFontSize: rootObj.s(14)
-                            accentColor: ThemeBackend.surface0
-                            textColor: isHoveredOrHighlighted ? ThemeBackend.text : ThemeBackend.overlay2
-                            onClicked: {
-                                let userFontsPath = Caching.stateDir ? (Caching.stateDir + "/fonts") : (Caching.home + "/.local/state/serpantinum/fonts");
-                                let escapeBash = function(str) { return String(str).replace(/(["\\$`])/g, '\\$1'); };
-                                Quickshell.execDetached(["bash", "-c", "mkdir -p \"" + escapeBash(userFontsPath) + "\" && xdg-open \"" + escapeBash(userFontsPath) + "\""]);
-                            }
-                        }
-
-                        IconButton {
-                            Layout.preferredWidth: rootObj.s(32)
-                            Layout.preferredHeight: rootObj.s(32)
-                            Layout.alignment: Qt.AlignVCenter
-                            cornerRadius: rootObj.s(6)
-                            buttonIcon: "󰐕"
-                            iconFontSize: rootObj.s(14)
-                            accentColor: ThemeBackend.surface0
-                            textColor: isHoveredOrHighlighted ? ThemeBackend.text : ThemeBackend.overlay2
-                            onClicked: fontPickerPopup.openPicker()
-                        }
-
-                        Dropdown {
-                            id: fontDropdown
-                            Layout.preferredWidth: rootObj.s(220)
-                            Layout.preferredHeight: rootObj.s(32)
-                            Layout.alignment: Qt.AlignVCenter
-                            options: themeTabRoot.availableFonts
-                            currentIndex: options.indexOf(themeTabRoot.currentFontFamily) >= 0 ? options.indexOf(themeTabRoot.currentFontFamily) : 0
-                            placeholderText: I18n.t("guide.theme.font.select")
-                            fontFamily: ThemeBackend.fontFamily
-                            useOptionAsFontFamily: true
-                            accentColor: ThemeBackend.mauve
-                            baseColor: ThemeBackend.surface0
-                            hoverColor: ThemeBackend.surface1
-                            dropdownColor: ThemeBackend.surface0
-                            borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
-                            textColor: ThemeBackend.text
-                            activeTextColor: ThemeBackend.crust
-                            cornerRadius: ThemeBackend.borderRadius
-                            fontPixelSize: rootObj.s(11)
-                            onValueChanged: function(index, value) {
-                                themeTabRoot.currentFontFamily = value;
-                                themeTabRoot.updateFontSetting();
-                            }
-                            onClicked: {
-                                themeTabRoot.loadAvailableFonts();
-                            }
-                        }
+                    onClicked: {
+                        themeTabRoot.loadAvailableFonts();
                     }
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: rowRadLayout.implicitHeight + rootObj.s(24)
-                radius: ThemeBackend.borderRadius
-                color: Qt.alpha(ThemeBackend.surface0, 0.4)
-                border.width: 0
+            SettingsRow {
+                rootObj: themeTabRoot.rootObj
+                icon: "󰞁"
+                title: I18n.t("guide.theme.radius.title")
+                description: I18n.t("guide.theme.radius.desc")
 
-                RowLayout {
-                    id: rowRadLayout
-                    anchors.left: parent.left
-                    anchors.leftMargin: rootObj.s(14)
-                    anchors.right: parent.right
-                    anchors.rightMargin: rootObj.s(14)
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: rootObj.s(12)
-
-                    IconButton {
-                        enabled: false
-                        size: rootObj.s(32)
-                        Layout.preferredWidth: rootObj.s(32)
-                        Layout.preferredHeight: rootObj.s(32)
-                        Layout.alignment: Qt.AlignVCenter
-                        cornerRadius: ThemeBackend.borderRadius
-                        buttonIcon: "󰞁"
-                        iconFontSize: rootObj.s(16)
-                        accentColor: ThemeBackend.surface0
-                        textColor: "#ffffff"
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: rootObj.s(2)
-
-                        Text { Layout.fillWidth: true; text: I18n.t("guide.theme.radius.title"); font.family: ThemeBackend.fontFamily; font.pixelSize: rootObj.s(13); color: ThemeBackend.text }
-                        Text { Layout.fillWidth: true; text: I18n.t("guide.theme.radius.desc"); font.family: ThemeBackend.fontFamily; font.pixelSize: rootObj.s(11); color: ThemeBackend.subtext0 }
-                    }
-
-                    NumberSelector {
-                        id: radiusSelector
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        implicitWidth: rootObj.s(150)
-                        implicitHeight: rootObj.s(32)
-                        from: 0
-                        to: 64
-                        stepSize: 1
-                        decimals: 0
-                        suffix: "px"
-                        value: themeTabRoot.currentBorderRadius
-                        baseColor: ThemeBackend.surface0
-                        accentColor: ThemeBackend.mauve
-                        buttonColor: ThemeBackend.surface1
-                        buttonTextColor: ThemeBackend.text
-                        textColor: ThemeBackend.text
-                        subTextColor: ThemeBackend.subtext0
-                        borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
-                        cornerRadius: ThemeBackend.borderRadius
-                        fontFamily: ThemeBackend.fontFamily
-                        fontPixelSize: rootObj.s(11)
-                        onValueChanged: function(val) {
-                            let num = (typeof val === "number" && !isNaN(val)) ? val : value;
-                            let rounded = Math.round(num);
-                            let snapped = themeTabRoot.getSnappedRadius(rounded);
-                            if (!isNaN(snapped) && snapped >= 0 && snapped <= 64 && themeTabRoot.currentBorderRadius !== snapped) {
-                                themeTabRoot.currentBorderRadius = snapped;
-                                borderRadiusDebounceTimer.restart();
-                            }
-                        }
-                        onTriggered: {
-                            let rounded = Math.round(radiusSelector.value);
-                            let snapped = themeTabRoot.getSnappedRadius(rounded);
+                NumberSelector {
+                    id: radiusSelector
+                    implicitWidth: rootObj.s(150)
+                    implicitHeight: rootObj.s(32)
+                    from: 0
+                    to: 64
+                    stepSize: 1
+                    decimals: 0
+                    suffix: "px"
+                    value: themeTabRoot.currentBorderRadius
+                    baseColor: ThemeBackend.surface0
+                    accentColor: ThemeBackend.mauve
+                    buttonColor: ThemeBackend.surface1
+                    buttonTextColor: ThemeBackend.text
+                    textColor: ThemeBackend.text
+                    subTextColor: ThemeBackend.subtext0
+                    borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
+                    cornerRadius: ThemeBackend.borderRadius
+                    fontFamily: ThemeBackend.fontFamily
+                    fontPixelSize: rootObj.s(11)
+                    onValueChanged: function(val) {
+                        let num = (typeof val === "number" && !isNaN(val)) ? val : value;
+                        let rounded = Math.round(num);
+                        let snapped = themeTabRoot.getSnappedRadius(rounded);
+                        if (!isNaN(snapped) && snapped >= 0 && snapped <= 64 && themeTabRoot.currentBorderRadius !== snapped) {
                             themeTabRoot.currentBorderRadius = snapped;
-                            themeTabRoot.updateBorderRadiusSetting();
+                            borderRadiusDebounceTimer.restart();
                         }
+                    }
+                    onTriggered: {
+                        let rounded = Math.round(radiusSelector.value);
+                        let snapped = themeTabRoot.getSnappedRadius(rounded);
+                        themeTabRoot.currentBorderRadius = snapped;
+                        themeTabRoot.updateBorderRadiusSetting();
                     }
                 }
             }

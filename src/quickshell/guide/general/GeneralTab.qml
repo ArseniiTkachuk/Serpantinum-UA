@@ -4,6 +4,7 @@ import QtQuick.Effects
 import Quickshell
 import "../../"
 import "../../reusables"
+import "../../reusables/guide"
 
 Item {
     id: generalTabRoot
@@ -339,301 +340,113 @@ Item {
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: rowLangLayout.implicitHeight + rootObj.s(24)
-                radius: ThemeBackend.borderRadius
-                color: Qt.alpha(ThemeBackend.surface0, 0.4)
-                border.width: 0
+            SettingsRow {
+                rootObj: generalTabRoot.rootObj
+                icon: "󰗊"
+                title: I18n.t("guide.general.language.title")
+                description: I18n.t("guide.general.language.desc")
 
-                RowLayout {
-                    id: rowLangLayout
-                    anchors.left: parent.left
-                    anchors.leftMargin: rootObj.s(14)
-                    anchors.right: parent.right
-                    anchors.rightMargin: rootObj.s(14)
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: rootObj.s(12)
-
-                    IconButton {
-                        enabled: false
-                        size: rootObj.s(32)
-                        Layout.preferredWidth: rootObj.s(32)
-                        Layout.preferredHeight: rootObj.s(32)
-                        Layout.alignment: Qt.AlignVCenter
-                        cornerRadius: ThemeBackend.borderRadius
-                        buttonIcon: "󰗊"
-                        iconFontSize: rootObj.s(16)
-                        accentColor: ThemeBackend.surface0
-                        textColor: "#ffffff"
+                Dropdown {
+                    id: langDropdown
+                    implicitWidth: rootObj.s(180)
+                    implicitHeight: rootObj.s(32)
+                    options: generalTabRoot.languageNames
+                    currentIndex: {
+                        let idx = generalTabRoot.languageCodes.indexOf(generalTabRoot.currentLanguage);
+                        return idx !== -1 ? idx : 0;
                     }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: rootObj.s(2)
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.language.title")
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(13)
-                            color: ThemeBackend.text
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.language.desc")
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(11)
-                            color: ThemeBackend.subtext0
-                        }
-                    }
-
-                    Dropdown {
-                        id: langDropdown
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        implicitWidth: rootObj.s(180)
-                        implicitHeight: rootObj.s(32)
-                        options: generalTabRoot.languageNames
-                        currentIndex: {
-                            let idx = generalTabRoot.languageCodes.indexOf(generalTabRoot.currentLanguage);
-                            return idx !== -1 ? idx : 0;
-                        }
-                        accentColor: ThemeBackend.mauve
-                        baseColor: ThemeBackend.surface0
-                        hoverColor: ThemeBackend.surface1
-                        dropdownColor: ThemeBackend.surface0
-                        borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
-                        textColor: ThemeBackend.text
-                        activeTextColor: ThemeBackend.crust
-                        cornerRadius: ThemeBackend.borderRadius
-                        fontPixelSize: rootObj.s(11)
-                        onValueChanged: function(index, value) {
-                            generalTabRoot.currentLanguage = generalTabRoot.languageCodes[index];
-                            generalTabRoot.updateGeneralSettings();
-                        }
+                    accentColor: ThemeBackend.mauve
+                    baseColor: ThemeBackend.surface0
+                    hoverColor: ThemeBackend.surface1
+                    dropdownColor: ThemeBackend.surface0
+                    borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
+                    textColor: ThemeBackend.text
+                    activeTextColor: ThemeBackend.crust
+                    cornerRadius: ThemeBackend.borderRadius
+                    fontPixelSize: rootObj.s(11)
+                    onValueChanged: function(index, value) {
+                        generalTabRoot.currentLanguage = generalTabRoot.languageCodes[index];
+                        generalTabRoot.updateGeneralSettings();
                     }
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: rowQuickactionsLayout.implicitHeight + rootObj.s(24)
-                radius: ThemeBackend.borderRadius
-                color: Qt.alpha(ThemeBackend.surface0, 0.4)
-                border.width: 0
+            SettingsRow {
+                rootObj: generalTabRoot.rootObj
+                icon: "󱓞"
+                title: I18n.t("guide.general.quickactions.title") || "Quickactions"
+                description: I18n.t("guide.general.quickactions.desc") || "Enable floating quickactions overlay"
 
-                RowLayout {
-                    id: rowQuickactionsLayout
-                    anchors.left: parent.left
-                    anchors.leftMargin: rootObj.s(14)
-                    anchors.right: parent.right
-                    anchors.rightMargin: rootObj.s(14)
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: rootObj.s(12)
-
-                    IconButton {
-                        enabled: false
-                        size: rootObj.s(32)
-                        Layout.preferredWidth: rootObj.s(32)
-                        Layout.preferredHeight: rootObj.s(32)
-                        Layout.alignment: Qt.AlignVCenter
-                        cornerRadius: ThemeBackend.borderRadius
-                        buttonIcon: "󱓞"
-                        iconFontSize: rootObj.s(16)
-                        accentColor: ThemeBackend.surface0
-                        textColor: "#ffffff"
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: rootObj.s(2)
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.quickactions.title") || "Quickactions"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(13)
-                            color: ThemeBackend.text
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.quickactions.desc") || "Enable floating quickactions overlay"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(11)
-                            color: ThemeBackend.subtext0
-                        }
-                    }
-
-                    Toggle {
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        checked: generalTabRoot.quickactions
-                        accentColor: ThemeBackend.mauve
-                        baseColor: ThemeBackend.surface1
-                        handleColor: ThemeBackend.crust
-                        handleOffColor: ThemeBackend.text
-                        onToggled: function(c) {
-                            generalTabRoot.quickactions = c;
-                            generalTabRoot.updateGeneralSettings();
-                        }
+                Toggle {
+                    checked: generalTabRoot.quickactions
+                    accentColor: ThemeBackend.mauve
+                    baseColor: ThemeBackend.surface1
+                    handleColor: ThemeBackend.crust
+                    handleOffColor: ThemeBackend.text
+                    onToggled: function(c) {
+                        generalTabRoot.quickactions = c;
+                        generalTabRoot.updateGeneralSettings();
                     }
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: rowMuteSfxLayout.implicitHeight + rootObj.s(24)
-                radius: ThemeBackend.borderRadius
-                color: Qt.alpha(ThemeBackend.surface0, 0.4)
-                border.width: 0
+            SettingsRow {
+                rootObj: generalTabRoot.rootObj
+                icon: "󰝟"
+                title: I18n.t("guide.general.mutesfx.title") || "Mute SFX"
+                description: I18n.t("guide.general.mutesfx.desc") || "Disable user interface sound effects"
 
-                RowLayout {
-                    id: rowMuteSfxLayout
-                    anchors.left: parent.left
-                    anchors.leftMargin: rootObj.s(14)
-                    anchors.right: parent.right
-                    anchors.rightMargin: rootObj.s(14)
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: rootObj.s(12)
-
-                    IconButton {
-                        enabled: false
-                        size: rootObj.s(32)
-                        Layout.preferredWidth: rootObj.s(32)
-                        Layout.preferredHeight: rootObj.s(32)
-                        Layout.alignment: Qt.AlignVCenter
-                        cornerRadius: ThemeBackend.borderRadius
-                        buttonIcon: "󰝟"
-                        iconFontSize: rootObj.s(16)
-                        accentColor: ThemeBackend.surface0
-                        textColor: "#ffffff"
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: rootObj.s(2)
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.mutesfx.title") || "Mute SFX"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(13)
-                            color: ThemeBackend.text
+                Toggle {
+                    checked: generalTabRoot.muteSfx
+                    accentColor: ThemeBackend.mauve
+                    baseColor: ThemeBackend.surface1
+                    handleColor: ThemeBackend.crust
+                    handleOffColor: ThemeBackend.text
+                    onToggled: function(c) {
+                        generalTabRoot.muteSfx = c;
+                        if (typeof Sounds !== "undefined") {
+                            Sounds.generalSettings = Object.assign({}, Sounds.generalSettings || {}, { "muteSfx": c });
                         }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.mutesfx.desc") || "Disable user interface sound effects"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(11)
-                            color: ThemeBackend.subtext0
-                        }
+                        generalTabRoot.updateGeneralSettings();
                     }
+                }
+            }
 
-                    Toggle {
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        checked: generalTabRoot.muteSfx
-                        accentColor: ThemeBackend.mauve
-                        baseColor: ThemeBackend.surface1
-                        handleColor: ThemeBackend.crust
-                        handleOffColor: ThemeBackend.text
-                        onToggled: function(c) {
-                            generalTabRoot.muteSfx = c;
+            SettingsRow {
+                rootObj: generalTabRoot.rootObj
+                icon: "󰕾"
+                title: I18n.t("guide.general.sfxvolume.title") || "SFX Volume"
+                description: I18n.t("guide.general.sfxvolume.desc") || "Volume level for user interface sound effects"
+
+                Draggable {
+                    id: sfxVolumeSlider
+                    Layout.rightMargin: rootObj.s(8)
+                    implicitWidth: rootObj.s(180)
+                    implicitHeight: rootObj.s(18)
+                    from: 0
+                    to: 100
+                    stepSize: 1
+                    defaultValue: 100
+                    showValueBubble: true
+                    valueFormatter: function(v) { return Math.round(v) + "%" }
+                    value: generalTabRoot.sfxVolume
+                    backgroundColor: ThemeBackend.surface0
+                    accentColor: ThemeBackend.mauve
+                    handleColor: ThemeBackend.text
+                    handleBorderColor: ThemeBackend.mantle
+                    onMoved: function(val) {
+                        let rounded = Math.round(val);
+                        if (generalTabRoot.sfxVolume !== rounded) {
+                            generalTabRoot.sfxVolume = rounded;
                             if (typeof Sounds !== "undefined") {
-                                Sounds.generalSettings = Object.assign({}, Sounds.generalSettings || {}, { "muteSfx": c });
+                                Sounds.generalSettings = Object.assign({}, Sounds.generalSettings || {}, { "sfxVolume": rounded });
                             }
-                            generalTabRoot.updateGeneralSettings();
+                            sfxVolumeDebounceTimer.restart();
                         }
                     }
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: rowSfxVolumeLayout.implicitHeight + rootObj.s(24)
-                radius: ThemeBackend.borderRadius
-                color: Qt.alpha(ThemeBackend.surface0, 0.4)
-                border.width: 0
-
-                RowLayout {
-                    id: rowSfxVolumeLayout
-                    anchors.left: parent.left
-                    anchors.leftMargin: rootObj.s(14)
-                    anchors.right: parent.right
-                    anchors.rightMargin: rootObj.s(14)
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: rootObj.s(12)
-
-                    IconButton {
-                        enabled: false
-                        size: rootObj.s(32)
-                        Layout.preferredWidth: rootObj.s(32)
-                        Layout.preferredHeight: rootObj.s(32)
-                        Layout.alignment: Qt.AlignVCenter
-                        cornerRadius: ThemeBackend.borderRadius
-                        buttonIcon: "󰕾"
-                        iconFontSize: rootObj.s(16)
-                        accentColor: ThemeBackend.surface0
-                        textColor: "#ffffff"
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: rootObj.s(2)
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.sfxvolume.title") || "SFX Volume"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(13)
-                            color: ThemeBackend.text
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.sfxvolume.desc") || "Volume level for user interface sound effects"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(11)
-                            color: ThemeBackend.subtext0
-                        }
-                    }
-
-                    Draggable {
-                        id: sfxVolumeSlider
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        Layout.rightMargin: rootObj.s(8)
-                        implicitWidth: rootObj.s(180)
-                        implicitHeight: rootObj.s(18)
-                        from: 0
-                        to: 100
-                        stepSize: 1
-                        defaultValue: 100
-                        showValueBubble: true
-                        valueFormatter: function(v) { return Math.round(v) + "%" }
-                        value: generalTabRoot.sfxVolume
-                        backgroundColor: ThemeBackend.surface0
-                        accentColor: ThemeBackend.mauve
-                        handleColor: ThemeBackend.text
-                        handleBorderColor: ThemeBackend.mantle
-                        onMoved: function(val) {
-                            let rounded = Math.round(val);
-                            if (generalTabRoot.sfxVolume !== rounded) {
-                                generalTabRoot.sfxVolume = rounded;
-                                if (typeof Sounds !== "undefined") {
-                                    Sounds.generalSettings = Object.assign({}, Sounds.generalSettings || {}, { "sfxVolume": rounded });
-                                }
-                                sfxVolumeDebounceTimer.restart();
-                            }
-                        }
-                        onDragFinished: {
-                            sfxVolumeDebounceTimer.stop();
-                            generalTabRoot.updateGeneralSettings();
-                        }
+                    onDragFinished: {
+                        sfxVolumeDebounceTimer.stop();
+                        generalTabRoot.updateGeneralSettings();
                     }
                 }
             }
@@ -834,303 +647,115 @@ Item {
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: rowWeatherIntervalLayout.implicitHeight + rootObj.s(24)
-                radius: ThemeBackend.borderRadius
-                color: Qt.alpha(ThemeBackend.surface0, 0.4)
-                border.width: 0
+            SettingsRow {
+                rootObj: generalTabRoot.rootObj
+                icon: "󰔛"
+                title: I18n.t("guide.general.weatherinterval.title") || "Weather Polling Interval"
+                description: I18n.t("guide.general.weatherinterval.desc") || "Polling frequency in minutes"
 
-                RowLayout {
-                    id: rowWeatherIntervalLayout
-                    anchors.left: parent.left
-                    anchors.leftMargin: rootObj.s(14)
-                    anchors.right: parent.right
-                    anchors.rightMargin: rootObj.s(14)
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: rootObj.s(12)
-
-                    IconButton {
-                        enabled: false
-                        size: rootObj.s(32)
-                        Layout.preferredWidth: rootObj.s(32)
-                        Layout.preferredHeight: rootObj.s(32)
-                        Layout.alignment: Qt.AlignVCenter
-                        cornerRadius: ThemeBackend.borderRadius
-                        buttonIcon: "󰔛"
-                        iconFontSize: rootObj.s(16)
-                        accentColor: ThemeBackend.surface0
-                        textColor: "#ffffff"
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: rootObj.s(2)
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.weatherinterval.title") || "Weather Polling Interval"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(13)
-                            color: ThemeBackend.text
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.weatherinterval.desc") || "Polling frequency in minutes"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(11)
-                            color: ThemeBackend.subtext0
-                        }
-                    }
-
-                    NumberSelector {
-                        id: weatherIntervalSelector
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        implicitWidth: rootObj.s(180)
-                        implicitHeight: rootObj.s(32)
-                        from: 1
-                        to: 1440
-                        stepSize: 1
-                        decimals: 0
-                        suffix: " min"
-                        value: generalTabRoot.weatherInterval
-                        baseColor: ThemeBackend.surface0
-                        accentColor: ThemeBackend.mauve
-                        buttonColor: ThemeBackend.surface1
-                        buttonTextColor: ThemeBackend.text
-                        textColor: ThemeBackend.text
-                        subTextColor: ThemeBackend.subtext0
-                        borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
-                        cornerRadius: ThemeBackend.borderRadius
-                        fontPixelSize: rootObj.s(11)
-                        onValueChanged: {
-                            let val = Math.round(value);
-                            if (val !== generalTabRoot.weatherInterval && val >= 1) {
-                                generalTabRoot.weatherInterval = val;
-                                generalTabRoot.updateGeneralSettings();
-                                if (typeof Weather !== "undefined") {
-                                    Weather.refreshInterval = generalTabRoot.weatherInterval * 60000;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: rowWeatherUnitLayout.implicitHeight + rootObj.s(24)
-                radius: ThemeBackend.borderRadius
-                color: Qt.alpha(ThemeBackend.surface0, 0.4)
-                border.width: 0
-
-                RowLayout {
-                    id: rowWeatherUnitLayout
-                    anchors.left: parent.left
-                    anchors.leftMargin: rootObj.s(14)
-                    anchors.right: parent.right
-                    anchors.rightMargin: rootObj.s(14)
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: rootObj.s(12)
-
-                    IconButton {
-                        enabled: false
-                        size: rootObj.s(32)
-                        Layout.preferredWidth: rootObj.s(32)
-                        Layout.preferredHeight: rootObj.s(32)
-                        Layout.alignment: Qt.AlignVCenter
-                        cornerRadius: ThemeBackend.borderRadius
-                        buttonIcon: "󰔏"
-                        iconFontSize: rootObj.s(16)
-                        accentColor: ThemeBackend.surface0
-                        textColor: "#ffffff"
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: rootObj.s(2)
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.weatherunit.title") || "Weather Unit"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(13)
-                            color: ThemeBackend.text
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.weatherunit.desc") || "Temperature scale for weather displays"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(11)
-                            color: ThemeBackend.subtext0
-                        }
-                    }
-
-                    Dropdown {
-                        id: weatherUnitDropdown
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        implicitWidth: rootObj.s(180)
-                        implicitHeight: rootObj.s(32)
-                        options: generalTabRoot.weatherUnitNames
-                        currentIndex: {
-                            let idx = generalTabRoot.weatherUnitCodes.indexOf(generalTabRoot.weatherUnit);
-                            return idx !== -1 ? idx : 0;
-                        }
-                        accentColor: ThemeBackend.mauve
-                        baseColor: ThemeBackend.surface0
-                        hoverColor: ThemeBackend.surface1
-                        dropdownColor: ThemeBackend.surface0
-                        borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
-                        textColor: ThemeBackend.text
-                        activeTextColor: ThemeBackend.crust
-                        cornerRadius: ThemeBackend.borderRadius
-                        fontPixelSize: rootObj.s(11)
-                        onValueChanged: function(index, value) {
-                            generalTabRoot.weatherUnit = generalTabRoot.weatherUnitCodes[index];
+                NumberSelector {
+                    id: weatherIntervalSelector
+                    implicitWidth: rootObj.s(180)
+                    implicitHeight: rootObj.s(32)
+                    from: 1
+                    to: 1440
+                    stepSize: 1
+                    decimals: 0
+                    suffix: " min"
+                    value: generalTabRoot.weatherInterval
+                    baseColor: ThemeBackend.surface0
+                    accentColor: ThemeBackend.mauve
+                    buttonColor: ThemeBackend.surface1
+                    buttonTextColor: ThemeBackend.text
+                    textColor: ThemeBackend.text
+                    subTextColor: ThemeBackend.subtext0
+                    borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
+                    cornerRadius: ThemeBackend.borderRadius
+                    fontPixelSize: rootObj.s(11)
+                    onValueChanged: {
+                        let val = Math.round(value);
+                        if (val !== generalTabRoot.weatherInterval && val >= 1) {
+                            generalTabRoot.weatherInterval = val;
                             generalTabRoot.updateGeneralSettings();
                             if (typeof Weather !== "undefined") {
-                                Weather.unit = generalTabRoot.weatherUnit;
+                                Weather.refreshInterval = generalTabRoot.weatherInterval * 60000;
                             }
                         }
                     }
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: rowShotReleaseLayout.implicitHeight + rootObj.s(24)
-                radius: ThemeBackend.borderRadius
-                color: Qt.alpha(ThemeBackend.surface0, 0.4)
-                border.width: 0
+            SettingsRow {
+                rootObj: generalTabRoot.rootObj
+                icon: "󰔏"
+                title: I18n.t("guide.general.weatherunit.title") || "Weather Unit"
+                description: I18n.t("guide.general.weatherunit.desc") || "Temperature scale for weather displays"
 
-                RowLayout {
-                    id: rowShotReleaseLayout
-                    anchors.left: parent.left
-                    anchors.leftMargin: rootObj.s(14)
-                    anchors.right: parent.right
-                    anchors.rightMargin: rootObj.s(14)
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: rootObj.s(12)
-
-                    IconButton {
-                        enabled: false
-                        size: rootObj.s(32)
-                        Layout.preferredWidth: rootObj.s(32)
-                        Layout.preferredHeight: rootObj.s(32)
-                        Layout.alignment: Qt.AlignVCenter
-                        cornerRadius: ThemeBackend.borderRadius
-                        buttonIcon: "󰹑"
-                        iconFontSize: rootObj.s(16)
-                        accentColor: ThemeBackend.surface0
-                        textColor: "#ffffff"
+                Dropdown {
+                    id: weatherUnitDropdown
+                    implicitWidth: rootObj.s(180)
+                    implicitHeight: rootObj.s(32)
+                    options: generalTabRoot.weatherUnitNames
+                    currentIndex: {
+                        let idx = generalTabRoot.weatherUnitCodes.indexOf(generalTabRoot.weatherUnit);
+                        return idx !== -1 ? idx : 0;
                     }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: rootObj.s(2)
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.screenshot_on_release.title") || "Capture region on mouse release"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(13)
-                            color: ThemeBackend.text
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.screenshot_on_release.desc") || "Take the screenshot as soon as you finish dragging, without clicking the shutter"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(11)
-                            color: ThemeBackend.subtext0
-                        }
-                    }
-
-                    Toggle {
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        checked: generalTabRoot.screenshotCaptureOnRelease
-                        accentColor: ThemeBackend.mauve
-                        baseColor: ThemeBackend.surface1
-                        handleColor: ThemeBackend.crust
-                        handleOffColor: ThemeBackend.text
-                        onToggled: function(c) {
-                            generalTabRoot.screenshotCaptureOnRelease = c;
-                            generalTabRoot.updateGeneralSettings();
+                    accentColor: ThemeBackend.mauve
+                    baseColor: ThemeBackend.surface0
+                    hoverColor: ThemeBackend.surface1
+                    dropdownColor: ThemeBackend.surface0
+                    borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
+                    textColor: ThemeBackend.text
+                    activeTextColor: ThemeBackend.crust
+                    cornerRadius: ThemeBackend.borderRadius
+                    fontPixelSize: rootObj.s(11)
+                    onValueChanged: function(index, value) {
+                        generalTabRoot.weatherUnit = generalTabRoot.weatherUnitCodes[index];
+                        generalTabRoot.updateGeneralSettings();
+                        if (typeof Weather !== "undefined") {
+                            Weather.unit = generalTabRoot.weatherUnit;
                         }
                     }
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: rowCopySettingsLayout.implicitHeight + rootObj.s(24)
-                radius: ThemeBackend.borderRadius
-                color: Qt.alpha(ThemeBackend.surface0, 0.4)
-                border.width: 0
+            SettingsRow {
+                rootObj: generalTabRoot.rootObj
+                icon: "󰹑"
+                title: I18n.t("guide.general.screenshot_on_release.title") || "Capture region on mouse release"
+                description: I18n.t("guide.general.screenshot_on_release.desc") || "Take the screenshot as soon as you finish dragging, without clicking the shutter"
 
-                RowLayout {
-                    id: rowCopySettingsLayout
-                    anchors.left: parent.left
-                    anchors.leftMargin: rootObj.s(14)
-                    anchors.right: parent.right
-                    anchors.rightMargin: rootObj.s(14)
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: rootObj.s(12)
-
-                    IconButton {
-                        enabled: false
-                        size: rootObj.s(32)
-                        Layout.preferredWidth: rootObj.s(32)
-                        Layout.preferredHeight: rootObj.s(32)
-                        Layout.alignment: Qt.AlignVCenter
-                        cornerRadius: ThemeBackend.borderRadius
-                        buttonIcon: "󰆏"
-                        iconFontSize: rootObj.s(16)
-                        accentColor: ThemeBackend.surface0
-                        textColor: "#ffffff"
+                Toggle {
+                    checked: generalTabRoot.screenshotCaptureOnRelease
+                    accentColor: ThemeBackend.mauve
+                    baseColor: ThemeBackend.surface1
+                    handleColor: ThemeBackend.crust
+                    handleOffColor: ThemeBackend.text
+                    onToggled: function(c) {
+                        generalTabRoot.screenshotCaptureOnRelease = c;
+                        generalTabRoot.updateGeneralSettings();
                     }
+                }
+            }
 
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: rootObj.s(2)
+            SettingsRow {
+                rootObj: generalTabRoot.rootObj
+                icon: "󰆏"
+                title: I18n.t("guide.general.copysettings.title") || "Copy settings"
+                description: I18n.t("guide.general.copysettings.desc") || "Copy configuration JSON to clipboard"
 
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.copysettings.title") || "Copy settings"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(13)
-                            color: ThemeBackend.text
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: I18n.t("guide.general.copysettings.desc") || "Copy configuration JSON to clipboard"
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: rootObj.s(11)
-                            color: ThemeBackend.subtext0
-                        }
-                    }
-
-                    ClickButton {
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        implicitHeight: rootObj.s(32)
-                        buttonText: "Copy settings"
-                        buttonIcon: "󰆏"
-                        accentColor: ThemeBackend.surface0
-                        textColor: ThemeBackend.text
-                        cornerRadius: ThemeBackend.borderRadius
-                        horizontalPadding: rootObj.s(14)
-                        iconFontSize: rootObj.s(15)
-                        textFontSize: rootObj.s(12)
-                        onTriggered: {
-                            Quickshell.execDetached(["bash", "-c", "cat \"" + Config.settingsJsonPath + "\" | wl-copy"]);
-                        }
+                ClickButton {
+                    implicitHeight: rootObj.s(32)
+                    buttonText: "Copy settings"
+                    buttonIcon: "󰆏"
+                    accentColor: ThemeBackend.surface0
+                    textColor: ThemeBackend.text
+                    cornerRadius: ThemeBackend.borderRadius
+                    horizontalPadding: rootObj.s(14)
+                    iconFontSize: rootObj.s(15)
+                    textFontSize: rootObj.s(12)
+                    onTriggered: {
+                        Quickshell.execDetached(["bash", "-c", "cat \"" + Config.settingsJsonPath + "\" | wl-copy"]);
                     }
                 }
             }
