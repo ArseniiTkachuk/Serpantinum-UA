@@ -1049,7 +1049,8 @@
       "material": "Material",
       "materialAnalog": "Material analoq",
       "lumen": "Lümen",
-      "lyrics": "Mahnı sözləri"
+      "lyrics": "Mahnı sözləri",
+      "simpleLyrics": "Sadə mahnı mətni"
     },
     "presets": {
       "minimal": {
@@ -1075,6 +1076,15 @@
       "fetch_error": "@{user} istifadəçisi yüklənmədi",
       "enter_username": "GitHub istifadəçi adını daxil edin",
       "no_contributions": "Heç bir töhfə tapılmadı"
+    },
+    "settings": {
+      "lyricsLines": "Sətirlər",
+      "lyricsAlignment": "Hizalama"
+    },
+    "align": {
+      "left": "Sol",
+      "center": "Mərkəz",
+      "right": "Sağ"
     }
   },
   "cli": {

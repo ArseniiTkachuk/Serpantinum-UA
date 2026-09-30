@@ -1068,7 +1068,8 @@
       "material": "Матеріал",
       "materialAnalog": "Матеріал Аналоговий",
       "lumen": "Люмен",
-      "lyrics": "Текст пісні"
+      "lyrics": "Текст пісні",
+      "simpleLyrics": "Простий текст пісні"
     },
     "presets": {
       "minimal": {
@@ -1094,6 +1095,15 @@
       "fetch_error": "Не вдалося завантажити користувача @{user}",
       "enter_username": "Введіть ім'я користувача GitHub",
       "no_contributions": "Контрибуцій не знайдено"
+    },
+    "settings": {
+      "lyricsLines": "Рядки",
+      "lyricsAlignment": "Вирівнювання"
+    },
+    "align": {
+      "left": "Зліва",
+      "center": "По центру",
+      "right": "Справа"
     }
   },
   "cli": {

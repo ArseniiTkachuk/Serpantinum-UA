@@ -1055,7 +1055,8 @@
       "material": "Material",
       "materialAnalog": "Material kim",
       "lumen": "Lumen",
-      "lyrics": "Lời bài hát"
+      "lyrics": "Lời bài hát",
+      "simpleLyrics": "Lời bài hát đơn giản"
     },
     "presets": {
       "minimal": {
@@ -1081,6 +1082,15 @@
       "fetch_error": "Không thể tải người dùng @{user}",
       "enter_username": "Nhập tên người dùng GitHub",
       "no_contributions": "Không tìm thấy đóng góp nào"
+    },
+    "settings": {
+      "lyricsLines": "Dòng",
+      "lyricsAlignment": "Căn chỉnh"
+    },
+    "align": {
+      "left": "Trái",
+      "center": "Giữa",
+      "right": "Phải"
     }
   },
   "cli": {

@@ -1055,7 +1055,8 @@
       "material": "Material",
       "materialAnalog": "Material Analog",
       "lumen": "Lumen",
-      "lyrics": "Lyrics"
+      "lyrics": "Lyrics",
+      "simpleLyrics": "Simple Lyrics"
     },
     "presets": {
       "minimal": {
@@ -1078,6 +1079,15 @@
       "fetch_error": "Could not fetch user @{user}",
       "enter_username": "Enter a GitHub username",
       "no_contributions": "No contributions found"
+    },
+    "settings": {
+      "lyricsLines": "Lines",
+      "lyricsAlignment": "Alignment"
+    },
+    "align": {
+      "left": "Left",
+      "center": "Center",
+      "right": "Right"
     }
   },
   "cli": {

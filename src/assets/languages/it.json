@@ -1054,7 +1054,8 @@
       "material": "Material",
       "materialAnalog": "Material analogico",
       "lumen": "Lumen",
-      "lyrics": "Testo"
+      "lyrics": "Testo",
+      "simpleLyrics": "Testo semplice"
     },
     "presets": {
       "minimal": {
@@ -1080,6 +1081,15 @@
       "fetch_error": "Impossibile recuperare l'utente @{user}",
       "enter_username": "Inserisci un nome utente GitHub",
       "no_contributions": "Nessun contributo trovato"
+    },
+    "settings": {
+      "lyricsLines": "Righe",
+      "lyricsAlignment": "Allineamento"
+    },
+    "align": {
+      "left": "Sinistra",
+      "center": "Centro",
+      "right": "Destra"
     }
   },
   "cli": {

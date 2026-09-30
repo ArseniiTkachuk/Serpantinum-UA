@@ -1055,7 +1055,8 @@
       "material": "머티리얼",
       "materialAnalog": "머티리얼 아날로그",
       "lumen": "루멘",
-      "lyrics": "가사"
+      "lyrics": "가사",
+      "simpleLyrics": "단순 가사"
     },
     "presets": {
       "minimal": {
@@ -1081,6 +1082,15 @@
       "fetch_error": "@{user} 사용자를 가져올 수 없습니다",
       "enter_username": "GitHub 사용자명을 입력하세요",
       "no_contributions": "기여 내역이 없습니다"
+    },
+    "settings": {
+      "lyricsLines": "줄 수",
+      "lyricsAlignment": "정렬"
+    },
+    "align": {
+      "left": "왼쪽",
+      "center": "가운데",
+      "right": "오른쪽"
     }
   },
   "cli": {

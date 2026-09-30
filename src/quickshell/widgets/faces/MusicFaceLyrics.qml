@@ -20,7 +20,48 @@ Item {
     property real maxAspect: 5.0
     property bool isRound: false
 
+    property bool lyricsSubscribed: false
+
+    property var widgetData: null
+    property var widget: null
+    property string lyricsAlignment: "left"
+
+    function updateLyricsAlignment() {
+        let w = root.widgetData || root.widget || (parent && (parent.widgetData || parent.widget || parent.item)) || null;
+        if (w) {
+            if (w.lyricsAlignment !== undefined && w.lyricsAlignment !== "") {
+                root.lyricsAlignment = w.lyricsAlignment;
+            } else if (w.alignment !== undefined && w.alignment !== "") {
+                root.lyricsAlignment = w.alignment;
+            }
+        }
+    }
+
+    onWidgetDataChanged: updateLyricsAlignment()
+    onWidgetChanged: updateLyricsAlignment()
+
+    Connections {
+        target: root.widgetData || root.widget || (parent ? (parent.widgetData || parent.widget || parent.item) : null)
+        ignoreUnknownSignals: true
+        function onLyricsAlignmentChanged() {
+            root.updateLyricsAlignment();
+        }
+        function onAlignmentChanged() {
+            root.updateLyricsAlignment();
+        }
+    }
+
     readonly property real widgetRadius: root.isRound ? (Math.min(root.width, root.height) / 2) : (ThemeBackend.borderRadius * 2)
+
+    function syncSubscription() {
+        if (root.visible && !root.lyricsSubscribed) {
+            root.lyricsSubscribed = true;
+            Lyrics.subscribe();
+        } else if (!root.visible && root.lyricsSubscribed) {
+            root.lyricsSubscribed = false;
+            Lyrics.unsubscribe();
+        }
+    }
 
     function getContrastColor(col) {
         if (!col) return "#ffffff";
@@ -110,8 +151,8 @@ Item {
         let col2 = Qt.color(c2);
         let t = Math.max(0.0, Math.min(1.0, ratio));
         let r = col1.r * (1.0 - t) + col2.r * t;
-        let g = col1.g * (1.0 - t) + col2.g * t;
-        let b = col1.b * (1.0 - t) + col2.b * t;
+        let g = col1.g * (1.0 - t) + col2.r * t;
+        let b = col1.b * (1.0 - t) + col2.r * t;
         return Qt.rgba(r, g, b, 1.0);
     }
 
@@ -165,8 +206,6 @@ Item {
     readonly property color dynamicTextColor: getAdjustedLyricColor()
     readonly property color activeLineColor: root.dynamicTextColor
 
-    property real activeItemCenterY: 0
-
     readonly property real sideMargin: Math.max(Scaler.s(12), root.width * 0.05)
     readonly property real refWidth: Scaler.s(320)
     readonly property real refHeight: Scaler.s(100)
@@ -174,56 +213,19 @@ Item {
     readonly property real fontScale: Math.pow(Math.max(0.3, effectiveSize), 0.38)
 
     readonly property real baseActiveFont: Math.max(Scaler.s(11), Math.min(root.height * 0.24, Scaler.s(15) * fontScale))
-    readonly property real baseNormalFont: Math.max(Scaler.s(9), baseActiveFont * 0.82)
-    readonly property real lineHeight: Math.max(Scaler.s(18), baseActiveFont * 1.4)
-    readonly property real lineSpacing: Math.max(Scaler.s(2), baseActiveFont * 0.25)
-    readonly property real itemStep: lineHeight + lineSpacing
 
-    onVisibleChanged: {
-        if (visible) {
-            Lyrics.subscribe();
-        } else {
-            Lyrics.unsubscribe();
-        }
-    }
+    onVisibleChanged: syncSubscription()
 
     Component.onCompleted: {
-        if (visible) {
-            Lyrics.subscribe();
-        }
+        syncSubscription();
+        updateLyricsAlignment();
     }
 
     Component.onDestruction: {
-        Lyrics.unsubscribe();
-    }
-
-    Connections {
-        target: Lyrics
-        function onCurrentIndexChanged() {
-            if (Lyrics.currentIndex >= 0 && lyricsRepeater && lyricsRepeater.count > Lyrics.currentIndex) {
-                let item = lyricsRepeater.itemAt(Lyrics.currentIndex);
-                if (item) {
-                    root.activeItemCenterY = item.y + item.height / 2;
-                }
-            }
+        if (root.lyricsSubscribed) {
+            root.lyricsSubscribed = false;
+            Lyrics.unsubscribe();
         }
-    }
-
-    readonly property real targetY: {
-        let center = bgContainer.height * 0.44;
-        if (Lyrics.currentIndex >= 0 && Lyrics.hasLyrics) {
-            if (root.activeItemCenterY > 0) {
-                return center - root.activeItemCenterY;
-            }
-            if (lyricsRepeater && lyricsRepeater.count > Lyrics.currentIndex) {
-                let item = lyricsRepeater.itemAt(Lyrics.currentIndex);
-                if (item) {
-                    return center - (item.y + item.height / 2);
-                }
-            }
-            return center - (Lyrics.currentIndex * itemStep + lineHeight / 2);
-        }
-        return center - (lineHeight / 2);
     }
 
     LyricsPicker {
@@ -290,119 +292,18 @@ Item {
             }
         }
 
-        Item {
+        LyricsView {
             id: lyricsViewport
             anchors.fill: parent
+            alignment: root.lyricsAlignment
             visible: Lyrics.hasLyrics
-            clip: true
-
-            Item {
-                id: scrollContainer
-                width: parent.width
-                height: lyricsColumn.height
-                y: root.targetY
-
-                Behavior on y {
-                    NumberAnimation {
-                        duration: 650
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                Column {
-                    id: lyricsColumn
-                    width: parent.width
-                    spacing: root.lineSpacing
-
-                    Repeater {
-                        id: lyricsRepeater
-                        model: Lyrics.lyrics
-
-                        delegate: Item {
-                            id: lineDelegate
-                            width: lyricsColumn.width
-                            height: Math.max(root.lineHeight, lineText.implicitHeight)
-
-                            readonly property bool isCurrent: index === Lyrics.currentIndex
-
-                            Component.onCompleted: {
-                                if (isCurrent) {
-                                    root.activeItemCenterY = y + height / 2;
-                                }
-                            }
-
-                            onIsCurrentChanged: {
-                                if (isCurrent) {
-                                    root.activeItemCenterY = y + height / 2;
-                                }
-                            }
-
-                            onYChanged: {
-                                if (isCurrent) {
-                                    root.activeItemCenterY = y + height / 2;
-                                }
-                            }
-
-                            onHeightChanged: {
-                                if (isCurrent) {
-                                    root.activeItemCenterY = y + height / 2;
-                                }
-                            }
-
-                            Text {
-                                id: lineText
-                                width: parent.width - (root.sideMargin * 2)
-                                x: root.sideMargin
-                                anchors.verticalCenter: parent.verticalCenter
-                                horizontalAlignment: Text.AlignLeft
-                                wrapMode: Text.WordWrap
-                                font.family: ThemeBackend.fontFamily
-                                font.weight: Font.Bold
-                                font.pixelSize: root.baseActiveFont
-                                color: (index === Lyrics.currentIndex && (!modelData.words || modelData.words.length === 0)) ? root.activeLineColor : ThemeBackend.text
-                                opacity: Lyrics.getLineOpacity(index, Lyrics.currentIndex)
-                                scale: {
-                                    if (index === Lyrics.currentIndex) return 1.0;
-                                    let d = Math.abs(index - Lyrics.currentIndex);
-                                    if (d === 1) return 0.86;
-                                    return 0.80;
-                                }
-                                transformOrigin: Item.Left
-
-                                textFormat: (index === Lyrics.currentIndex && modelData.words && modelData.words.length > 0) ? Text.StyledText : Text.PlainText
-
-                                text: {
-                                    if (index === Lyrics.currentIndex && modelData.words && modelData.words.length > 0) {
-                                        return Lyrics.renderActiveLineText(modelData, Lyrics.currentPosition, root.activeLineColor, ThemeBackend.text);
-                                    }
-                                    return modelData.text !== "" ? modelData.text : "♪";
-                                }
-
-                                Behavior on color {
-                                    ColorAnimation {
-                                        duration: 650
-                                        easing.type: Easing.OutCubic
-                                    }
-                                }
-
-                                Behavior on opacity {
-                                    NumberAnimation {
-                                        duration: 650
-                                        easing.type: Easing.OutCubic
-                                    }
-                                }
-
-                                Behavior on scale {
-                                    NumberAnimation {
-                                        duration: 650
-                                        easing.type: Easing.OutCubic
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            sideMargin: root.sideMargin
+            baseActiveFont: root.baseActiveFont
+            lineHeight: Math.max(Scaler.s(18), root.baseActiveFont * 1.4)
+            lineSpacing: Math.max(Scaler.s(2), root.baseActiveFont * 0.25)
+            activeLineColor: root.activeLineColor
+            inactiveLineColor: ThemeBackend.text || "#cdd6f4"
+            fontFamily: ThemeBackend.fontFamily
         }
 
         ColumnLayout {

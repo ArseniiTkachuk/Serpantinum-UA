@@ -1055,7 +1055,8 @@
       "material": "Մատերիալ",
       "materialAnalog": "Մատերիալ անալոգային",
       "lumen": "Լյումեն",
-      "lyrics": "Երգի բառեր"
+      "lyrics": "Երգի բառեր",
+      "simpleLyrics": "Պարզ երգի տեքստ"
     },
     "presets": {
       "minimal": {
@@ -1081,6 +1082,15 @@
       "fetch_error": "Չհաջողվեց բեռնել @{user} օգտատիրոջը",
       "enter_username": "Մուտքագրեք GitHub-ի օգտանունը",
       "no_contributions": "Ներդրումներ չեն գտնվել"
+    },
+    "settings": {
+      "lyricsLines": "Տողեր",
+      "lyricsAlignment": "Հավասարեցում"
+    },
+    "align": {
+      "left": "Ձախ",
+      "center": "Կենտրոն",
+      "right": "Աջ"
     }
   },
   "cli": {

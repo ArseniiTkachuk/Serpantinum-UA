@@ -1099,7 +1099,8 @@
       "material": "Материал",
       "materialAnalog": "Материал аналоговые",
       "lumen": "Люмен",
-      "lyrics": "Текст песни"
+      "lyrics": "Текст песни",
+      "simpleLyrics": "Простой текст песни"
     },
     "presets": {
       "minimal": {
@@ -1125,6 +1126,15 @@
       "fetch_error": "Не удалось загрузить пользователя @{user}",
       "enter_username": "Введите имя пользователя GitHub",
       "no_contributions": "Контрибуции не найдены"
+    },
+    "settings": {
+      "lyricsLines": "Строки",
+      "lyricsAlignment": "Выравнивание"
+    },
+    "align": {
+      "left": "Слева",
+      "center": "По центру",
+      "right": "Справа"
     }
   },
   "cli": {

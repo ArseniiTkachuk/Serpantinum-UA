@@ -1099,7 +1099,8 @@
       "material": "Material",
       "materialAnalog": "Material analog",
       "lumen": "Lumen",
-      "lyrics": "Songtext"
+      "lyrics": "Songtext",
+      "simpleLyrics": "Einfacher Songtext"
     },
     "presets": {
       "minimal": {
@@ -1125,6 +1126,15 @@
       "fetch_error": "Benutzer @{user} konnte nicht geladen werden",
       "enter_username": "GitHub-Benutzernamen eingeben",
       "no_contributions": "Keine Beiträge gefunden"
+    },
+    "settings": {
+      "lyricsLines": "Zeilen",
+      "lyricsAlignment": "Ausrichtung"
+    },
+    "align": {
+      "left": "Links",
+      "center": "Mitte",
+      "right": "Rechts"
     }
   },
   "cli": {
