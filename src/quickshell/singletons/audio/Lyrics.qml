@@ -54,9 +54,7 @@ Item {
 
     function subscribe() {
         subscribers++;
-        if (subscribers === 1) {
-            triggerSearch();
-        }
+        triggerSearch();
     }
 
     function unsubscribe() {
@@ -65,6 +63,12 @@ Item {
             searchTimeoutTimer.stop();
             cacheReadProcess.running = false;
             fileReadProcess.running = false;
+            if (loading) {
+                loading = false;
+                lastFetchedKey = "";
+                activeFetchKey = "";
+                activeSession = null;
+            }
         }
     }
 
@@ -207,6 +211,7 @@ Item {
     }
 
     onCurrentTrackKeyChanged: triggerSearch()
+    onPlayerChanged: triggerSearch()
 
     function triggerSearch() {
         if (root.subscribers <= 0) return;
@@ -222,12 +227,17 @@ Item {
             return;
         }
 
-        if (currentTrackKey === lastFetchedKey && lyrics && lyrics.length > 0) {
-            return;
+        if (currentTrackKey === lastFetchedKey && currentTrackKey === activeFetchKey) {
+            if (loading) return;
+            if (lyrics && lyrics.length > 0) return;
         }
 
         lastFetchedKey = currentTrackKey;
         activeFetchKey = currentTrackKey;
+        activeSession = null;
+        searchTimeoutTimer.stop();
+        lyrics = [];
+        hasLyrics = false;
         checkCacheAndFetch(currentTrackKey);
     }
 
@@ -558,7 +568,7 @@ Item {
     }
 
     function fetchLyrics(artist, title, requestKey) {
-        if (requestKey !== root.currentTrackKey) return;
+        if (requestKey !== root.currentTrackKey || requestKey !== root.activeFetchKey) return;
         loading = true;
         hasLyrics = false;
         lyrics = [];
@@ -803,7 +813,7 @@ Item {
             onStreamFinished: {
                 let content = this.text.trim();
                 let key = cacheReadProcess.targetKey;
-                if (key !== root.currentTrackKey) return;
+                if (key !== root.currentTrackKey || key !== root.activeFetchKey) return;
 
                 if (content !== "") {
                     try {
