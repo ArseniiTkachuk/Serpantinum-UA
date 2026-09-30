@@ -15,6 +15,24 @@ Item {
 
     focus: true
 
+    readonly property bool active: root.visible && (!Window.window || Window.window.visible)
+
+    property bool cavaRegistered: false
+
+    function registerCava() {
+        if (!cavaRegistered) {
+            cavaRegistered = true;
+            Cava.registerConsumer();
+        }
+    }
+
+    function unregisterCava() {
+        if (cavaRegistered) {
+            cavaRegistered = false;
+            Cava.unregisterConsumer();
+        }
+    }
+
     function s(val) { 
         return Scaler.s(val); 
     }
@@ -42,7 +60,7 @@ Item {
     property bool lyricsSubscribed: false
 
     function updateLyricsSubscription() {
-        let shouldSub = root.visible && (bottomSectionSwitch.currentIndex === 1);
+        let shouldSub = root.active && (bottomSectionSwitch.currentIndex === 1);
         if (shouldSub && !lyricsSubscribed) {
             lyricsSubscribed = true;
             Lyrics.customPlayer = root.targetPlayer;
@@ -58,7 +76,7 @@ Item {
 
     Shortcut {
         sequence: "Tab"
-        enabled: root.visible
+        enabled: root.active
         onActivated: {
             bottomSectionSwitch.currentIndex = (bottomSectionSwitch.currentIndex === 0 ? 1 : 0);
             root.updateLyricsSubscription();
@@ -67,19 +85,19 @@ Item {
 
     Shortcut {
         sequence: "Backtab"
-        enabled: root.visible
+        enabled: root.active
         onActivated: {
             bottomSectionSwitch.currentIndex = (bottomSectionSwitch.currentIndex === 0 ? 1 : 0);
             root.updateLyricsSubscription();
         }
     }
 
-    onVisibleChanged: {
+    onActiveChanged: {
         updateLyricsSubscription();
-        if (visible) {
+        if (active) {
             forceActiveFocus();
             resetAndPlayIntro();
-            Cava.registerConsumer();
+            registerCava();
             triggerLocalArtFetch();
             if (!eqProc.running) eqProc.running = true;
             if (titleTextMain.implicitWidth > titleClipRect.width) {
@@ -87,7 +105,7 @@ Item {
                 titleAnim.restart();
             }
         } else {
-            Cava.unregisterConsumer();
+            unregisterCava();
             titleAnim.stop();
             marqueeContainer.x = 0;
             if (lyricsPickerPopup.visible || lyricsPickerPopup.opened) {
@@ -103,17 +121,17 @@ Item {
         if (root.eqData) {
             root.savedEqData = Object.assign({}, root.eqData);
         }
-        if (visible) {
+        if (active) {
             forceActiveFocus();
             resetAndPlayIntro();
-            Cava.registerConsumer();
+            registerCava();
             triggerLocalArtFetch();
             updateLyricsSubscription();
         }
     }
 
     Component.onDestruction: {
-        Cava.unregisterConsumer();
+        unregisterCava();
         if (lyricsSubscribed) {
             lyricsSubscribed = false;
             Lyrics.unsubscribe();
@@ -184,7 +202,14 @@ Item {
     }
 
     property int barCount: 60
-    property var rawBarLevels: Cava.barLevels
+    property var rawBarLevels: []
+
+    Binding {
+        target: root
+        property: "rawBarLevels"
+        value: Cava.barLevels
+        when: root.active
+    }
 
     property var processedBars: {
         let source = rawBarLevels;
@@ -291,16 +316,20 @@ Item {
     Connections {
         target: root.targetPlayer
         function onPositionChanged() {
+            if (!root.active) return;
             if (root.targetPlayer) root.currentLivePosition = root.targetPlayer.position;
         }
         function onPostTrackChanged() {
+            if (!root.active) return;
             if (root.targetPlayer) root.currentLivePosition = root.targetPlayer.position;
             root.triggerLocalArtFetch();
         }
         function onTrackArtUrlChanged() {
+            if (!root.active) return;
             root.triggerLocalArtFetch();
         }
         function onTrackTitleChanged() {
+            if (!root.active) return;
             root.triggerLocalArtFetch();
         }
     }
@@ -314,7 +343,7 @@ Item {
     Timer {
         interval: 1000
         repeat: true
-        running: root.visible && root.hasTargetPlayer && root.targetPlayer.isPlaying
+        running: root.active && root.hasTargetPlayer && root.targetPlayer.isPlaying
         onTriggered: {
             if (root.targetPlayer) {
                 if (typeof root.targetPlayer.positionChanged === "function") {
@@ -422,20 +451,12 @@ Item {
     property string accumulatedEqOut: ""
     property real lastEqUpdate: 0
 
-    property real catppuccinFlowOffset: 0
-    NumberAnimation on catppuccinFlowOffset {
-        from: 0; to: 1.0
-        duration: 8000
-        loops: Animation.Infinite
-        running: true
-    }
-
     property real globalOrbitAngle: 0
     NumberAnimation on globalOrbitAngle {
         from: 0; to: Math.PI * 2
         duration: 90000
         loops: Animation.Infinite
-        running: true
+        running: root.active
     }
 
     property real eqLightningProgress: 0.0
@@ -588,7 +609,7 @@ Item {
 
     Timer {
         interval: 1000
-        running: root.visible
+        running: root.active
         repeat: true
         triggeredOnStart: true
         onTriggered: {
@@ -716,7 +737,7 @@ Item {
                     NumberAnimation on rotation {
                         from: 0; to: 360; duration: 5000
                         loops: Animation.Infinite
-                        running: true
+                        running: root.active
                     }
 
                     gradient: Gradient {
@@ -742,8 +763,6 @@ Item {
             anchors.margins: root.s(3)
             color: ThemeBackend.base
             radius: ThemeBackend.borderRadius
-
-            layer.enabled: true
 
             Rectangle {
                 id: innerBgMask
@@ -1029,7 +1048,7 @@ Item {
                                     NumberAnimation on rotation {
                                         from: 0; to: 360; duration: 25000
                                         loops: Animation.Infinite
-                                        running: true
+                                        running: root.active
                                         paused: !(root.targetPlayer && root.targetPlayer.isPlaying)
                                     }
 
@@ -1224,7 +1243,7 @@ Item {
 
                                             onTextChanged: {
                                                 marqueeContainer.x = 0;
-                                                if (implicitWidth > titleClipRect.width && root.visible) {
+                                                if (implicitWidth > titleClipRect.width && root.active) {
                                                     titleAnim.restart();
                                                 } else {
                                                     titleAnim.stop();
@@ -1245,7 +1264,7 @@ Item {
                                     SequentialAnimation on x {
                                         id: titleAnim
                                         loops: Animation.Infinite
-                                        running: root.visible && titleTextMain.implicitWidth > titleClipRect.width
+                                        running: root.active && titleTextMain.implicitWidth > titleClipRect.width
 
                                         PauseAnimation { duration: 3000 }
                                         
@@ -1350,6 +1369,7 @@ Item {
                                 Connections {
                                     target: root.targetPlayer
                                     function onPositionChanged() {
+                                        if (!root.active) return;
                                         if (!progBar.isDragging && !progBar.seekPending && root.targetPlayer) {
                                             progBar.value = root.targetPlayer.position;
                                         }
@@ -1898,12 +1918,13 @@ Item {
 
                                         Timer {
                                             interval: 16
-                                            running: root.eqLightningFade < 1.0 && root.eqLightningProgress > 0.0
+                                            running: root.active && root.eqLightningFade < 1.0 && root.eqLightningProgress > 0.0
                                             repeat: true
                                             onTriggered: lightningCanvas.requestPaint()
                                         }
 
                                         onPaint: {
+                                            if (!root.active) return;
                                             var ctx = getContext("2d");
                                             ctx.clearRect(0, 0, width, height);
 
@@ -2263,13 +2284,18 @@ Item {
         readonly property real progressX: pad + shownFraction * (width - 2 * pad)
 
         property real phase: 0
-        NumberAnimation on phase {
-            from: 0
-            to: Math.PI * 2
-            duration: bar.cycleMs
-            loops: Animation.Infinite
-            running: bar.visible && (bar.playing || bar.ampFactor > 0.001)
-        }
+
+        property real step: Math.max(2, root.s(2.5))
+        property real startTaperMin: root.s(24)
+        property real startTaperMax: root.s(64)
+
+        property string trackColorStr: ""
+        property string fullColorStr: ""
+        property var layerColorStrs: []
+        property var gridTables: []
+        property var cachedGradients: []
+        property real cachedGradTop: -9999
+        property real cachedGradA: -9999
 
         property var layers: [
             { color: bar.primaryColor, amp: 0.86, alpha: 0.32, taper: root.s(70), comps: [
@@ -2283,14 +2309,120 @@ Item {
                 { len: root.s(225), mult: 2, off: 0.60, w: 0.32 } ] }
         ]
 
-        onLiveAmpChanged: cv.requestPaint()
-        onWaveColorChanged: cv.requestPaint()
-        onPrimaryColorChanged: cv.requestPaint()
-        onSecondaryColorChanged: cv.requestPaint()
-        onTertiaryColorChanged: cv.requestPaint()
-        onPhaseChanged: cv.requestPaint()
-        onShownFractionChanged: cv.requestPaint()
-        onWidthChanged: cv.requestPaint()
+        function rgbaCol(col, a) {
+            return "rgba(" + Math.round(col.r * 255) + "," + Math.round(col.g * 255) + "," + Math.round(col.b * 255) + "," + a + ")";
+        }
+
+        function easeQuintic(t) {
+            t = Math.max(0, Math.min(1, t));
+            return t * t * t * (t * (t * 6 - 15) + 10);
+        }
+
+        function updateColors() {
+            trackColorStr = rgbaCol(bar.waveColor, bar.trackAlpha);
+            fullColorStr = rgbaCol(bar.waveColor, 1.0);
+            var arr = [];
+            var L = bar.layers;
+            for (var i = 0; i < L.length; i++) {
+                var curCol = L[i].color || bar.primaryColor;
+                arr.push({
+                    c0: rgbaCol(curCol, L[i].alpha * 0.55),
+                    c1: rgbaCol(curCol, L[i].alpha)
+                });
+            }
+            layerColorStrs = arr;
+            cachedGradients = [];
+        }
+
+        function rebuildGridTables() {
+            var L = bar.layers;
+            if (!L || L.length === 0 || bar.width <= 0) return;
+            var maxSteps = Math.ceil(bar.width / bar.step) + 4;
+            var tables = [];
+            for (var li = 0; li < L.length; li++) {
+                var comps = L[li].comps;
+                var layerSins = [];
+                var layerCoss = [];
+                for (var k = 0; k < comps.length; k++) {
+                    var p = comps[k];
+                    var kFreq = (2 * Math.PI) / p.len;
+                    var sins = new Float64Array(maxSteps);
+                    var coss = new Float64Array(maxSteps);
+                    for (var i = 0; i < maxSteps; i++) {
+                        var x = bar.pad + i * bar.step;
+                        var angle = kFreq * x + p.off;
+                        sins[i] = Math.sin(angle);
+                        coss[i] = Math.cos(angle);
+                    }
+                    layerSins.push(sins);
+                    layerCoss.push(coss);
+                }
+                tables.push({ sins: layerSins, coss: layerCoss, maxSteps: maxSteps });
+            }
+            bar.gridTables = tables;
+        }
+
+        function hillFromGrid(table, comps, i, cosBetas, sinBetas) {
+            var n = 0;
+            for (var k = 0; k < comps.length; k++) {
+                n += comps[k].w * (table.sins[k][i] * cosBetas[k] - table.coss[k][i] * sinBetas[k]);
+            }
+            var base = (n + 0.85) / 1.85;
+            if (base <= 0) return 0;
+            if (base >= 1) base = 1;
+            return 0.5 * (1 - Math.cos(base * Math.PI));
+        }
+
+        function hillDirect(x, comps, phaseVal) {
+            var n = 0;
+            for (var k = 0; k < comps.length; k++) {
+                var p = comps[k];
+                n += p.w * Math.sin((2 * Math.PI / p.len) * x - phaseVal * p.mult + p.off);
+            }
+            var base = (n + 0.85) / 1.85;
+            if (base <= 0) return 0;
+            if (base >= 1) base = 1;
+            return 0.5 * (1 - Math.cos(base * Math.PI));
+        }
+
+        Component.onCompleted: {
+            updateColors();
+            rebuildGridTables();
+        }
+
+        Connections {
+            target: root
+            function onActiveChanged() {
+                if (root.active) {
+                    bar.updateColors();
+                    bar.rebuildGridTables();
+                    cv.requestPaint();
+                }
+            }
+        }
+
+        onLiveAmpChanged: { if (root.active) cv.requestPaint(); }
+        onWaveColorChanged: { updateColors(); if (root.active) cv.requestPaint(); }
+        onPrimaryColorChanged: { updateColors(); if (root.active) cv.requestPaint(); }
+        onSecondaryColorChanged: { if (root.active) cv.requestPaint(); }
+        onTertiaryColorChanged: { if (root.active) cv.requestPaint(); }
+        onShownFractionChanged: { if (root.active) cv.requestPaint(); }
+        onWidthChanged: { rebuildGridTables(); if (root.active) cv.requestPaint(); }
+        onPadChanged: { rebuildGridTables(); if (root.active) cv.requestPaint(); }
+        onStepChanged: { rebuildGridTables(); if (root.active) cv.requestPaint(); }
+        onLayersChanged: { updateColors(); rebuildGridTables(); if (root.active) cv.requestPaint(); }
+
+        Timer {
+            id: waveTimer
+            interval: 16
+            repeat: true
+            running: root.active && (bar.playing || bar.ampFactor > 0.001)
+            onTriggered: {
+                var now = Date.now();
+                bar.phase = ((now % bar.cycleMs) / bar.cycleMs) * Math.PI * 2;
+                cv.requestPaint();
+            }
+        }
 
         Canvas {
             id: cv
@@ -2303,69 +2435,89 @@ Item {
             }
 
             onPaint: {
+                if (!root.active) return;
+
                 var ctx = getContext("2d");
                 ctx.clearRect(0, 0, width, height);
 
-                var cy = bar.cy, pad = bar.pad, right = width - pad;
+                var cy = bar.cy;
+                var pad = bar.pad;
+                var right = width - pad;
                 var endX = Math.max(pad, bar.progressX);
-                var top = cy - bar.strokeWidth / 2;
-                var step = Math.max(2, root.s(2.5));
-                var startTaper = Math.max(root.s(24), Math.min(root.s(64), (endX - pad) * 0.6));
-
-                function rgbaCol(col, a) {
-                    return "rgba(" + Math.round(col.r * 255) + "," + Math.round(col.g * 255) + "," + Math.round(col.b * 255) + "," + a + ")";
-                }
-                function easeStart(t) {
-                    t = Math.max(0, Math.min(1, t));
-                    return t * t * t * (t * (t * 6 - 15) + 10);
-                }
-                function easeEnd(t) {
-                    t = Math.max(0, Math.min(1, t));
-                    return t * t * t * (t * (t * 6 - 15) + 10);
-                }
-                function hill(x, ly) {
-                    var n = 0;
-                    for (var k = 0; k < ly.comps.length; k++) {
-                        var p = ly.comps[k];
-                        n += p.w * Math.sin((2 * Math.PI / p.len) * x - bar.phase * p.mult + p.off);
-                    }
-                    var base = (n + 0.85) / 1.85;
-                    if (base <= 0) return 0;
-                    if (base >= 1) base = 1;
-                    return 0.5 * (1 - Math.cos(base * Math.PI));
-                }
+                var strokeW = bar.strokeWidth;
+                var top = cy - strokeW / 2;
+                var step = bar.step;
+                var startTaper = Math.max(bar.startTaperMin, Math.min(bar.startTaperMax, (endX - pad) * 0.6));
+                var currentPhase = bar.phase;
+                var barAmp = bar.amplitude;
+                var currentLiveAmp = bar.liveAmp;
+                var L = bar.layers;
 
                 ctx.lineCap = "round";
                 ctx.lineJoin = "round";
-                ctx.lineWidth = bar.strokeWidth;
+                ctx.lineWidth = strokeW;
                 ctx.globalAlpha = 1.0;
 
-                ctx.strokeStyle = rgbaCol(bar.waveColor, bar.trackAlpha);
+                ctx.strokeStyle = bar.trackColorStr || bar.rgbaCol(bar.waveColor, bar.trackAlpha);
                 ctx.beginPath();
                 ctx.moveTo(endX, cy);
                 ctx.lineTo(right, cy);
                 ctx.stroke();
 
                 if (endX > pad + 1) {
-                    var L = bar.layers;
+                    var tables = bar.gridTables;
+                    var hasTables = tables && tables.length === L.length;
+                    var gradients = bar.cachedGradients;
+                    var colorStrs = bar.layerColorStrs;
+
                     for (var li = 0; li < L.length; li++) {
                         var ly = L[li];
-                        var A = bar.amplitude * ly.amp * bar.liveAmp;
+                        var A = barAmp * ly.amp * currentLiveAmp;
                         if (A < 0.3) continue;
 
                         var endTaperLen = Math.max(1.0, ly.taper * Math.min(1.0, (endX - pad) / (ly.taper * 1.5)));
-                        var curCol = ly.color || bar.primaryColor;
-                        var g = ctx.createLinearGradient(0, top - A, 0, top);
-                        g.addColorStop(0.0, rgbaCol(curCol, ly.alpha * 0.55));
-                        g.addColorStop(1.0, rgbaCol(curCol, ly.alpha));
-                        ctx.fillStyle = g;
 
+                        var g = (gradients && gradients[li] && bar.cachedGradTop === top && bar.cachedGradA === A)
+                            ? gradients[li]
+                            : null;
+
+                        if (!g) {
+                            g = ctx.createLinearGradient(0, top - A, 0, top);
+                            var colPair = (colorStrs && colorStrs[li]) ? colorStrs[li] : {
+                                c0: bar.rgbaCol(ly.color || bar.primaryColor, ly.alpha * 0.55),
+                                c1: bar.rgbaCol(ly.color || bar.primaryColor, ly.alpha)
+                            };
+                            g.addColorStop(0.0, colPair.c0);
+                            g.addColorStop(1.0, colPair.c1);
+                            if (!gradients) gradients = [];
+                            gradients[li] = g;
+                        }
+
+                        var comps = ly.comps;
+                        var numComps = comps.length;
+                        var cosBetas = new Float64Array(numComps);
+                        var sinBetas = new Float64Array(numComps);
+                        for (var k = 0; k < numComps; k++) {
+                            var beta = comps[k].mult * currentPhase;
+                            cosBetas[k] = Math.cos(beta);
+                            sinBetas[k] = Math.sin(beta);
+                        }
+
+                        var table = hasTables ? tables[li] : null;
+                        var canUseGrid = table && table.sins && table.sins.length === numComps;
+
+                        ctx.fillStyle = g;
                         ctx.beginPath();
                         ctx.moveTo(pad, cy);
-                        for (var x = pad; x <= endX; x += step) {
+
+                        var gridIdx = 0;
+                        for (var x = pad; x <= endX; x += step, gridIdx++) {
                             var curX = Math.min(x, endX);
-                            var env = easeStart((curX - pad) / startTaper) * easeEnd((endX - curX) / endTaperLen);
-                            var yPos = top - hill(curX, ly) * A * env;
+                            var env = bar.easeQuintic((curX - pad) / startTaper) * bar.easeQuintic((endX - curX) / endTaperLen);
+                            var h = (canUseGrid && curX === x && gridIdx < table.maxSteps)
+                                ? bar.hillFromGrid(table, comps, gridIdx, cosBetas, sinBetas)
+                                : bar.hillDirect(curX, comps, currentPhase);
+                            var yPos = top - h * A * env;
                             ctx.lineTo(curX, yPos);
                             if (curX === endX) break;
                         }
@@ -2374,9 +2526,12 @@ Item {
                         ctx.closePath();
                         ctx.fill();
                     }
+                    bar.cachedGradTop = top;
+                    bar.cachedGradA = A;
+                    bar.cachedGradients = gradients;
                 }
 
-                ctx.strokeStyle = rgbaCol(bar.waveColor, 1.0);
+                ctx.strokeStyle = bar.fullColorStr || bar.rgbaCol(bar.waveColor, 1.0);
                 ctx.beginPath();
                 ctx.moveTo(pad, cy);
                 ctx.lineTo(endX, cy);
