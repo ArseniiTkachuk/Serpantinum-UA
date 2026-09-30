@@ -1050,7 +1050,7 @@ Item {
                                         from: 0; to: 360; duration: 25000
                                         loops: Animation.Infinite
                                         running: root.active
-                                        paused: !(root.targetPlayer && root.targetPlayer.isPlaying)
+                                        paused: root.active && !(root.targetPlayer && root.targetPlayer.isPlaying)
                                     }
 
                                     Item {
