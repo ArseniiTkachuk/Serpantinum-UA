@@ -15,6 +15,7 @@ Scope {
     property bool isActive: false
     property string targetMonitorName: ""
     property string targetSelectedWidgetId: ""
+    readonly property var activeWidgetsModel: (redactorWindowLoader.item && redactorWindowLoader.item.activeWidgetsModel) ? redactorWindowLoader.item.activeWidgetsModel : null
 
     function open(mon, widgetId) {
         root.targetMonitorName = (mon && typeof mon === "string") ? mon.trim() : "";
@@ -108,6 +109,7 @@ Scope {
                 color: "transparent"
 
                 property alias redactorMode: redactorMode
+                property alias activeWidgetsModel: redactorMode.activeWidgetsModel
 
                 property string monitorName: {
                     if (root.targetMonitorName && root.targetMonitorName !== "") {
@@ -124,11 +126,6 @@ Scope {
                 }
                 readonly property string safeMonitorName: (monitorName || (targetScreen ? targetScreen.name : "default")).replace(/[^a-zA-Z0-9_-]/g, "_")
                 screen: redactorWindow.targetScreen
-
-                ListModel {
-                    id: activeWidgetsModel
-                    onCountChanged: redactorMode.updateToolbarObscured()
-                }
 
                 WlrLayershell.namespace: "qs-widget-redactor-" + redactorWindow.safeMonitorName
                 WlrLayershell.layer: WlrLayer.Overlay
@@ -199,6 +196,14 @@ Scope {
                     id: redactorMode
                     anchors.fill: parent
 
+                    ListModel {
+                        id: activeWidgetsModel
+                        dynamicRoles: true
+                        onCountChanged: redactorMode.updateToolbarObscured()
+                    }
+
+                    property alias activeWidgetsModel: activeWidgetsModel
+
                     property string selectedId: root.targetSelectedWidgetId
                     property bool gridEnabled: false
                     property real activeGuideX: -1
@@ -207,6 +212,20 @@ Scope {
                     property bool isReady: false
                     property bool isInitializing: true
                     property int topZ: 1
+
+                    readonly property var selectedWidget: {
+                        if (!selectedId) return null;
+                        for (let i = 0; i < widgetRepeater.count; i++) {
+                            let p = widgetRepeater.itemAt(i);
+                            if (p && String(p.wId) === String(selectedId)) {
+                                return (p.preview && p.preview.item) ? p.preview.item : p;
+                            }
+                        }
+                        return null;
+                    }
+
+                    readonly property var currentWidget: selectedWidget
+                    readonly property var activeWidget: selectedWidget
 
                     onSelectedIdChanged: updateToolbarObscured()
                     onWidthChanged: updateToolbarObscured()
@@ -226,6 +245,8 @@ Scope {
 
                     Connections {
                         target: WidgetSync
+                        ignoreUnknownSignals: true
+
                         function onPositionChanged(monitor, widgetId, x, y) {
                             if (monitor !== redactorWindow.safeMonitorName) return;
                             let target = String(widgetId).trim();
@@ -235,6 +256,26 @@ Scope {
                                     activeWidgetsModel.setProperty(i, "wX", x);
                                     activeWidgetsModel.setProperty(i, "wY", y);
                                     redactorMode.queueUpdateToolbarObscured();
+                                    break;
+                                }
+                            }
+                        }
+
+                        function onPropertyChanged(monitor, widgetId, propName, val) {
+                            if (monitor && monitor !== redactorWindow.safeMonitorName) return;
+                            let target = String(widgetId).trim();
+                            for (let i = 0; i < activeWidgetsModel.count; i++) {
+                                let item = activeWidgetsModel.get(i);
+                                if (String(item.wId).trim() === target) {
+                                    activeWidgetsModel.setProperty(i, propName, val);
+                                    let proxy = widgetRepeater.itemAt(i);
+                                    if (proxy && proxy.preview && proxy.preview.item) {
+                                        try {
+                                            if (proxy.preview.item[propName] !== undefined) {
+                                                proxy.preview.item[propName] = val;
+                                            }
+                                        } catch (e) {}
+                                    }
                                     break;
                                 }
                             }
@@ -261,7 +302,7 @@ Scope {
                     }
 
                     function updateToolbarObscured() {
-                        if (activeWidgetsModel.count === 0) {
+                        if (!activeWidgetsModel || activeWidgetsModel.count === 0) {
                             toolbarObscured = false;
                             return;
                         }
@@ -532,6 +573,7 @@ Scope {
                             if (!proxy || !proxy.preview || proxy.preview.status !== Loader.Ready) continue;
 
                             let row = activeWidgetsModel.get(i);
+                            if (!row) continue;
                             let res = snapBoxToGrid(proxy.preview.item, row.wX, row.wY, row.wWidth, row.wHeight);
 
                             if (res.x !== row.wX || res.y !== row.wY || res.w !== row.wWidth || res.h !== row.wHeight) {
@@ -611,23 +653,74 @@ Scope {
                         redactorMode.updateToolbarObscured();
                     }
 
-                    function handleAdditionalAction(action, itemIndex, itemId, proxy) {
+                    function setWidgetProperty(propName, val, targetId) {
+                        let tid = targetId || redactorMode.selectedId;
+                        if (!tid) return;
+                        for (let i = 0; i < activeWidgetsModel.count; i++) {
+                            let row = activeWidgetsModel.get(i);
+                            if (String(row.wId) === String(tid)) {
+                                activeWidgetsModel.setProperty(i, propName, val);
+                                let proxy = widgetRepeater.itemAt(i);
+                                if (proxy) {
+                                    if (proxy.preview && proxy.preview.item) {
+                                        try {
+                                            if (proxy.preview.item[propName] !== undefined) {
+                                                proxy.preview.item[propName] = val;
+                                            }
+                                        } catch (e) {}
+                                    }
+                                    if (typeof WidgetSync !== "undefined") {
+                                        if (typeof WidgetSync.setProperty === "function") {
+                                            WidgetSync.setProperty(redactorWindow.safeMonitorName, String(tid), propName, val);
+                                        } else if (typeof WidgetSync.setWidgetProperty === "function") {
+                                            WidgetSync.setWidgetProperty(redactorWindow.safeMonitorName, String(tid), propName, val);
+                                        } else if (typeof WidgetSync.setCustomProperty === "function") {
+                                            WidgetSync.setCustomProperty(redactorWindow.safeMonitorName, String(tid), propName, val);
+                                        }
+                                    }
+                                    proxy.finalizeSync();
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    function updateWidgetProperty(target, propName, val) {
+                        let tid = (target && (target.wId || target.id)) ? (target.wId || target.id) : redactorMode.selectedId;
+                        setWidgetProperty(propName, val, tid);
+                    }
+
+                    function saveConfig() {
+                        for (let i = 0; i < widgetRepeater.count; i++) {
+                            let proxy = widgetRepeater.itemAt(i);
+                            if (proxy) proxy.finalizeSync();
+                        }
+                    }
+
+                    function save() {
+                        saveConfig();
+                    }
+
+                    function handleAdditionalAction(action, itemIndex, itemId, proxy, extraArg) {
                         if (action === "pickImage") {
-                            let curImg = activeWidgetsModel.get(itemIndex) ? (activeWidgetsModel.get(itemIndex).wImagePath || "") : "";
+                            let row = (itemIndex >= 0 && itemIndex < activeWidgetsModel.count) ? activeWidgetsModel.get(itemIndex) : null;
+                            let curImg = row ? (row.wImagePath || "") : "";
                             openImagePicker(itemIndex, itemId, curImg, proxy.wVariant === "round");
                         } else if (action === "stretchWidth") {
-                            let item = activeWidgetsModel.get(itemIndex);
+                            let item = (itemIndex >= 0 && itemIndex < activeWidgetsModel.count) ? activeWidgetsModel.get(itemIndex) : null;
                             if (!item) return;
 
                             let rot = Math.abs(Math.round(proxy.wRotation || 0)) % 360;
                             if (rot % 180 === 0) {
-                                item.wX = 0;
-                                item.wWidth = redactorMode.safeWidth;
+                                activeWidgetsModel.setProperty(itemIndex, "wX", 0);
+                                activeWidgetsModel.setProperty(itemIndex, "wWidth", redactorMode.safeWidth);
                             } else {
-                                item.wY = 0;
-                                item.wWidth = redactorMode.safeHeight;
+                                activeWidgetsModel.setProperty(itemIndex, "wY", 0);
+                                activeWidgetsModel.setProperty(itemIndex, "wWidth", redactorMode.safeHeight);
                             }
                             proxy.finalizeSync();
+                        } else if (extraArg !== undefined) {
+                            setWidgetProperty(action, extraArg, itemId);
                         }
                     }
 
@@ -715,7 +808,7 @@ Scope {
 
                         Repeater {
                             id: widgetRepeater
-                            model: activeWidgetsModel
+                            model: redactorMode.activeWidgetsModel
                             delegate: Item {
                                 id: widgetProxy
                                 property real wRotation: (model.wRotation !== undefined && !isNaN(model.wRotation)) ? model.wRotation : 0
@@ -1100,17 +1193,43 @@ Scope {
                                         source: WidgetRegistry.faceFile(widgetProxy.wType, widgetProxy.wVariant)
                                         onLoaded: {
                                             if (item) {
-                                                if (item.imagePath !== undefined) {
-                                                    item.imagePath = Qt.binding(() => widgetProxy.wImagePath);
-                                                }
-                                                if (item.wImagePath !== undefined) {
-                                                    item.wImagePath = Qt.binding(() => widgetProxy.wImagePath);
-                                                }
-                                                if (item.path !== undefined) {
-                                                    item.path = Qt.binding(() => widgetProxy.wImagePath);
-                                                }
-                                                if (item.source !== undefined && typeof item.source === "string") {
-                                                    item.source = Qt.binding(() => widgetProxy.wImagePath);
+                                                try {
+                                                    if (item.imagePath !== undefined) {
+                                                        item.imagePath = Qt.binding(() => widgetProxy.wImagePath);
+                                                    }
+                                                    if (item.wImagePath !== undefined) {
+                                                        item.wImagePath = Qt.binding(() => widgetProxy.wImagePath);
+                                                    }
+                                                    if (item.path !== undefined) {
+                                                        item.path = Qt.binding(() => widgetProxy.wImagePath);
+                                                    }
+                                                    if (item.source !== undefined && typeof item.source === "string") {
+                                                        item.source = Qt.binding(() => widgetProxy.wImagePath);
+                                                    }
+                                                } catch (e) {}
+
+                                                let activeModel = redactorMode.activeWidgetsModel;
+                                                let row = (activeModel && widgetProxy.wIndex >= 0 && widgetProxy.wIndex < activeModel.count) ? activeModel.get(widgetProxy.wIndex) : null;
+                                                if (row) {
+                                                    let standardKeys = WidgetRegistry.standardKeys || [
+                                                        "wType", "wVariant", "wX", "wY", "wWidth", "wHeight",
+                                                        "wOpacity", "wRotation", "wImagePath", "wId"
+                                                    ];
+                                                    let ignoredProps = [
+                                                        "objectName", "destroyed", "deleteLater", "parent", "data",
+                                                        "resources", "children", "visible", "enabled", "x", "y", "z",
+                                                        "width", "height", "opacity", "rotation", "scale"
+                                                    ];
+                                                    for (let k in row) {
+                                                        if (!k || typeof k !== "string") continue;
+                                                        if (k.endsWith("Changed") || k.startsWith("on") || typeof row[k] === "function" || row[k] === undefined) continue;
+                                                        if (ignoredProps.includes(k) || standardKeys.includes(k)) continue;
+                                                        try {
+                                                            if (item[k] !== undefined && item[k] !== row[k]) {
+                                                                item[k] = row[k];
+                                                            }
+                                                        } catch (e) {}
+                                                    }
                                                 }
                                                 let res = redactorMode.gridEnabled
                                                     ? redactorMode.snapBoxToGrid(item, model.wX, model.wY, model.wWidth, model.wHeight)
@@ -1542,6 +1661,25 @@ Scope {
                                     Behavior on opacity { NumberAnimation { duration: 150 } }
                                     spacing: s(6)
 
+                                    Component {
+                                        id: defaultAdditionalButtonComponent
+                                        IconButton {
+                                            id: defBtn
+                                            property var settingData: null
+                                            size: s(34)
+                                            cornerRadius: ThemeBackend.borderRadius
+                                            buttonIcon: (defBtn.settingData && defBtn.settingData.icon) ? defBtn.settingData.icon : ""
+                                            iconFontSize: s((defBtn.settingData && defBtn.settingData.iconFontSize) ? defBtn.settingData.iconFontSize : 16)
+                                            accentColor: redactorMode.resolveThemeColor((defBtn.settingData && defBtn.settingData.accentColor) ? defBtn.settingData.accentColor : "surface0")
+                                            textColor: redactorMode.resolveThemeColor((defBtn.settingData && defBtn.settingData.textColor) ? defBtn.settingData.textColor : "mauve")
+                                            onClicked: {
+                                                if (defBtn.settingData && defBtn.settingData.action) {
+                                                    redactorMode.handleAdditionalAction(defBtn.settingData.action, widgetProxy.wIndex, widgetProxy.wId, widgetProxy);
+                                                }
+                                            }
+                                        }
+                                    }
+
                                     readonly property real limitY: (toolbar.opacity > 0.1 && !redactorMode.toolbarObscured) ? toolbar.y : redactorMode.safeHeight
 
                                     readonly property bool fitsBelow: (widgetProxy.y + widgetProxy.height + widgetProxy.selectionGap + implicitHeight + s(8)) <= limitY
@@ -1664,15 +1802,61 @@ Scope {
                                         }
 
                                         Repeater {
-                                            model: WidgetRegistry.additionalSettings(widgetProxy.wType, "top")
-                                            delegate: IconButton {
-                                                size: s(34)
-                                                cornerRadius: ThemeBackend.borderRadius
-                                                buttonIcon: modelData.icon || ""
-                                                iconFontSize: s(modelData.iconFontSize || 16)
-                                                accentColor: redactorMode.resolveThemeColor(modelData.accentColor || "surface0")
-                                                textColor: redactorMode.resolveThemeColor(modelData.textColor || "mauve")
-                                                onClicked: redactorMode.handleAdditionalAction(modelData.action, widgetProxy.wIndex, widgetProxy.wId, widgetProxy)
+                                            model: WidgetRegistry.additionalSettings(widgetProxy.wType, "top", widgetProxy.wVariant)
+                                            delegate: Loader {
+                                                id: settingLoaderTop
+                                                Layout.alignment: Qt.AlignVCenter
+
+                                                readonly property var currentSetting: modelData
+                                                readonly property var currentProxy: widgetProxy
+                                                readonly property var currentModel: (redactorMode.activeWidgetsModel && widgetProxy.wIndex >= 0 && widgetProxy.wIndex < redactorMode.activeWidgetsModel.count) ? redactorMode.activeWidgetsModel.get(widgetProxy.wIndex) : null
+                                                readonly property var currentFace: preview.item
+
+                                                sourceComponent: {
+                                                    if (modelData.component) return modelData.component;
+                                                    if (modelData.sourceComponent) return modelData.sourceComponent;
+                                                    if (modelData.source || modelData.file) return null;
+                                                    return defaultAdditionalButtonComponent;
+                                                }
+                                                source: {
+                                                    if (modelData.component || modelData.sourceComponent) return "";
+                                                    if (modelData.source) return Qt.resolvedUrl(modelData.source);
+                                                    if (modelData.file) return Qt.resolvedUrl(modelData.file);
+                                                    return "";
+                                                }
+
+                                                function setupControl() {
+                                                    if (!item) return;
+                                                    try { if (item.settingData !== undefined) item.settingData = currentSetting; } catch (e) {}
+                                                    try { if (item.typeData !== undefined) item.typeData = WidgetRegistry.types[widgetProxy.wType]; } catch (e) {}
+                                                    try { if (item.redactor !== undefined) item.redactor = redactorMode; } catch (e) {}
+                                                    try { if (item.proxy !== undefined) item.proxy = currentProxy; } catch (e) {}
+                                                    try { if (item.widgetProxy !== undefined) item.widgetProxy = currentProxy; } catch (e) {}
+                                                    try { if (item.widgetData !== undefined) item.widgetData = currentModel; } catch (e) {}
+                                                    try { if (item.item !== undefined) item.item = currentFace; } catch (e) {}
+                                                    try { if (item.widget !== undefined) item.widget = currentFace || currentProxy; } catch (e) {}
+                                                    try { if (item.targetWidget !== undefined) item.targetWidget = currentFace || currentProxy; } catch (e) {}
+                                                    try { if (item.activeWidgetsModel !== undefined) item.activeWidgetsModel = redactorMode.activeWidgetsModel; } catch (e) {}
+                                                }
+
+                                                onLoaded: setupControl()
+
+                                                Connections {
+                                                    target: preview
+                                                    function onItemChanged() {
+                                                        settingLoaderTop.setupControl();
+                                                    }
+                                                }
+
+                                                Connections {
+                                                    target: widgetProxy
+                                                    function onWIndexChanged() {
+                                                        settingLoaderTop.setupControl();
+                                                    }
+                                                    function onWVariantChanged() {
+                                                        settingLoaderTop.setupControl();
+                                                    }
+                                                }
                                             }
                                         }
 
@@ -1711,14 +1895,17 @@ Scope {
                                                     root.targetSelectedWidgetId = "";
                                                 }
                                                 WidgetSync.removeWidget(redactorWindow.safeMonitorName, rmId);
-                                                for (let i = activeWidgetsModel.count - 1; i >= 0; i--) {
-                                                    if (String(activeWidgetsModel.get(i).wId) === rmId) {
-                                                        activeWidgetsModel.remove(i, 1);
+                                                let activeModel = redactorMode.activeWidgetsModel;
+                                                if (activeModel) {
+                                                    for (let i = activeModel.count - 1; i >= 0; i--) {
+                                                        if (String(activeModel.get(i).wId) === rmId) {
+                                                            activeModel.remove(i, 1);
+                                                        }
                                                     }
-                                                }
-                                                if (activeWidgetsModel.count === 0) {
-                                                    redactorMode.selectedId = "";
-                                                    root.targetSelectedWidgetId = "";
+                                                    if (activeModel.count === 0) {
+                                                        redactorMode.selectedId = "";
+                                                        root.targetSelectedWidgetId = "";
+                                                    }
                                                 }
                                                 redactorMode.updateToolbarObscured();
                                             }
@@ -1730,15 +1917,61 @@ Scope {
                                         Layout.alignment: Qt.AlignHCenter
 
                                         Repeater {
-                                            model: WidgetRegistry.additionalSettings(widgetProxy.wType, "bottom")
-                                            delegate: IconButton {
-                                                size: s(34)
-                                                cornerRadius: ThemeBackend.borderRadius
-                                                buttonIcon: modelData.icon || ""
-                                                iconFontSize: s(modelData.iconFontSize || 16)
-                                                accentColor: redactorMode.resolveThemeColor(modelData.accentColor || "surface0")
-                                                textColor: redactorMode.resolveThemeColor(modelData.textColor || "mauve")
-                                                onClicked: redactorMode.handleAdditionalAction(modelData.action, widgetProxy.wIndex, widgetProxy.wId, widgetProxy)
+                                            model: WidgetRegistry.additionalSettings(widgetProxy.wType, "bottom", widgetProxy.wVariant)
+                                            delegate: Loader {
+                                                id: settingLoaderBottom
+                                                Layout.alignment: Qt.AlignVCenter
+
+                                                readonly property var currentSetting: modelData
+                                                readonly property var currentProxy: widgetProxy
+                                                readonly property var currentModel: (redactorMode.activeWidgetsModel && widgetProxy.wIndex >= 0 && widgetProxy.wIndex < redactorMode.activeWidgetsModel.count) ? redactorMode.activeWidgetsModel.get(widgetProxy.wIndex) : null
+                                                readonly property var currentFace: preview.item
+
+                                                sourceComponent: {
+                                                    if (modelData.component) return modelData.component;
+                                                    if (modelData.sourceComponent) return modelData.sourceComponent;
+                                                    if (modelData.source || modelData.file) return null;
+                                                    return defaultAdditionalButtonComponent;
+                                                }
+                                                source: {
+                                                    if (modelData.component || modelData.sourceComponent) return "";
+                                                    if (modelData.source) return Qt.resolvedUrl(modelData.source);
+                                                    if (modelData.file) return Qt.resolvedUrl(modelData.file);
+                                                    return "";
+                                                }
+
+                                                function setupControl() {
+                                                    if (!item) return;
+                                                    try { if (item.settingData !== undefined) item.settingData = currentSetting; } catch (e) {}
+                                                    try { if (item.typeData !== undefined) item.typeData = WidgetRegistry.types[widgetProxy.wType]; } catch (e) {}
+                                                    try { if (item.redactor !== undefined) item.redactor = redactorMode; } catch (e) {}
+                                                    try { if (item.proxy !== undefined) item.proxy = currentProxy; } catch (e) {}
+                                                    try { if (item.widgetProxy !== undefined) item.widgetProxy = currentProxy; } catch (e) {}
+                                                    try { if (item.widgetData !== undefined) item.widgetData = currentModel; } catch (e) {}
+                                                    try { if (item.item !== undefined) item.item = currentFace; } catch (e) {}
+                                                    try { if (item.widget !== undefined) item.widget = currentFace || currentProxy; } catch (e) {}
+                                                    try { if (item.targetWidget !== undefined) item.targetWidget = currentFace || currentProxy; } catch (e) {}
+                                                    try { if (item.activeWidgetsModel !== undefined) item.activeWidgetsModel = redactorMode.activeWidgetsModel; } catch (e) {}
+                                                }
+
+                                                onLoaded: setupControl()
+
+                                                Connections {
+                                                    target: preview
+                                                    function onItemChanged() {
+                                                        settingLoaderBottom.setupControl();
+                                                    }
+                                                }
+
+                                                Connections {
+                                                    target: widgetProxy
+                                                    function onWIndexChanged() {
+                                                        settingLoaderBottom.setupControl();
+                                                    }
+                                                    function onWVariantChanged() {
+                                                        settingLoaderBottom.setupControl();
+                                                    }
+                                                }
                                             }
                                         }
 
@@ -1852,7 +2085,7 @@ Scope {
 
                     Item {
                         anchors.centerIn: workspaceArea
-                        visible: redactorMode.isReady && activeWidgetsModel.count === 0
+                        visible: redactorMode.isReady && (redactorMode.activeWidgetsModel ? redactorMode.activeWidgetsModel.count === 0 : true)
                         width: s(400)
                         height: s(100)
 
@@ -1909,7 +2142,7 @@ Scope {
                                     rot = ((Math.round(rot) % 360) + 360) % 360;
                                     let imgPath = item.wImagePath || item.imagePath || item.path || "";
 
-                                    activeWidgetsModel.append({
+                                    let entry = {
                                         wType: type,
                                         wVariant: variant,
                                         wX: item.wX !== undefined ? parseFloat(item.wX) : 100,
@@ -1920,7 +2153,15 @@ Scope {
                                         wRotation: rot,
                                         wImagePath: imgPath,
                                         wId: String(item.wId || item.id || ("w_" + Date.now() + "_" + i))
-                                    });
+                                    };
+
+                                    for (let key in item) {
+                                        if (entry[key] === undefined && !WidgetRegistry.standardKeys.includes(key)) {
+                                            entry[key] = item[key];
+                                        }
+                                    }
+
+                                    activeWidgetsModel.append(entry);
                                 }
                             } catch (e) {}
                         }
@@ -1969,7 +2210,7 @@ Scope {
                         anchors.horizontalCenter: parent.horizontalCenter
                         z: 200000
 
-                        opacity: (activeWidgetsModel.count === 0 || redactorMode.selectedId === "" || !redactorMode.toolbarObscured) ? 1.0 : 0.0
+                        opacity: (!redactorMode.activeWidgetsModel || redactorMode.activeWidgetsModel.count === 0 || redactorMode.selectedId === "" || !redactorMode.toolbarObscured) ? 1.0 : 0.0
                         visible: opacity > 0
                         enabled: opacity > 0
                         Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
@@ -2036,7 +2277,7 @@ Scope {
                                     accentColor: ThemeBackend.surface0
                                     textColor: ThemeBackend.text
                                     Layout.alignment: Qt.AlignVCenter
-                                    visible: activeWidgetsModel.count > 0
+                                    visible: redactorMode.activeWidgetsModel ? (redactorMode.activeWidgetsModel.count > 0) : false
                                     iconOffsetX: -1
                                     onClicked: redactorMode.removeAllWidgets()
                                 }
@@ -2071,11 +2312,14 @@ Scope {
                             property string targetWidgetId: ""
 
                             onImageSelected: (filePath, fileName) => {
+                                let model = redactorMode.activeWidgetsModel;
                                 if (targetWidgetIndex >= 0 && targetWidgetId !== "") {
-                                    for (let i = 0; i < activeWidgetsModel.count; i++) {
-                                        if (String(activeWidgetsModel.get(i).wId) === targetWidgetId) {
-                                            activeWidgetsModel.setProperty(i, "wImagePath", filePath);
-                                            break;
+                                    if (model) {
+                                        for (let i = 0; i < model.count; i++) {
+                                            if (String(model.get(i).wId) === targetWidgetId) {
+                                                model.setProperty(i, "wImagePath", filePath);
+                                                break;
+                                            }
                                         }
                                     }
                                     WidgetSync.setImagePath(redactorWindow.safeMonitorName, targetWidgetId, filePath);
@@ -2099,18 +2343,20 @@ Scope {
 
                                     let defVar = WidgetRegistry.defaultVariant("image");
 
-                                    activeWidgetsModel.append({
-                                        "wType": "image",
-                                        "wVariant": defVar,
-                                        "wX": spawnX,
-                                        "wY": spawnY,
-                                        "wWidth": defW,
-                                        "wHeight": defH,
-                                        "wOpacity": 1.0,
-                                        "wRotation": 0,
-                                        "wImagePath": filePath,
-                                        "wId": newId
-                                    });
+                                    if (model) {
+                                        model.append({
+                                            "wType": "image",
+                                            "wVariant": defVar,
+                                            "wX": spawnX,
+                                            "wY": spawnY,
+                                            "wWidth": defW,
+                                            "wHeight": defH,
+                                            "wOpacity": 1.0,
+                                            "wRotation": 0,
+                                            "wImagePath": filePath,
+                                            "wId": newId
+                                        });
+                                    }
 
                                     redactorMode.topZ += 1;
                                     redactorMode.selectedId = newId;

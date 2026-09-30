@@ -18,6 +18,30 @@ PanelWindow {
     property real wOpacity: 1.0
     property real wRotation: 0
 
+    property var customProps: ({})
+
+    function applyCustomProps() {
+        let it = faceLoader.item;
+        if (!it || !customProps) return;
+        let ignoredProps = [
+            "objectName", "destroyed", "deleteLater", "parent", "data",
+            "resources", "children", "visible", "enabled", "x", "y", "z",
+            "width", "height", "opacity", "rotation", "scale"
+        ];
+        for (let k in customProps) {
+            if (!k || typeof k !== "string") continue;
+            if (k.endsWith("Changed") || k.startsWith("on") || typeof customProps[k] === "function" || customProps[k] === undefined) continue;
+            if (ignoredProps.includes(k)) continue;
+            try {
+                if (it[k] !== undefined && it[k] !== customProps[k]) {
+                    it[k] = customProps[k];
+                }
+            } catch (e) {}
+        }
+    }
+    
+    onCustomPropsChanged: applyCustomProps()
+
     property bool isRedacting: false
     property bool initialized: false
 
@@ -135,19 +159,22 @@ PanelWindow {
         Behavior on rotation { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
         onLoaded: {
             if (item) {
-                if (item.imagePath !== undefined) {
-                    item.imagePath = Qt.binding(() => root.wImagePath);
-                }
-                if (item.wImagePath !== undefined) {
-                    item.wImagePath = Qt.binding(() => root.wImagePath);
-                }
-                if (item.path !== undefined) {
-                    item.path = Qt.binding(() => root.wImagePath);
-                }
-                if (item.source !== undefined && typeof item.source === "string") {
-                    item.source = Qt.binding(() => root.wImagePath);
-                }
+                try {
+                    if (item.imagePath !== undefined) {
+                        item.imagePath = Qt.binding(() => root.wImagePath);
+                    }
+                    if (item.wImagePath !== undefined) {
+                        item.wImagePath = Qt.binding(() => root.wImagePath);
+                    }
+                    if (item.path !== undefined) {
+                        item.path = Qt.binding(() => root.wImagePath);
+                    }
+                    if (item.source !== undefined && typeof item.source === "string") {
+                        item.source = Qt.binding(() => root.wImagePath);
+                    }
+                } catch (e) {}
             }
+            root.applyCustomProps();
             root.updateEffectiveSize();
         }
     }
