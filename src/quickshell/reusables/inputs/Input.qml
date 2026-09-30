@@ -10,6 +10,8 @@ Item {
     implicitWidth: 180
     implicitHeight: 32
 
+    readonly property var currentWindow: Window.window
+
     property color baseColor: "#313244"
     property color accentColor: "#89b4fa"
     property color textColor: "#cdd6f4"
@@ -76,6 +78,26 @@ Item {
     signal cleared()
     signal clicked()
     signal triggered()
+
+    Item {
+        parent: root.currentWindow ? root.currentWindow.contentItem : null
+        width: parent ? parent.width : 0
+        height: parent ? parent.height : 0
+        visible: root.hasFocus
+
+        TapHandler {
+            acceptedButtons: Qt.AllButtons
+            onTapped: function(eventPoint) {
+                let pt = eventPoint ? eventPoint.scenePosition : point.scenePosition;
+                let px = pt ? pt.x : 0;
+                let py = pt ? pt.y : 0;
+                let pos = root.mapFromItem(null, px, py);
+                if (pos.x < 0 || pos.x > root.width || pos.y < 0 || pos.y > root.height) {
+                    innerInput.focus = false;
+                }
+            }
+        }
+    }
 
     function copyToClipboard(str) {
         if (!str || str.length === 0) return;
