@@ -1,3 +1,19 @@
+### 2.2.2
+
+- fix: ensure easyeffects isn't dying with the ssystem restart
+- fix: update the missing properties in the widgetsync
+- chore: update qmldir file
+- perf: replace the hardcoded lyrics with a lyricsview in the musicpopup
+- feat: add support for custom propertes to the widget redactor
+- feat: new face lyrics simple widget for music, with configurable size and layout
+- fix: make sure lyrics don't stale and update properly on lyrics change
+- fix: make input.qml lose focus when clicked outside
+- refactor: separate the wavy seek bar and the lyrics view into reusables
+- fix: make the hashes for song previews unique to prevent different players to cache wrong thumbnails to a song
+- fix(equalizer): write the preset where EasyEffects 8 reads it, atomically (#338)
+- perf: optimize the canvas animation in the musicpopup
+- style: make sure the handle doesn't faint in the musicpopup
+
 ### 2.2.1
 
 - feat: add a on-hover caffein duration in the systempanel
