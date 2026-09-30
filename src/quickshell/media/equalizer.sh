@@ -4,7 +4,13 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../scripts/caching.sh"
 qs_ensure_cache "music"
 
 STATE_FILE="$QS_RUN_MUSIC/eq_state.json"
-PRESET_DIR="$HOME/.config/easyeffects/output"
+# EasyEffects 7+ stores output presets under XDG_DATA_HOME ($HOME/.local/share
+# by default). The old ~/.config/easyeffects/output path is not simply ignored:
+# every `easyeffects -l ...` launch makes EE "migrate" it — copy the files into
+# the real directory and move the old directory to the trash (see
+# presets_directory_manager.cpp). Writing there also races with the preset
+# reload that the same launch triggers.
+PRESET_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/easyeffects/output"
 PRESET_NAME="live_eq"
 PRESET_FILE="$PRESET_DIR/${PRESET_NAME}.json"
 
@@ -36,7 +42,7 @@ try:
     print(json.dumps(preset, indent=4))
 except:
     sys.exit(1)
-" "$vals" > "$PRESET_FILE"
+" "$vals" > "$PRESET_FILE.tmp.$$" && mv -f "$PRESET_FILE.tmp.$$" "$PRESET_FILE" || rm -f "$PRESET_FILE.tmp.$$"
 
     easyeffects -l "$PRESET_NAME" >/dev/null 2>&1 &
 }
