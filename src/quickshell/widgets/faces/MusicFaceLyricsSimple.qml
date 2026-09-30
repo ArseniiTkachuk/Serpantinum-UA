@@ -104,4 +104,33 @@ Item {
             }
         }
     }
+
+    Text {
+        anchors.centerIn: parent
+        visible: !(Lyrics.isMediaActive && Lyrics.hasLyrics)
+        text: {
+            if (typeof I18n !== "undefined") {
+                if (!Lyrics.isMediaActive) return I18n.t("music.nothing_playing");
+                if (Lyrics.loading) return I18n.t("music.searching_lyrics");
+                return I18n.t("music.no_lyrics");
+            }
+            if (!Lyrics.isMediaActive) return "Nothing is playing";
+            if (Lyrics.loading) return "Searching lyrics...";
+            return "No lyrics available";
+        }
+        font.family: (typeof ThemeBackend !== "undefined" && ThemeBackend.fontFamily) ? ThemeBackend.fontFamily : "sans-serif"
+        font.weight: Font.DemiBold
+        font.pixelSize: Scaler.s(12)
+        color: (typeof ThemeBackend !== "undefined" && ThemeBackend.subtext0) ? ThemeBackend.subtext0 : "#a6adc8"
+
+        layer.enabled: true
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: "#000000"
+            shadowVerticalOffset: Scaler.s(1.5)
+            shadowHorizontalOffset: 0
+            shadowBlur: 0.35
+            shadowOpacity: 0.55
+        }
+    }
 }
