@@ -10,10 +10,194 @@ Rectangle {
 
     property var rootObj: null
 
+    readonly property var effectiveRootObj: {
+        if (rootObj) return rootObj;
+        let p = root.parent;
+        while (p) {
+            if (p.rootObj) return p.rootObj;
+            if (p.isGuidePopup) return p;
+            p = p.parent;
+        }
+        return null;
+    }
+
     function s(val) {
-        let dummy = rootObj;
+        let dummy = effectiveRootObj;
         return (dummy && typeof dummy.s === "function") ? dummy.s(val) : val;
     }
+
+    property string settingId: ""
+    property string searchTab: ""
+    property string searchSubTab: ""
+    property string searchKeywords: ""
+    property bool searchable: true
+
+    readonly property string effectiveSettingId: {
+        if (settingId && settingId !== "") return settingId;
+        if (title && title !== "") {
+            return title.toLowerCase().replace(/[^a-z0-9_]/g, "_");
+        }
+        return "";
+    }
+
+    property real highlightFlash: 0.0
+    property int handledHighlightToken: -1
+
+    function ensureVisibleInFlickable() {
+        let p = root.parent;
+        let flick = null;
+        while (p) {
+            if (p.contentY !== undefined && p.contentHeight !== undefined) {
+                flick = p;
+                break;
+            }
+            p = p.parent;
+        }
+        if (flick) {
+            let targetPos = root.mapToItem(flick.contentItem, 0, 0);
+            if (targetPos) {
+                let viewTop = flick.contentY;
+                let viewBottom = flick.contentY + flick.height;
+                if (targetPos.y < viewTop || targetPos.y + root.height > viewBottom) {
+                    flick.contentY = Math.max(0, Math.min(targetPos.y - flick.height / 2 + root.height / 2, flick.contentHeight - flick.height));
+                }
+            }
+        }
+    }
+
+    function triggerHighlightAnimation() {
+        highlightAnimation.restart();
+        root.ensureVisibleInFlickable();
+    }
+
+    function checkHighlight() {
+        let r = effectiveRootObj;
+        if (!r) return;
+        if (!root.visible) return;
+        if (r.highlightToken === root.handledHighlightToken) return;
+        if (r.highlightedSettingId && (r.highlightedSettingId === root.effectiveSettingId || r.highlightedSettingId === root.settingId)) {
+            root.handledHighlightToken = r.highlightToken;
+            r.highlightedSettingId = "";
+            highlightDelayTimer.restart();
+        }
+    }
+
+    Connections {
+        target: root.effectiveRootObj
+        ignoreUnknownSignals: true
+        function onHighlightTokenChanged() {
+            root.checkHighlight();
+        }
+    }
+
+    onVisibleChanged: {
+        if (visible) {
+            root.checkHighlight();
+        }
+    }
+
+    Timer {
+        id: highlightDelayTimer
+        interval: 80
+        repeat: false
+        onTriggered: root.triggerHighlightAnimation()
+    }
+
+    SequentialAnimation {
+        id: highlightAnimation
+        NumberAnimation { target: root; property: "highlightFlash"; from: 0.0; to: 1.0; duration: 400; easing.type: Easing.OutCubic }
+        PauseAnimation { duration: 1500 }
+        NumberAnimation { target: root; property: "highlightFlash"; from: 1.0; to: 0.0; duration: 900; easing.type: Easing.InOutSine }
+    }
+
+    function resolveTabInfo() {
+        let tab = searchTab;
+        let subtab = searchSubTab;
+
+        if (tab !== "" && subtab !== "") {
+            return { tab: tab, subtab: subtab };
+        }
+
+        let p = root.parent;
+        let targetTabIdx = -1;
+        let targetSubTabIdx = -1;
+
+        while (p) {
+            if (targetSubTabIdx === -1 && p.subTabIndex !== undefined) {
+                targetSubTabIdx = p.subTabIndex;
+            }
+            if (targetTabIdx === -1 && p.tabIndex !== undefined) {
+                targetTabIdx = p.tabIndex;
+            }
+            p = p.parent;
+        }
+
+        let r = effectiveRootObj;
+        if (r && r.tabsModel && targetTabIdx >= 0 && targetTabIdx < r.tabsModel.length) {
+            let tModel = r.tabsModel[targetTabIdx];
+            if (tab === "") {
+                tab = tModel.key || tModel.id || "";
+            }
+            if (subtab === "" && tModel.subtabs && targetSubTabIdx >= 0 && targetSubTabIdx < tModel.subtabs.length) {
+                subtab = tModel.subtabs[targetSubTabIdx].key || tModel.subtabs[targetSubTabIdx].id || "";
+            }
+        }
+
+        return { tab: tab, subtab: subtab };
+    }
+
+    function registerWithSearch() {
+        let r = effectiveRootObj;
+        if (!r || typeof r.registerSearchItem !== "function") return;
+        if (!root.searchable || !root.title || root.title === "") {
+            if (root.effectiveSettingId !== "") {
+                r.unregisterSearchItem(root.effectiveSettingId);
+            }
+            return;
+        }
+
+        let info = resolveTabInfo();
+        r.registerSearchItem({
+            id: root.effectiveSettingId,
+            title: root.title,
+            desc: root.description,
+            description: root.description,
+            tab: info.tab,
+            subtab: info.subtab,
+            icon: root.icon,
+            keywords: root.searchKeywords,
+            target: root
+        });
+    }
+
+    function unregisterFromSearch() {
+        let r = effectiveRootObj;
+        if (!r || typeof r.unregisterSearchItem !== "function") return;
+        if (root.effectiveSettingId !== "") {
+            r.unregisterSearchItem(root.effectiveSettingId);
+        }
+    }
+
+    Timer {
+        id: searchRegTimer
+        interval: 10
+        repeat: false
+        onTriggered: root.registerWithSearch()
+    }
+
+    Component.onCompleted: {
+        searchRegTimer.restart();
+        checkHighlight();
+    }
+    Component.onDestruction: unregisterFromSearch()
+
+    onTitleChanged: searchRegTimer.restart()
+    onDescriptionChanged: searchRegTimer.restart()
+    onIconChanged: searchRegTimer.restart()
+    onSearchableChanged: searchRegTimer.restart()
+    onSearchTabChanged: searchRegTimer.restart()
+    onSearchSubTabChanged: searchRegTimer.restart()
+    onSettingIdChanged: searchRegTimer.restart()
 
     property real cornerRadius: ThemeBackend.borderRadius
     property color baseColor: Qt.alpha(ThemeBackend.surface0, 0.4)
@@ -69,7 +253,13 @@ Rectangle {
     property alias bottomContent: bottomCol.data
 
     radius: root.cornerRadius
-    color: (root.clickable && cardMa.containsMouse) ? root.hoverColor : root.baseColor
+    color: {
+        let base = (root.clickable && cardMa.containsMouse) ? root.hoverColor : root.baseColor;
+        if (root.highlightFlash > 0.001) {
+            return Qt.tint(base, Qt.rgba(ThemeBackend.mauve.r, ThemeBackend.mauve.g, ThemeBackend.mauve.b, root.highlightFlash * 0.12));
+        }
+        return base;
+    }
     border.color: root.borderColor
     border.width: root.borderWidth
     clip: true

@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import "../../"
 import "../../reusables"
+import "../../reusables/guide"
 
 Item {
     id: barTabRoot
@@ -1105,11 +1106,12 @@ Item {
                 }
             }
 
-            SettingsRow {
+            SettingsGroup {
                 rootObj: barTabRoot.rootObj
                 icon: "󰏘"
                 title: I18n.t("guide.bar.style.title")
                 description: I18n.t("guide.bar.style.desc")
+                expanded: barTabRoot.barStyle === "solid" || barTabRoot.barStyle === "fill"
 
                 Switch {
                     Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
@@ -1131,44 +1133,29 @@ Item {
                         barTabRoot.updateBarSettings();
                     }
                 }
-            }
 
-            Item {
-                id: distinctPillsSectionWrapper
-                Layout.fillWidth: true
-                property bool isOpen: barTabRoot.barStyle === "solid" || barTabRoot.barStyle === "fill"
-                clip: true
-                visible: implicitHeight > 0
-                opacity: isOpen ? 1.0 : 0.0
-                implicitHeight: isOpen ? distinctPillsInnerBox.implicitHeight : 0
+                subSettings: [
+                    SettingsRow {
+                        rootObj: barTabRoot.rootObj
+                        icon: "󰍜"
+                        title: I18n.t("guide.bar.distinct_pills.title")
+                        description: I18n.t("guide.bar.distinct_pills.desc")
 
-                Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-
-                SettingsRow {
-                    id: distinctPillsInnerBox
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    rootObj: barTabRoot.rootObj
-                    icon: "󰍜"
-                    title: I18n.t("guide.bar.distinct_pills.title")
-                    description: I18n.t("guide.bar.distinct_pills.desc")
-
-                    Toggle {
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        checked: barTabRoot.distinctPills
-                        accentColor: ThemeBackend.mauve
-                        baseColor: ThemeBackend.surface1
-                        handleColor: ThemeBackend.crust
-                        handleOffColor: ThemeBackend.text
-                        onToggled: function(c) {
-                            barTabRoot.clearPendingGroup();
-                            barTabRoot.distinctPills = c;
-                            barTabRoot.updateBarSettings();
+                        Toggle {
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            checked: barTabRoot.distinctPills
+                            accentColor: ThemeBackend.mauve
+                            baseColor: ThemeBackend.surface1
+                            handleColor: ThemeBackend.crust
+                            handleOffColor: ThemeBackend.text
+                            onToggled: function(c) {
+                                barTabRoot.clearPendingGroup();
+                                barTabRoot.distinctPills = c;
+                                barTabRoot.updateBarSettings();
+                            }
                         }
                     }
-                }
+                ]
             }
 
             Item {
@@ -1284,11 +1271,12 @@ Item {
                 }
             }
 
-            SettingsRow {
+            SettingsGroup {
                 rootObj: barTabRoot.rootObj
                 icon: "󰈉"
                 title: I18n.t("guide.bar.autohide.title")
                 description: I18n.t("guide.bar.autohide.desc")
+                expanded: barTabRoot.autohide
 
                 Toggle {
                     Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
@@ -1303,61 +1291,46 @@ Item {
                         barTabRoot.updateBarSettings();
                     }
                 }
-            }
 
-            Item {
-                id: timeoutSectionWrapper
-                Layout.fillWidth: true
-                property bool isOpen: barTabRoot.autohide
-                clip: true
-                visible: implicitHeight > 0
-                opacity: isOpen ? 1.0 : 0.0
-                implicitHeight: isOpen ? timeoutInnerBox.implicitHeight : 0
+                subSettings: [
+                    SettingsRow {
+                        rootObj: barTabRoot.rootObj
+                        icon: "󰔛"
+                        title: I18n.t("guide.bar.timeout.title")
+                        description: I18n.t("guide.bar.timeout.desc")
 
-                Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-
-                SettingsRow {
-                    id: timeoutInnerBox
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    rootObj: barTabRoot.rootObj
-                    icon: "󰔛"
-                    title: I18n.t("guide.bar.timeout.title")
-                    description: I18n.t("guide.bar.timeout.desc")
-
-                    Draggable {
-                        id: timeoutSlider
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        Layout.rightMargin: rootObj.s(8)
-                        implicitWidth: rootObj.s(220)
-                        implicitHeight: rootObj.s(18)
-                        from: 250
-                        to: 10000
-                        stepSize: 50
-                        defaultValue: 1000
-                        showValueBubble: true
-                        valueFormatter: function(v) { return Math.round(v) + " ms" }
-                        value: barTabRoot.autohideTimeout
-                        backgroundColor: ThemeBackend.surface0
-                        accentColor: ThemeBackend.mauve
-                        handleColor: ThemeBackend.text
-                        handleBorderColor: ThemeBackend.mantle
-                        onMoved: function(val) {
-                            barTabRoot.clearPendingGroup();
-                            let rounded = Math.round(val);
-                            if (barTabRoot.autohideTimeout !== rounded) {
-                                barTabRoot.autohideTimeout = rounded;
-                                barWidthDebounceTimer.restart();
+                        Draggable {
+                            id: timeoutSlider
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            Layout.rightMargin: rootObj.s(8)
+                            implicitWidth: rootObj.s(220)
+                            implicitHeight: rootObj.s(18)
+                            from: 250
+                            to: 10000
+                            stepSize: 50
+                            defaultValue: 1000
+                            showValueBubble: true
+                            valueFormatter: function(v) { return Math.round(v) + " ms" }
+                            value: barTabRoot.autohideTimeout
+                            backgroundColor: ThemeBackend.surface0
+                            accentColor: ThemeBackend.mauve
+                            handleColor: ThemeBackend.text
+                            handleBorderColor: ThemeBackend.mantle
+                            onMoved: function(val) {
+                                barTabRoot.clearPendingGroup();
+                                let rounded = Math.round(val);
+                                if (barTabRoot.autohideTimeout !== rounded) {
+                                    barTabRoot.autohideTimeout = rounded;
+                                    barWidthDebounceTimer.restart();
+                                }
+                            }
+                            onDragFinished: {
+                                barWidthDebounceTimer.stop();
+                                barTabRoot.updateBarSettings();
                             }
                         }
-                        onDragFinished: {
-                            barWidthDebounceTimer.stop();
-                            barTabRoot.updateBarSettings();
-                        }
                     }
-                }
+                ]
             }
 
             Rectangle {
