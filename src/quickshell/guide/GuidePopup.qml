@@ -15,6 +15,8 @@ Item {
 
     readonly property bool isGuidePopup: true
 
+    signal requestLoadAll()
+
     property int activationCounter: 0
     property var appPaths: Caching
     property int currentTab: 0
@@ -180,60 +182,64 @@ Item {
         return { tabIndex: tabIdx, subIndex: subIdx };
     }
 
-    function registerSearchItem(entry) {
-        if (!entry) return;
+    function normalizeSearchEntry(entry) {
+        if (!entry) return null;
         let id = String(entry.id || entry.settingId || entry.title || "").trim();
-        if (!id) return;
-        let map = Object.assign({}, searchIndexMap);
-        map[id] = {
+        if (!id) return null;
+        let tab = String(entry.tab || entry.searchTab || "").trim();
+        let subtab = String(entry.subtab || entry.searchSubTab || "").trim();
+        let key = String(entry.key || (tab + "|" + subtab + "|" + id)).trim();
+        return {
+            key: key,
             id: id,
             title: String(entry.title || "").trim(),
             desc: String(entry.desc || entry.description || "").trim(),
             description: String(entry.description || entry.desc || "").trim(),
-            tab: String(entry.tab || entry.searchTab || "").trim(),
-            subtab: String(entry.subtab || entry.searchSubTab || "").trim(),
+            tab: tab,
+            subtab: subtab,
             icon: String(entry.icon || "󰒓").trim(),
             keywords: entry.keywords || entry.searchKeywords || "",
             target: entry.target || null,
             onSelected: entry.onSelected || null
         };
-        searchIndexMap = map;
-        rebuildSearchIndex();
+    }
+
+    function registerSearchItem(entry) {
+        let item = normalizeSearchEntry(entry);
+        if (!item) return;
+        searchIndexMap[item.key] = item;
+        searchRebuildTimer.restart();
     }
 
     function registerSearchItems(items) {
         if (!Array.isArray(items)) return;
-        let map = Object.assign({}, searchIndexMap);
+        let changed = false;
         for (let i = 0; i < items.length; i++) {
-            let entry = items[i];
-            if (!entry) continue;
-            let id = String(entry.id || entry.settingId || entry.title || "").trim();
-            if (!id) continue;
-            map[id] = {
-                id: id,
-                title: String(entry.title || "").trim(),
-                desc: String(entry.desc || entry.description || "").trim(),
-                description: String(entry.description || entry.desc || "").trim(),
-                tab: String(entry.tab || entry.searchTab || "").trim(),
-                subtab: String(entry.subtab || entry.searchSubTab || "").trim(),
-                icon: String(entry.icon || "󰒓").trim(),
-                keywords: entry.keywords || entry.searchKeywords || "",
-                target: entry.target || null,
-                onSelected: entry.onSelected || null
-            };
+            let item = normalizeSearchEntry(items[i]);
+            if (item) {
+                searchIndexMap[item.key] = item;
+                changed = true;
+            }
         }
-        searchIndexMap = map;
-        rebuildSearchIndex();
+        if (changed) {
+            searchRebuildTimer.restart();
+        }
     }
 
-    function unregisterSearchItem(id) {
-        if (!id) return;
-        let key = String(id).trim();
+    function unregisterSearchItem(idOrKey) {
+        if (!idOrKey) return;
+        let key = String(idOrKey).trim();
         if (searchIndexMap[key]) {
-            let map = Object.assign({}, searchIndexMap);
-            delete map[key];
-            searchIndexMap = map;
-            rebuildSearchIndex();
+            delete searchIndexMap[key];
+            searchRebuildTimer.restart();
+            return;
+        }
+        for (let k in searchIndexMap) {
+            if (searchIndexMap[k] && searchIndexMap[k].id === key) {
+                delete searchIndexMap[k];
+                searchRebuildTimer.restart();
+                break;
+            }
         }
     }
 
@@ -416,6 +422,9 @@ Item {
     }
 
     function openSearch() {
+        root.requestLoadAll();
+        searchRebuildTimer.stop();
+        rebuildSearchIndex();
         searchClearTimer.stop();
         searchActive = true;
         searchSelectedIndex = -1;
@@ -645,6 +654,13 @@ Item {
         }
     }
 
+    Timer {
+        id: searchRebuildTimer
+        interval: 30
+        repeat: false
+        onTriggered: root.rebuildSearchIndex()
+    }
+
     onVisibleChanged: {
         if (visible) {
             forceActiveFocus();
@@ -655,6 +671,8 @@ Item {
             closeSequence.stop();
             highlightTimer.stop();
             searchClearTimer.stop();
+            searchRebuildTimer.stop();
+            rebuildSearchIndex();
             pendingHighlightItem = null;
             introBase = 0.0;
             introSidebar = 0.0;
@@ -718,7 +736,7 @@ Item {
     }
 
     Shortcut {
-        sequence: StandardKey.Find
+        sequences: [StandardKey.Find]
         onActivated: root.openSearch()
     }
 
@@ -1267,6 +1285,7 @@ Item {
                                                         property bool isSelected: root.searchSelectedIndex >= 0 &&
                                                                                   root.searchSelectedIndex < root.flatSearchResults.length &&
                                                                                   (root.flatSearchResults[root.searchSelectedIndex] === directItemRow.modelData ||
+                                                                                   (root.flatSearchResults[root.searchSelectedIndex] && root.flatSearchResults[root.searchSelectedIndex].key === directItemRow.modelData.key) ||
                                                                                    (root.flatSearchResults[root.searchSelectedIndex] && root.flatSearchResults[root.searchSelectedIndex].id === directItemRow.modelData.id))
 
                                                         onIsSelectedChanged: {
@@ -1459,6 +1478,7 @@ Item {
                                                                         property bool isSelected: root.searchSelectedIndex >= 0 &&
                                                                                                   root.searchSelectedIndex < root.flatSearchResults.length &&
                                                                                                   (root.flatSearchResults[root.searchSelectedIndex] === subItemRow.modelData ||
+                                                                                                   (root.flatSearchResults[root.searchSelectedIndex] && root.flatSearchResults[root.searchSelectedIndex].key === subItemRow.modelData.key) ||
                                                                                                    (root.flatSearchResults[root.searchSelectedIndex] && root.flatSearchResults[root.searchSelectedIndex].id === subItemRow.modelData.id))
 
                                                                         onIsSelectedChanged: {
@@ -2925,8 +2945,17 @@ Item {
                                 }
                             }
 
+                            onStatusChanged: {
+                                if (status === Loader.Error) {
+                                    console.warn("Guide tab failed to load:", source);
+                                }
+                            }
+
                             onLoaded: {
                                 root.registerTabSearchItems(item);
+                                Qt.callLater(function() {
+                                    root.registerTabSearchItems(singleTabLoader.item);
+                                });
                             }
 
                             Component.onCompleted: ensureLoaded()
@@ -2935,6 +2964,20 @@ Item {
                                 target: root
                                 function onCurrentTabChanged() {
                                     if (root.currentTab === tabContentWrapper.parentTabIndex && !tabContentWrapper.hasSubtabs) singleTabLoader.ensureLoaded();
+                                }
+                                function onRequestLoadAll() {
+                                    singleTabLoader.ensureLoaded();
+                                }
+                            }
+
+                            Connections {
+                                target: singleTabLoader.item
+                                ignoreUnknownSignals: true
+                                function onSearchItemsChanged() {
+                                    root.registerTabSearchItems(singleTabLoader.item);
+                                }
+                                function onSearchEntriesChanged() {
+                                    root.registerTabSearchItems(singleTabLoader.item);
                                 }
                             }
                         }
@@ -2956,20 +2999,28 @@ Item {
                                     if (status === Loader.Null && subData.file) {
                                         setSource(subData.file, {
                                             "rootObj": root,
-                                            "tabIndex": tabContentWrapper.parentTabIndex,
-                                            "subTabIndex": subIndex
+                                            "tabIndex": tabContentWrapper.parentTabIndex
                                         });
-                                        if (item && "subTabIndex" in item) {
+                                        if (item && item.subTabIndex !== undefined) {
                                             item.subTabIndex = subIndex;
                                         }
                                     }
                                 }
 
+                                onStatusChanged: {
+                                    if (status === Loader.Error) {
+                                        console.warn("Guide tab failed to load:", source);
+                                    }
+                                }
+
                                 onLoaded: {
-                                    if (item && "subTabIndex" in item) {
+                                    if (item && item.subTabIndex !== undefined) {
                                         item.subTabIndex = subIndex;
                                     }
                                     root.registerTabSearchItems(item);
+                                    Qt.callLater(function() {
+                                        root.registerTabSearchItems(subTabLoader.item);
+                                    });
                                 }
 
                                 Component.onCompleted: ensureLoaded()
@@ -2981,6 +3032,20 @@ Item {
                                     }
                                     function onCurrentSubTabChanged() {
                                         if (root.currentTab === tabContentWrapper.parentTabIndex && root.currentSubTab === subIndex) subTabLoader.ensureLoaded();
+                                    }
+                                    function onRequestLoadAll() {
+                                        subTabLoader.ensureLoaded();
+                                    }
+                                }
+
+                                Connections {
+                                    target: subTabLoader.item
+                                    ignoreUnknownSignals: true
+                                    function onSearchItemsChanged() {
+                                        root.registerTabSearchItems(subTabLoader.item);
+                                    }
+                                    function onSearchEntriesChanged() {
+                                        root.registerTabSearchItems(subTabLoader.item);
                                     }
                                 }
                             }
