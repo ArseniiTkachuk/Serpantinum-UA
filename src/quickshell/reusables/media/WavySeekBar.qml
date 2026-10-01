@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls
+import QtQuick.Effects
 import "../"
 import "../../"
 
@@ -369,6 +370,16 @@ Item {
         }
         Behavior on color {
             ColorAnimation { duration: 150 }
+        }
+
+        layer.enabled: true
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: "#000000"
+            shadowVerticalOffset: bar.s(1.0)
+            shadowHorizontalOffset: 0
+            shadowBlur: 0.35
+            shadowOpacity: 0.45
         }
     }
 
