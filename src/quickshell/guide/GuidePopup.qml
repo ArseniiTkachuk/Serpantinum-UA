@@ -416,6 +416,26 @@ Item {
         } catch(e) {}
     }
 
+    function ensureTabVisible(idx) {
+        if (!tabsFlickable || idx < 0 || idx >= tabsCol.tabItems.length) return;
+        try {
+            let item = tabsCol.tabItems[idx];
+            if (!item) return;
+            let itemY = item.y;
+            let itemH = item.height;
+            let viewTop = tabsFlickable.contentY;
+            let viewHeight = tabsFlickable.height;
+            let viewBottom = viewTop + viewHeight;
+
+            if (itemY < viewTop) {
+                tabsFlickable.contentY = Math.max(0, itemY - root.s(8));
+            } else if (itemY + itemH > viewBottom) {
+                let maxScroll = Math.max(0, tabsFlickable.contentHeight - viewHeight);
+                tabsFlickable.contentY = Math.min(maxScroll, itemY + itemH - viewHeight + root.s(8));
+            }
+        } catch(e) {}
+    }
+
     function triggerHighlight(settingId) {
         highlightedSettingId = settingId;
         highlightToken++;
@@ -619,6 +639,44 @@ Item {
         Updater.checkUpdate();
     }
 
+    function nextTab() {
+        let parentTab = tabsModel[currentTab];
+        if (parentTab && parentTab.subtabs && parentTab.subtabs.length > 0 && expandedTab === currentTab) {
+            if (currentSubTab < parentTab.subtabs.length - 1) {
+                currentSubTab++;
+                return;
+            }
+        }
+        currentTab = (currentTab + 1) % tabsModel.length;
+        let nextParent = tabsModel[currentTab];
+        if (nextParent && nextParent.subtabs && nextParent.subtabs.length > 0) {
+            expandedTab = currentTab;
+            currentSubTab = 0;
+        } else {
+            expandedTab = -1;
+            currentSubTab = 0;
+        }
+    }
+
+    function prevTab() {
+        let parentTab = tabsModel[currentTab];
+        if (parentTab && parentTab.subtabs && parentTab.subtabs.length > 0 && expandedTab === currentTab) {
+            if (currentSubTab > 0) {
+                currentSubTab--;
+                return;
+            }
+        }
+        currentTab = (currentTab - 1 + tabsModel.length) % tabsModel.length;
+        let prevParent = tabsModel[currentTab];
+        if (prevParent && prevParent.subtabs && prevParent.subtabs.length > 0) {
+            expandedTab = currentTab;
+            currentSubTab = prevParent.subtabs.length - 1;
+        } else {
+            expandedTab = -1;
+            currentSubTab = 0;
+        }
+    }
+
     Timer {
         id: focusTimer
         interval: 50
@@ -697,44 +755,6 @@ Item {
         }
     }
 
-    function nextTab() {
-        let parentTab = tabsModel[currentTab];
-        if (parentTab && parentTab.subtabs && parentTab.subtabs.length > 0 && expandedTab === currentTab) {
-            if (currentSubTab < parentTab.subtabs.length - 1) {
-                currentSubTab++;
-                return;
-            }
-        }
-        currentTab = (currentTab + 1) % tabsModel.length;
-        let nextParent = tabsModel[currentTab];
-        if (nextParent && nextParent.subtabs && nextParent.subtabs.length > 0) {
-            expandedTab = currentTab;
-            currentSubTab = 0;
-        } else {
-            expandedTab = -1;
-            currentSubTab = 0;
-        }
-    }
-
-    function prevTab() {
-        let parentTab = tabsModel[currentTab];
-        if (parentTab && parentTab.subtabs && parentTab.subtabs.length > 0 && expandedTab === currentTab) {
-            if (currentSubTab > 0) {
-                currentSubTab--;
-                return;
-            }
-        }
-        currentTab = (currentTab - 1 + tabsModel.length) % tabsModel.length;
-        let prevParent = tabsModel[currentTab];
-        if (prevParent && prevParent.subtabs && prevParent.subtabs.length > 0) {
-            expandedTab = currentTab;
-            currentSubTab = prevParent.subtabs.length - 1;
-        } else {
-            expandedTab = -1;
-            currentSubTab = 0;
-        }
-    }
-
     Shortcut {
         sequences: [StandardKey.Find]
         onActivated: root.openSearch()
@@ -753,11 +773,29 @@ Item {
         if (root.searchActive) {
             root.navigateSearch(1);
             event.accepted = true;
+        } else {
+            root.nextTab();
+            event.accepted = true;
         }
     }
     Keys.onUpPressed: (event) => {
         if (root.searchActive) {
             root.navigateSearch(-1);
+            event.accepted = true;
+        } else {
+            root.prevTab();
+            event.accepted = true;
+        }
+    }
+    Keys.onLeftPressed: (event) => {
+        if (!root.searchActive) {
+            root.prevTab();
+            event.accepted = true;
+        }
+    }
+    Keys.onRightPressed: (event) => {
+        if (!root.searchActive) {
+            root.nextTab();
             event.accepted = true;
         }
     }
@@ -803,7 +841,10 @@ Item {
         Quickshell.execDetached(["bash", "-c", "echo '" + currentTab + ":" + currentSubTab + "' > '" + Caching.getCacheDir("guide") + "/last_tab.txt'"]);
     }
 
-    onCurrentTabChanged: saveLastTab()
+    onCurrentTabChanged: {
+        saveLastTab();
+        ensureTabVisible(currentTab);
+    }
     onCurrentSubTabChanged: saveLastTab()
 
     FileView {
@@ -1331,11 +1372,8 @@ Item {
                                                                 cornerRadius: root.s(6)
                                                                 buttonIcon: directItemRow.modelData.icon || "󰒓"
                                                                 iconFontSize: root.s(14)
-                                                                accentColor: directItemRow.isSelected ? Qt.alpha(ThemeBackend.crust, 0.15) : ThemeBackend.surface1
-                                                                textColor: directItemRow.isSelected ? ThemeBackend.crust : ThemeBackend.mauve
-
-                                                                Behavior on accentColor { ColorAnimation { duration: 150 } }
-                                                                Behavior on textColor { ColorAnimation { duration: 150 } }
+                                                                accentColor: ThemeBackend.surface0
+                                                                textColor: "#ffffff"
                                                             }
 
                                                             ColumnLayout {
@@ -1524,11 +1562,8 @@ Item {
                                                                                 cornerRadius: root.s(6)
                                                                                 buttonIcon: subItemRow.modelData.icon || "󰒓"
                                                                                 iconFontSize: root.s(14)
-                                                                                accentColor: subItemRow.isSelected ? Qt.alpha(ThemeBackend.crust, 0.15) : ThemeBackend.surface1
-                                                                                textColor: subItemRow.isSelected ? ThemeBackend.crust : ThemeBackend.mauve
-
-                                                                                Behavior on accentColor { ColorAnimation { duration: 150 } }
-                                                                                Behavior on textColor { ColorAnimation { duration: 150 } }
+                                                                                accentColor: ThemeBackend.surface0
+                                                                                textColor: "#ffffff"
                                                                             }
 
                                                                             ColumnLayout {
