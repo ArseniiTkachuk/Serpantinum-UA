@@ -85,14 +85,24 @@ Rectangle {
             property real fillRatio: Math.max(0.0, Math.min(1.0, isNaN(animValue) ? 0.0 : animValue))
             property real fillWidth: width * fillRatio
 
+            property color baseAccentColor: batWidgetRoot.batDynamicColor
+            property color accentColor: batMouseArea.pressed ? Qt.darker(baseAccentColor, 1.15) : (batMouseArea.containsMouse ? Qt.lighter(baseAccentColor, 1.08) : baseAccentColor)
+
             height: sysLayout.pillHeight
             property real targetWidth: batWidgetRoot.isDesktop ? (barWindow ? barWindow.s(batWidgetRoot.isCompact ? 30 : 32) : (batWidgetRoot.isCompact ? 30 : 32)) : (baseContentRow.implicitWidth + (barWindow ? barWindow.s(batWidgetRoot.isCompact ? 16 : 18) : (batWidgetRoot.isCompact ? 16 : 18)))
             width: targetWidth
             Behavior on width { NumberAnimation { duration: 480; easing.type: Easing.OutQuint } }
 
+            scale: batMouseArea.pressed ? 0.94 : (batMouseArea.containsMouse ? 1.04 : 1.0)
+            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+
             radius: Math.max(0, ThemeBackend.borderRadius - (barWindow ? barWindow.s(2) : 2))
-            color: batWidgetRoot.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
-            border.color: batWidgetRoot.isCompact ? ThemeBackend.surface2 : ThemeBackend.surface1
+            property color baseColor: batWidgetRoot.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
+            color: batMouseArea.pressed ? Qt.darker(baseColor, 1.15) : (batMouseArea.containsMouse ? Qt.lighter(baseColor, 1.08) : baseColor)
+            Behavior on color { ColorAnimation { duration: 150 } }
+            property color baseBorderColor: batWidgetRoot.isCompact ? ThemeBackend.surface2 : ThemeBackend.surface1
+            border.color: batMouseArea.containsMouse ? ThemeBackend.surface2 : baseBorderColor
+            Behavior on border.color { ColorAnimation { duration: 150 } }
             border.width: 1
             clip: true
 
@@ -143,8 +153,8 @@ Rectangle {
                     ctx.closePath();
 
                     var grad = ctx.createLinearGradient(0, 0, 0, height);
-                    grad.addColorStop(0, Qt.lighter(batWidgetRoot.batDynamicColor, 1.25).toString());
-                    grad.addColorStop(1, batWidgetRoot.batDynamicColor.toString());
+                    grad.addColorStop(0, Qt.lighter(batPill.accentColor, 1.25).toString());
+                    grad.addColorStop(1, batPill.accentColor.toString());
                     ctx.fillStyle = grad;
                     ctx.globalAlpha = 0.95;
                     ctx.fill();
@@ -157,12 +167,7 @@ Rectangle {
                     function onRadiusChanged() { pillCanvas.requestPaint(); }
                     function onFillRatioChanged() { pillCanvas.requestPaint(); }
                     function onFillWidthChanged() { pillCanvas.requestPaint(); }
-                }
-
-                Connections {
-                    target: batWidgetRoot
-                    enabled: batWidgetRoot.showLayout && batWidgetRoot.moduleActive
-                    function onBatDynamicColorChanged() { pillCanvas.requestPaint(); }
+                    function onAccentColorChanged() { pillCanvas.requestPaint(); }
                 }
             }
 
@@ -227,7 +232,9 @@ Rectangle {
             }
 
             MouseArea {
+                id: batMouseArea
                 anchors.fill: parent
+                hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: Quickshell.execDetached(["bash", "-c", Caching.serpantinumDir + "/scripts/qs_manager.sh toggle system"])
             }

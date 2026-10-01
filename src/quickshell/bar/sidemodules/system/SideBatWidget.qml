@@ -76,13 +76,21 @@ Rectangle {
         width: barWindow ? barWindow.s(sideBatRoot.isCompact ? 26 : 28) : (sideBatRoot.isCompact ? 26 : 28)
         height: barWindow ? barWindow.s(sideBatRoot.isCompact ? 26 : 28) : (sideBatRoot.isCompact ? 26 : 28)
         radius: Math.max(0, ThemeBackend.borderRadius - (barWindow ? barWindow.s(2) : 2))
-        color: sideBatRoot.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
-        border.color: sideBatRoot.isCompact ? ThemeBackend.surface2 : ThemeBackend.surface1
+        property color baseColor: sideBatRoot.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
+        color: batMouseArea.pressed ? Qt.darker(baseColor, 1.15) : (batMouseArea.containsMouse ? Qt.lighter(baseColor, 1.08) : baseColor)
+        Behavior on color { ColorAnimation { duration: 150 } }
+        property color baseBorderColor: sideBatRoot.isCompact ? ThemeBackend.surface2 : ThemeBackend.surface1
+        border.color: batMouseArea.containsMouse ? ThemeBackend.surface2 : baseBorderColor
+        Behavior on border.color { ColorAnimation { duration: 150 } }
         border.width: 1
         clip: true
 
+        scale: batMouseArea.pressed ? 0.94 : (batMouseArea.containsMouse ? 1.04 : 1.0)
+        Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+
         property real value: sideBatRoot.isDesktop ? 0.0 : (UPower.displayDevice.ready ? UPower.displayDevice.percentage : 0.0)
-        property color accentColor: sideBatRoot.batDynamicColor
+        property color baseAccentColor: sideBatRoot.batDynamicColor
+        property color accentColor: batMouseArea.pressed ? Qt.darker(baseAccentColor, 1.15) : (batMouseArea.containsMouse ? Qt.lighter(baseAccentColor, 1.08) : baseAccentColor)
         property bool initAnimTrigger: false
 
         property real animValue: value
@@ -189,7 +197,9 @@ Rectangle {
         }
 
         MouseArea {
+            id: batMouseArea
             anchors.fill: parent
+            hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: Quickshell.execDetached(["bash", "-c", Caching.serpantinumDir + "/scripts/qs_manager.sh toggle system"])
         }
