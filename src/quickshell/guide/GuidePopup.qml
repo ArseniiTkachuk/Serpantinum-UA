@@ -282,7 +282,6 @@ Item {
     }
 
     function rebuildSearchIndex() {
-        console.log(Object.keys(searchIndexMap).join("\n"));
         let list = [];
         for (let k in searchIndexMap) {
             list.push(searchIndexMap[k]);
