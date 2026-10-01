@@ -59,15 +59,6 @@ Rectangle {
     visible: opacity > 0
     Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
 
-    property real globalWavePhase: 0.0
-    NumberAnimation on globalWavePhase {
-        from: 0
-        to: Math.PI * 2
-        duration: sideBatRoot.isCharging ? 1800 : 3600
-        loops: Animation.Infinite
-        running: sideBatRoot.showLayout && sideBatRoot.moduleActive
-    }
-
     Timer {
         running: sideBatRoot.moduleActive && barWindow && barWindow.isStartupReady && barWindow.isDataReady
         interval: 100
@@ -99,9 +90,6 @@ Rectangle {
 
         property real fillRatio: Math.max(0.0, Math.min(1.0, isNaN(animValue) ? 0.0 : animValue))
         property real fillY: height * (1.0 - fillRatio)
-        property real maxWaveAmp: sideBatRoot.isCharging ? (barWindow ? barWindow.s(2.5) : 2.5) : (barWindow ? barWindow.s(0.5) : 0.5)
-        property real waveAmp: (fillRatio < 0.99 && fillRatio > 0.01) ? maxWaveAmp * Math.sin(fillRatio * Math.PI) : 0
-        property real waveCenterOffset: 0.375 * waveAmp * (Math.sin(sideBatRoot.globalWavePhase) - Math.cos(sideBatRoot.globalWavePhase))
 
         Timer {
             running: sideBatRoot.moduleActive && sideBatRoot.showLayout && !batBtn.initAnimTrigger
@@ -146,18 +134,7 @@ Rectangle {
                 ctx.clip();
 
                 ctx.beginPath();
-                ctx.moveTo(0, batBtn.fillY);
-                if (batBtn.waveAmp > 0) {
-                    var cp1y = batBtn.fillY + Math.sin(sideBatRoot.globalWavePhase) * batBtn.waveAmp;
-                    var cp2y = batBtn.fillY + Math.cos(sideBatRoot.globalWavePhase + Math.PI) * batBtn.waveAmp;
-                    ctx.bezierCurveTo(width * 0.33, cp2y, width * 0.66, cp1y, width, batBtn.fillY);
-                    ctx.lineTo(width, height);
-                    ctx.lineTo(0, height);
-                } else {
-                    ctx.lineTo(width, batBtn.fillY);
-                    ctx.lineTo(width, height);
-                    ctx.lineTo(0, height);
-                }
+                ctx.rect(0, batBtn.fillY, width, height - batBtn.fillY);
                 ctx.closePath();
 
                 var grad = ctx.createLinearGradient(0, 0, 0, height);
@@ -170,18 +147,11 @@ Rectangle {
             }
 
             Connections {
-                target: sideBatRoot
-                enabled: (sideBatRoot.showLayout && sideBatRoot.moduleActive) && batBtn.waveAmp > 0
-                function onGlobalWavePhaseChanged() { pillCanvas.requestPaint(); }
-            }
-
-            Connections {
                 target: batBtn
                 enabled: sideBatRoot.showLayout && sideBatRoot.moduleActive
                 function onRadiusChanged() { pillCanvas.requestPaint(); }
                 function onFillRatioChanged() { pillCanvas.requestPaint(); }
                 function onAccentColorChanged() { pillCanvas.requestPaint(); }
-                function onWaveAmpChanged() { pillCanvas.requestPaint(); }
             }
         }
 
@@ -198,7 +168,7 @@ Rectangle {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            height: Math.min(parent.height, Math.max(0, (parent.height * batBtn.fillRatio) - batBtn.waveCenterOffset))
+            height: Math.min(parent.height, Math.max(0, parent.height * batBtn.fillRatio))
             clip: true
             visible: batBtn.fillRatio > 0
 
