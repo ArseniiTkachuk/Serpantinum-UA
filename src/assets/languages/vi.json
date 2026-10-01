@@ -271,7 +271,8 @@
         "save_preset": {
           "title": "Lưu preset"
         },
-        "preset_name_placeholder": "Nhập tên preset..."
+        "preset_name_placeholder": "Nhập tên preset...",
+        "screen_desc": "Cấu hình và chỉnh sửa tiện ích màn hình nền"
       }
     },
     "bar": {
@@ -399,7 +400,8 @@
         "desc": "Thư mục để tìm kiếm hình nền",
         "select_dir": "Chọn thư mục...",
         "select_wallpaper": "Chọn hình nền",
-        "no_wallpaper_selected": "Chưa chọn hình nền nào"
+        "no_wallpaper_selected": "Chưa chọn hình nền nào",
+        "select": "Hình nền"
       }
     },
     "file_picker": {
@@ -1044,7 +1046,8 @@
       "user": "Người dùng",
       "usage": "Mức sử dụng",
       "battery": "Pin",
-      "github": "Github"
+      "github": "Github",
+      "time": "Thời gian"
     },
     "variants": {
       "digital": "Điện tử",

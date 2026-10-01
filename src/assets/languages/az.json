@@ -269,7 +269,8 @@
         "save_preset": {
           "title": "Preseti yadda saxla"
         },
-        "preset_name_placeholder": "Presetin adını daxil edin..."
+        "preset_name_placeholder": "Presetin adını daxil edin...",
+        "screen_desc": "Masaüstü vidjetlərini konfiqurasiya edin və redaktə edin"
       }
     },
     "bar": {
@@ -397,7 +398,8 @@
         "desc": "Fon şəkillərinin axtarılacağı qovluq",
         "select_dir": "Qovluq seç...",
         "select_wallpaper": "Fon şəkli seç",
-        "no_wallpaper_selected": "Fon şəkli seçilməyib"
+        "no_wallpaper_selected": "Fon şəkli seçilməyib",
+        "select": "Divar kağızı"
       }
     },
     "file_picker": {
@@ -1038,7 +1040,8 @@
       "user": "İstifadəçi",
       "usage": "İstifadə",
       "battery": "Batareya",
-      "github": "Github"
+      "github": "Github",
+      "time": "Vaxt"
     },
     "variants": {
       "digital": "Rəqəmsal",

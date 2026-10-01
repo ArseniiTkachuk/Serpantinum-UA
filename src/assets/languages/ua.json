@@ -269,7 +269,8 @@
         "save_preset": {
           "title": "Зберегти пресет"
         },
-        "preset_name_placeholder": "Введіть назву пресету..."
+        "preset_name_placeholder": "Введіть назву пресету...",
+        "screen_desc": "Налаштування та редагування віджетів робочого столу"
       }
     },
     "bar": {
@@ -373,7 +374,8 @@
         "desc": "Тека для пошуку шпалер",
         "select_dir": "Обрати теку...",
         "select_wallpaper": "Обрати шпалери",
-        "no_wallpaper_selected": "Шпалери не обрано"
+        "no_wallpaper_selected": "Шпалери не обрано",
+        "select": "Шпалери"
       }
     },
     "file_picker": {
@@ -1057,7 +1059,8 @@
       "user": "Користувач",
       "usage": "Навантаження",
       "battery": "Батарея",
-      "github": "Github"
+      "github": "Github",
+      "time": "Час"
     },
     "variants": {
       "digital": "Цифровий",

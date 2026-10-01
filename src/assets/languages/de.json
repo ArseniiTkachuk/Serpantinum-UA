@@ -272,7 +272,8 @@
         "save_preset": {
           "title": "Voreinstellung speichern"
         },
-        "preset_name_placeholder": "Namen der Voreinstellung eingeben..."
+        "preset_name_placeholder": "Namen der Voreinstellung eingeben...",
+        "screen_desc": "Desktop-Widgets konfigurieren und bearbeiten"
       }
     },
     "bar": {
@@ -400,7 +401,8 @@
         "desc": "Ordner für die suche nach hintergrundbildern",
         "select_dir": "Ordner auswählen...",
         "select_wallpaper": "Hintergrundbild auswählen",
-        "no_wallpaper_selected": "Kein hintergrundbild ausgewählt"
+        "no_wallpaper_selected": "Kein hintergrundbild ausgewählt",
+        "select": "Hintergrundbild"
       }
     },
     "file_picker": {
@@ -1088,7 +1090,8 @@
       "user": "Benutzer",
       "usage": "Auslastung",
       "battery": "Akku",
-      "github": "Github"
+      "github": "Github",
+      "time": "Zeit"
     },
     "variants": {
       "digital": "Digital",

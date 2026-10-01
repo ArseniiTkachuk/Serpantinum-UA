@@ -272,7 +272,8 @@
         "save_preset": {
           "title": "Сохранить пресет"
         },
-        "preset_name_placeholder": "Введите название пресета..."
+        "preset_name_placeholder": "Введите название пресета...",
+        "screen_desc": "Настройка и редактирование виджетов рабочего стола"
       }
     },
     "bar": {
@@ -400,7 +401,8 @@
         "desc": "Папка для поиска обоев",
         "select_dir": "Выбрать папку...",
         "select_wallpaper": "Выбрать обои",
-        "no_wallpaper_selected": "Обои не выбраны"
+        "no_wallpaper_selected": "Обои не выбраны",
+        "select": "Обои"
       }
     },
     "file_picker": {
@@ -1088,7 +1090,8 @@
       "user": "Пользователь",
       "usage": "Нагрузка",
       "battery": "Батарея",
-      "github": "Github"
+      "github": "Github",
+      "time": "Время"
     },
     "variants": {
       "digital": "Цифровые",

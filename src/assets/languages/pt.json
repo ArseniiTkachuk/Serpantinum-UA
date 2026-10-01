@@ -271,7 +271,8 @@
         "save_preset": {
           "title": "Salvar predefinição"
         },
-        "preset_name_placeholder": "Digite o nome da predefinição..."
+        "preset_name_placeholder": "Digite o nome da predefinição...",
+        "screen_desc": "Configurar e editar widgets da área de trabalho"
       }
     },
     "bar": {
@@ -399,7 +400,8 @@
         "desc": "Pasta onde buscar papéis de parede",
         "select_dir": "Selecionar pasta...",
         "select_wallpaper": "Selecionar papel de parede",
-        "no_wallpaper_selected": "Nenhum papel de parede selecionado"
+        "no_wallpaper_selected": "Nenhum papel de parede selecionado",
+        "select": "Papel de parede"
       }
     },
     "file_picker": {
@@ -1044,7 +1046,8 @@
       "user": "Usuário",
       "usage": "Uso",
       "battery": "Bateria",
-      "github": "Github"
+      "github": "Github",
+      "time": "Hora"
     },
     "variants": {
       "digital": "Digital",

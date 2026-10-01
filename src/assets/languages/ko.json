@@ -271,7 +271,8 @@
         "save_preset": {
           "title": "프리셋 저장"
         },
-        "preset_name_placeholder": "프리셋 이름 입력..."
+        "preset_name_placeholder": "프리셋 이름 입력...",
+        "screen_desc": "바탕화면 위젯 설정 및 편집"
       }
     },
     "bar": {
@@ -399,7 +400,8 @@
         "desc": "배경화면을 검색할 디렉터리",
         "select_dir": "디렉터리 선택...",
         "select_wallpaper": "배경화면 선택",
-        "no_wallpaper_selected": "선택된 배경화면 없음"
+        "no_wallpaper_selected": "선택된 배경화면 없음",
+        "select": "배경화면"
       }
     },
     "file_picker": {
@@ -1044,7 +1046,8 @@
       "user": "사용자",
       "usage": "사용량",
       "battery": "배터리",
-      "github": "Github"
+      "github": "Github",
+      "time": "시간"
     },
     "variants": {
       "digital": "디지털",

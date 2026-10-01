@@ -271,7 +271,8 @@
         "save_preset": {
           "title": "Պահպանել պրեսետը"
         },
-        "preset_name_placeholder": "Մուտքագրեք պրեսետի անունը..."
+        "preset_name_placeholder": "Մուտքագրեք պրեսետի անունը...",
+        "screen_desc": "Կարգավորել և խմբագրել աշխատասեղանի վիջեթները"
       }
     },
     "bar": {
@@ -399,7 +400,8 @@
         "desc": "Պաստառներ որոնելու պանակը",
         "select_dir": "Ընտրեք պանակը...",
         "select_wallpaper": "Ընտրել պաստառ",
-        "no_wallpaper_selected": "Պաստառ ընտրված չէ"
+        "no_wallpaper_selected": "Պաստառ ընտրված չէ",
+        "select": "Պաստառ"
       }
     },
     "file_picker": {
@@ -1044,7 +1046,8 @@
       "user": "Օգտատեր",
       "usage": "Օգտագործում",
       "battery": "Մարտկոց",
-      "github": "Github"
+      "github": "Github",
+      "time": "Ժամանակ"
     },
     "variants": {
       "digital": "Թվային",
