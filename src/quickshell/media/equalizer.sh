@@ -47,7 +47,7 @@ ensure_easyeffects() {
         return 0
     fi
 
-    easyeffects --gapplication-service >/dev/null 2>&1 &
+    easyeffects -w -l "$PRESET_NAME" >/dev/null 2>&1 &
     sleep 0.5
 }
 
@@ -105,16 +105,16 @@ try:
                 gain = gains[s_idx]
                 break
 
-            bands[f'band{i}'] = {
-                'frequency': freq,
-                'gain': gain,
-                'mode': 'Bell',
-                'mute': False,
-                'q': 1.0,
-                'solo': False,
-                'width': 1.0,
-                'slope': 'x1'
-            }
+        bands[f'band{i}'] = {
+            'frequency': freq,
+            'gain': gain,
+            'mode': 'Bell',
+            'mute': False,
+            'q': 1.0,
+            'solo': False,
+            'width': 1.0,
+            'slope': 'x1'
+        }
 
     preset = {
         'output': {
