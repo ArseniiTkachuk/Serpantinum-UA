@@ -17,6 +17,7 @@ Item {
     property alias bottomLeftText: root.subText
 
     property real wavePhase: 0.0
+    property real waveIntensity: 0.0
     property bool isLive: true
     property bool hasShadow: false
     property color shadowColor: Qt.rgba(0, 0, 0, 0.22)
@@ -57,10 +58,42 @@ Item {
 
     default property alias childItems: customContentBox.data
 
-    readonly property real fillRatio: Math.max(0.0, Math.min(1.0, root.value))
+    readonly property real targetRatio: Math.max(0.0, Math.min(1.0, root.value))
+    property real fillRatio: targetRatio
     readonly property real fillY: height * (1.0 - root.fillRatio)
-    readonly property real waveAmp: (root.fillRatio < 0.99 && root.fillRatio > 0.01) ? root.waveAmpMax * Math.sin(root.fillRatio * Math.PI) : 0
+    readonly property real waveAmp: (root.fillRatio < 0.99 && root.fillRatio > 0.01) ? root.waveAmpMax * Math.sin(root.fillRatio * Math.PI) * root.waveIntensity : 0
     readonly property real waveCenterOffset: root.waveAmp > 0 ? 0.375 * root.waveAmp * (Math.sin(root.wavePhase) - Math.cos(root.wavePhase)) : 0
+
+    onTargetRatioChanged: {
+        if (!root.isLive) {
+            growAnimation.stop();
+            fallAnimation.stop();
+            root.fillRatio = targetRatio;
+            root.waveIntensity = 0.0;
+            fluidCanvas.requestPaint();
+            return;
+        }
+
+        if (targetRatio > root.fillRatio) {
+            fallAnimation.stop();
+            growAnimation.stop();
+            growAnimation.fromRatio = root.fillRatio;
+            growAnimation.toRatio = targetRatio;
+            growAnimation.restart();
+        } else if (targetRatio < root.fillRatio) {
+            growAnimation.stop();
+            fallAnimation.stop();
+            fallAnimation.fromRatio = root.fillRatio;
+            fallAnimation.toRatio = targetRatio;
+            fallAnimation.restart();
+        }
+    }
+
+    onFillRatioChanged: {
+        if (root.isLive) {
+            fluidCanvas.requestPaint();
+        }
+    }
 
     onWavePhaseChanged: {
         if (root.isLive && root.waveAmp > 0) {
@@ -68,7 +101,7 @@ Item {
         }
     }
 
-    onValueChanged: {
+    onWaveIntensityChanged: {
         if (root.isLive) {
             fluidCanvas.requestPaint();
         }
@@ -82,6 +115,80 @@ Item {
 
     onWidthChanged: fluidCanvas.requestPaint()
     onHeightChanged: fluidCanvas.requestPaint()
+
+    ParallelAnimation {
+        id: growAnimation
+        property real fromRatio: 0.0
+        property real toRatio: 0.0
+
+        NumberAnimation {
+            target: root
+            property: "fillRatio"
+            from: growAnimation.fromRatio
+            to: growAnimation.toRatio
+            duration: 750
+            easing.type: Easing.OutCubic
+        }
+
+        SequentialAnimation {
+            NumberAnimation {
+                target: root
+                property: "waveIntensity"
+                from: 0.0
+                to: 1.0
+                duration: 180
+                easing.type: Easing.OutQuad
+            }
+            NumberAnimation {
+                target: root
+                property: "waveIntensity"
+                from: 1.0
+                to: 0.0
+                duration: 570
+                easing.type: Easing.InOutQuad
+            }
+        }
+
+        NumberAnimation {
+            target: root
+            property: "wavePhase"
+            from: root.wavePhase
+            to: root.wavePhase + (Math.PI * 3)
+            duration: 750
+            easing.type: Easing.Linear
+        }
+
+        onFinished: {
+            root.waveIntensity = 0.0;
+            fluidCanvas.requestPaint();
+        }
+    }
+
+    ParallelAnimation {
+        id: fallAnimation
+        property real fromRatio: 0.0
+        property real toRatio: 0.0
+
+        NumberAnimation {
+            target: root
+            property: "fillRatio"
+            from: fallAnimation.fromRatio
+            to: fallAnimation.toRatio
+            duration: 450
+            easing.type: Easing.OutCubic
+        }
+
+        PropertyAction {
+            target: root
+            property: "waveIntensity"
+            value: 0.0
+        }
+
+        onFinished: {
+            root.waveIntensity = 0.0;
+            fluidCanvas.requestPaint();
+        }
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -109,7 +216,7 @@ Item {
         onPaint: {
             var ctx = getContext("2d");
             ctx.clearRect(0, 0, width, height);
-            if (root.value <= 0) return;
+            if (root.fillRatio <= 0) return;
 
             ctx.save();
             var r = root.cardRadius;
@@ -225,7 +332,7 @@ Item {
         anchors.right: parent.right
         height: Math.min(parent.height, Math.max(0, (parent.height * root.fillRatio) - root.waveCenterOffset))
         clip: true
-        visible: root.value > 0
+        visible: root.fillRatio > 0
 
         Item {
             anchors.bottom: parent.bottom
