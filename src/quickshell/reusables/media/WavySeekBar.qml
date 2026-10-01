@@ -34,7 +34,7 @@ Item {
     property real handleSize: height < 30 ? Math.max(8, Math.min(14, height * 0.75)) : bar.s(17)
     property real strokeWidth: height < 30 ? Math.max(2.5, handleSize * 0.35) : bar.s(9)
     property real amplitude: height < 30 ? Math.max(4, height * 0.45) : bar.s(20)
-    property int cycleMs: 8000
+    property int cycleMs: 5200
     property real restingLevel: 0.0
 
     readonly property real cy: height - handleSize * (height < 30 ? 0.65 : 0.7)
@@ -69,20 +69,18 @@ Item {
     property var layerColorStrs: []
     property var gridTables: []
     property var cachedGradients: []
-    property real cachedGradTop: -9999
-    property real cachedGradA: -9999
 
     property real scaleFactor: height < 30 ? (height / 35) : 1.0
     property var layers: [
-        { color: bar.primaryColor, amp: 0.86, alpha: 0.32, taper: bar.s(70) * bar.scaleFactor, comps: [
-            { len: bar.s(245) * bar.scaleFactor, mult: 1, off: 1.10, w: 0.65 },
-            { len: bar.s(145) * bar.scaleFactor, mult: 2, off: 1.90, w: 0.35 } ] },
-        { color: bar.primaryColor, amp: 0.93, alpha: 0.56, taper: bar.s(80) * bar.scaleFactor, comps: [
-            { len: bar.s(300) * bar.scaleFactor, mult: 1, off: 0.55, w: 0.65 },
-            { len: bar.s(180) * bar.scaleFactor, mult: 2, off: 1.25, w: 0.35 } ] },
-        { color: bar.primaryColor, amp: 1.00, alpha: 0.82, taper: bar.s(90) * bar.scaleFactor, comps: [
-            { len: bar.s(360) * bar.scaleFactor, mult: 1, off: 0.00, w: 0.68 },
-            { len: bar.s(225) * bar.scaleFactor, mult: 2, off: 0.60, w: 0.32 } ] }
+        { color: bar.primaryColor, amp: 1.00, alpha: 0.35, taper: bar.s(85) * bar.scaleFactor, comps: [
+            { len: bar.s(280) * bar.scaleFactor, mult: 1, off: 0.00, w: 0.88 },
+            { len: bar.s(150) * bar.scaleFactor, mult: 2, off: 0.80, w: 0.12 } ] },
+        { color: bar.primaryColor, amp: 0.88, alpha: 0.65, taper: bar.s(75) * bar.scaleFactor, comps: [
+            { len: bar.s(220) * bar.scaleFactor, mult: 1, off: 1.25, w: 0.88 },
+            { len: bar.s(120) * bar.scaleFactor, mult: 2, off: 2.05, w: 0.12 } ] },
+        { color: bar.primaryColor, amp: 0.76, alpha: 1.00, taper: bar.s(60) * bar.scaleFactor, comps: [
+            { len: bar.s(165) * bar.scaleFactor, mult: 1, off: 2.50, w: 0.88 },
+            { len: bar.s(90) * bar.scaleFactor, mult: 2, off: 3.30, w: 0.12 } ] }
     ]
 
     function rgbaCol(col, a) {
@@ -103,9 +101,11 @@ Item {
         if (L) {
             for (var i = 0; i < L.length; i++) {
                 var curCol = L[i].color || bar.primaryColor;
+                var a1 = L[i].alpha;
+                var a0 = a1 >= 1.0 ? 1.0 : (a1 * 0.55);
                 arr.push({
-                    c0: rgbaCol(curCol, L[i].alpha * 0.55),
-                    c1: rgbaCol(curCol, L[i].alpha)
+                    c0: rgbaCol(curCol, a0),
+                    c1: rgbaCol(curCol, a1)
                 });
             }
         }
@@ -146,10 +146,7 @@ Item {
         for (var k = 0; k < comps.length; k++) {
             n += comps[k].w * (table.sins[k][i] * cosBetas[k] - table.coss[k][i] * sinBetas[k]);
         }
-        var base = (n + 0.85) / 1.85;
-        if (base <= 0) return 0;
-        if (base >= 1) base = 1;
-        return 0.5 * (1 - Math.cos(base * Math.PI));
+        return 0.5 * (1 + Math.max(-1.0, Math.min(1.0, n)));
     }
 
     function hillDirect(x, comps, phaseVal) {
@@ -158,10 +155,7 @@ Item {
             var p = comps[k];
             n += p.w * Math.sin((2 * Math.PI / p.len) * x - phaseVal * p.mult + p.off);
         }
-        var base = (n + 0.85) / 1.85;
-        if (base <= 0) return 0;
-        if (base >= 1) base = 1;
-        return 0.5 * (1 - Math.cos(base * Math.PI));
+        return 0.5 * (1 + Math.max(-1.0, Math.min(1.0, n)));
     }
 
     Component.onCompleted: {
@@ -253,18 +247,22 @@ Item {
 
                     var endTaperLen = Math.max(1.0, ly.taper * Math.min(1.0, (endX - pad) / (ly.taper * 1.5)));
 
-                    var g = (gradients && gradients[li] && bar.cachedGradTop === top && bar.cachedGradA === A)
+                    var g = (gradients && gradients[li] && gradients[li]._top === top && gradients[li]._a === A)
                         ? gradients[li]
                         : null;
 
                     if (!g) {
                         g = ctx.createLinearGradient(0, top - A, 0, top);
+                        var a1 = ly.alpha;
+                        var a0 = a1 >= 1.0 ? 1.0 : (a1 * 0.55);
                         var colPair = (colorStrs && colorStrs[li]) ? colorStrs[li] : {
-                            c0: bar.rgbaCol(ly.color || bar.primaryColor, ly.alpha * 0.55),
-                            c1: bar.rgbaCol(ly.color || bar.primaryColor, ly.alpha)
+                            c0: bar.rgbaCol(ly.color || bar.primaryColor, a0),
+                            c1: bar.rgbaCol(ly.color || bar.primaryColor, a1)
                         };
                         g.addColorStop(0.0, colPair.c0);
                         g.addColorStop(1.0, colPair.c1);
+                        g._top = top;
+                        g._a = A;
                         if (!gradients) gradients = [];
                         gradients[li] = g;
                     }
@@ -302,8 +300,6 @@ Item {
                     ctx.closePath();
                     ctx.fill();
                 }
-                bar.cachedGradTop = top;
-                bar.cachedGradA = A;
                 bar.cachedGradients = gradients;
             }
 
