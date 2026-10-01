@@ -328,6 +328,10 @@
         "hide_empty": {
           "title": "Boş iş sahələrini gizlət",
           "desc": "Yalnız dolu və aktiv iş sahələrini göstər"
+        },
+        "style": {
+          "title": "Stil",
+          "desc": "İş sahələri indikatorlarının vizual stilini seçin"
         }
       },
       "opacity": {
@@ -374,6 +378,10 @@
         "show_date": {
           "title": "Tarixi göstər",
           "desc": "Saatın yanında tarix mətnini göstərin"
+        },
+        "style": {
+          "title": "Stil",
+          "desc": "Saat və tarix ekranının vizual stilini seçin"
         }
       }
     },

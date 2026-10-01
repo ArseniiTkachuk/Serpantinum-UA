@@ -330,6 +330,10 @@
         "hide_empty": {
           "title": "Ocultar áreas de trabalho vazias",
           "desc": "Mostrar apenas as áreas ocupadas e a ativa"
+        },
+        "style": {
+          "title": "Estilo",
+          "desc": "Escolha o estilo visual para os indicadores de áreas de trabalho"
         }
       },
       "opacity": {
@@ -376,6 +380,10 @@
         "show_date": {
           "title": "Mostrar data",
           "desc": "Exibir o texto da data ao lado do relógio"
+        },
+        "style": {
+          "title": "Estilo",
+          "desc": "Escolha o estilo visual para o relógio e a data"
         }
       }
     },

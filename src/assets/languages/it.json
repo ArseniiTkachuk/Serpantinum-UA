@@ -329,6 +329,10 @@
         "hide_empty": {
           "title": "Nascondi spazi di lavoro vuoti",
           "desc": "Mostra solo gli spazi di lavoro occupati e quello attivo"
+        },
+        "style": {
+          "title": "Stile",
+          "desc": "Scegli lo stile visivo per gli indicatori degli spazi di lavoro"
         }
       },
       "opacity": {
@@ -375,6 +379,10 @@
         "show_date": {
           "title": "Mostra data",
           "desc": "Mostra il testo della data accanto all'orologio"
+        },
+        "style": {
+          "title": "Stile",
+          "desc": "Scegli lo stile visivo per l'orologio e la data"
         }
       }
     },
