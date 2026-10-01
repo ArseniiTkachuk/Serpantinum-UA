@@ -690,7 +690,7 @@ Item {
         repeat: false
         onTriggered: {
             if (settingsSearchInput) {
-                settingsSearchInput.forceActiveFocus();
+                settingsSearchInput.forceInputFocus();
             }
         }
     }
