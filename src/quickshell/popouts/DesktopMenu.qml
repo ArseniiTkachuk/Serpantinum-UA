@@ -304,6 +304,13 @@ PanelWindow {
         shuffleProcess.running = true;
     }
 
+    function lockScreen() {
+        DesktopMenuController.hide();
+        let dir = (typeof Caching !== "undefined" && Caching.serpantinumDir) ? Caching.serpantinumDir : "";
+        let scriptPath = dir ? (dir + "/scripts/lock.sh") : "lock.sh";
+        Quickshell.execDetached(["bash", scriptPath]);
+    }
+
     function reloadShell() {
         let dir = (typeof Caching !== "undefined" && Caching.serpantinumDir) ? Caching.serpantinumDir : "";
         let cmd = (dir ? "if [ -f '" + dir + "/scripts/reload.sh' ]; then bash '" + dir + "/scripts/reload.sh'; else " : "")
@@ -487,6 +494,22 @@ PanelWindow {
                                 onClicked: {
                                     DesktopMenuController.hide();
                                     reloadTimer.restart();
+                                }
+                            }
+
+                            IconButton {
+                                id: lockBtn
+                                visible: !desktopMenuWindow.isWidgetMode
+                                width: desktopMenuWindow.s(36)
+                                height: desktopMenuWindow.s(36)
+                                size: height
+                                cornerRadius: desktopMenuWindow.s(8)
+                                accentColor: desktopMenuWindow.buttonColor
+                                textColor: ThemeBackend.text
+                                buttonIcon: ""
+                                iconFontSize: desktopMenuWindow.s(16)
+                                onClicked: {
+                                    desktopMenuWindow.lockScreen();
                                 }
                             }
 
