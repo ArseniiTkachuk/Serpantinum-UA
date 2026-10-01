@@ -188,15 +188,30 @@ Item {
         if (!id) return null;
         let tab = String(entry.tab || entry.searchTab || "").trim();
         let subtab = String(entry.subtab || entry.searchSubTab || "").trim();
-        let key = String(entry.key || (tab + "|" + subtab + "|" + id)).trim();
+
+        let norm = s => String(s || "").trim().toLowerCase().replace(/^guide\.tabs\./, "");
+        let cleanTab = norm(tab);
+        let cleanSubtab = norm(subtab);
+
+        let indices = resolveIndices(tab, subtab);
+        if (indices.tabIndex >= 0 && indices.tabIndex < tabsModel.length) {
+            let tModel = tabsModel[indices.tabIndex];
+            cleanTab = norm(tModel.key || tModel.id);
+            if (indices.subIndex >= 0 && tModel.subtabs && indices.subIndex < tModel.subtabs.length) {
+                let stModel = tModel.subtabs[indices.subIndex];
+                cleanSubtab = norm(stModel.key || stModel.id);
+            }
+        }
+
+        let key = cleanTab + "|" + cleanSubtab + "|" + id.toLowerCase();
         return {
             key: key,
             id: id,
             title: String(entry.title || "").trim(),
             desc: String(entry.desc || entry.description || "").trim(),
             description: String(entry.description || entry.desc || "").trim(),
-            tab: tab,
-            subtab: subtab,
+            tab: cleanTab,
+            subtab: cleanSubtab,
             icon: String(entry.icon || "󰒓").trim(),
             keywords: entry.keywords || entry.searchKeywords || "",
             target: entry.target || null,
@@ -234,8 +249,31 @@ Item {
             searchRebuildTimer.restart();
             return;
         }
+
+        let norm = s => String(s || "").trim().toLowerCase().replace(/^guide\.tabs\./, "");
+        let parts = key.split("|");
+        if (parts.length === 3) {
+            let cleanTab = norm(parts[0]);
+            let cleanSubtab = norm(parts[1]);
+            let indices = resolveIndices(parts[0], parts[1]);
+            if (indices.tabIndex >= 0 && indices.tabIndex < tabsModel.length) {
+                let tModel = tabsModel[indices.tabIndex];
+                cleanTab = norm(tModel.key || tModel.id);
+                if (indices.subIndex >= 0 && tModel.subtabs && indices.subIndex < tModel.subtabs.length) {
+                    let stModel = tModel.subtabs[indices.subIndex];
+                    cleanSubtab = norm(stModel.key || stModel.id);
+                }
+            }
+            let canonicalKey = cleanTab + "|" + cleanSubtab + "|" + parts[2].trim().toLowerCase();
+            if (searchIndexMap[canonicalKey]) {
+                delete searchIndexMap[canonicalKey];
+                searchRebuildTimer.restart();
+                return;
+            }
+        }
+
         for (let k in searchIndexMap) {
-            if (searchIndexMap[k] && searchIndexMap[k].id === key) {
+            if (searchIndexMap[k] && (searchIndexMap[k].id === key || searchIndexMap[k].id.toLowerCase() === key.toLowerCase())) {
                 delete searchIndexMap[k];
                 searchRebuildTimer.restart();
                 break;
@@ -244,6 +282,7 @@ Item {
     }
 
     function rebuildSearchIndex() {
+        console.log(Object.keys(searchIndexMap).join("\n"));
         let list = [];
         for (let k in searchIndexMap) {
             list.push(searchIndexMap[k]);
