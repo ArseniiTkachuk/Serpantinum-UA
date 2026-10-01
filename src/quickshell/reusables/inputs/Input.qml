@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell.Io
@@ -79,21 +80,26 @@ Item {
     signal clicked()
     signal triggered()
 
+    // Passive click-outside monitor: does not consume or steal mouse/touch events
     Item {
         parent: root.currentWindow ? root.currentWindow.contentItem : null
         width: parent ? parent.width : 0
         height: parent ? parent.height : 0
         visible: root.hasFocus
 
-        TapHandler {
+        PointHandler {
             acceptedButtons: Qt.AllButtons
-            onTapped: function(eventPoint) {
-                let pt = eventPoint ? eventPoint.scenePosition : point.scenePosition;
-                let px = pt ? pt.x : 0;
-                let py = pt ? pt.y : 0;
-                let pos = root.mapFromItem(null, px, py);
-                if (pos.x < 0 || pos.x > root.width || pos.y < 0 || pos.y > root.height) {
-                    innerInput.focus = false;
+            grabPermissions: PointerHandler.TakeOverForbidden
+            target: null
+            onActiveChanged: {
+                if (active && point) {
+                    let pt = point.scenePosition || point.position;
+                    if (pt) {
+                        let pos = root.mapFromItem(null, pt.x, pt.y);
+                        if (pos.x < 0 || pos.x > root.width || pos.y < 0 || pos.y > root.height) {
+                            innerInput.focus = false;
+                        }
+                    }
                 }
             }
         }
