@@ -2821,7 +2821,7 @@ Item {
                                             Layout.preferredHeight: root.s(32)
                                             Layout.alignment: Qt.AlignVCenter
                                             cornerRadius: ThemeBackend.borderRadius
-                                            buttonIcon: ""
+                                            buttonIcon: ""
                                             iconOffsetX: root.tabsModel[11].iconOffsetX ?? 0
                                             iconFontSize: root.s(16)
                                             accentColor: ThemeBackend.surface0
