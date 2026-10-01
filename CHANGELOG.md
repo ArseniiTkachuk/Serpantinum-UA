@@ -1,3 +1,17 @@
+### 2.2.3
+
+- feat: add arrow navigation to the guidepopup search
+- fix: don't unregister setting rows from other tabs
+- fix: add a themetab non setting row settings into the search in the guidepopup
+- fix: add translations for the search
+- fix: fix the icon on the about tab
+- fix: improve the search bar
+- fix: add a nothing is playing string to the musicface lyrics simple
+- fix: fix the issue with the numberanimation paused property not being set when not running
+- Merge remote-tracking branch 'origin/master'
+- feat(i18n): fall back to the system language when none is set (#343)
+- feat: add search for settings in the guide popup, implement settingsgroups in bargeneraltab, docktab
+
 ### 2.2.2
 
 - fix: ensure easyeffects isn't dying with the ssystem restart
