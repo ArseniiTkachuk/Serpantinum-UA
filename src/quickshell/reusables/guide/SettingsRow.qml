@@ -32,6 +32,20 @@ Rectangle {
     property string searchKeywords: ""
     property bool searchable: true
 
+    property bool hiddenByConfig: false
+    property string unavailableReason: ""
+
+    property int revealHolds: 0
+    readonly property bool revealedBySearch: revealHolds > 0
+    readonly property bool dimmed: hiddenByConfig
+    readonly property string effectiveDescription: (root.dimmed && root.unavailableReason !== "") ? root.unavailableReason : root.description
+
+    visible: !root.hiddenByConfig || root.revealedBySearch
+
+    property bool selfRevealHeld: false
+    property var heldGroups: []
+    property int highlightLeadInMs: 0
+
     readonly property string effectiveSettingId: {
         if (settingId && settingId !== "") return settingId;
         if (title && title !== "") {
@@ -42,6 +56,75 @@ Rectangle {
 
     property real highlightFlash: 0.0
     property int handledHighlightToken: -1
+
+    function _releaseGroupList(groups) {
+        for (let i = 0; i < groups.length; i++) {
+            try {
+                if (groups[i] && typeof groups[i].releaseOpen === "function") groups[i].releaseOpen();
+            } catch (e) {}
+        }
+    }
+
+    function acquireRevealHolds() {
+        let prevSelfHeld = root.selfRevealHeld;
+        let prevGroups = root.heldGroups;
+
+        root.selfRevealHeld = root.hiddenByConfig;
+        if (root.selfRevealHeld) root.revealHolds++;
+
+        let groups = [];
+        let needsExpand = false;
+        let p = root.parent;
+        while (p) {
+            if (p.tabIndex !== undefined || p.isGuidePopup || p.isGuideTab) break;
+            if (p.isGroupSubWrapper && p.ownerGroup && typeof p.ownerGroup.holdOpen === "function") {
+                if (!p.ownerGroup.isOpen) needsExpand = true;
+                p.ownerGroup.holdOpen();
+                groups.push(p.ownerGroup);
+            }
+            p = p.parent;
+        }
+        root.heldGroups = groups;
+
+        root.highlightLeadInMs = needsExpand ? 280 : 0;
+
+        if (prevSelfHeld && root.revealHolds > 0) root.revealHolds--;
+        root._releaseGroupList(prevGroups);
+    }
+
+    function releaseRevealHolds() {
+        let selfHeld = root.selfRevealHeld;
+        let groups = root.heldGroups;
+        root.selfRevealHeld = false;
+        root.heldGroups = [];
+        if (selfHeld && root.revealHolds > 0) root.revealHolds--;
+        root._releaseGroupList(groups);
+    }
+
+    function isSettingAvailable() {
+        if (!root.searchable) return false;
+        if (!root.title || root.title === "") return false;
+
+        let softHidden = null;
+        if (root.hiddenByConfig && !root.revealedBySearch) softHidden = root;
+
+        let p = root.parent;
+        while (p) {
+            if (p.tabIndex !== undefined || p.isGuidePopup || p.isGuideTab) break;
+            if (p.isGroupSubWrapper && p.ownerGroup && !p.ownerGroup.isOpen) softHidden = p;
+            p = p.parent;
+        }
+
+        if (softHidden) {
+            let above = softHidden.parent;
+            if (!above || !above.visible) return false;
+        } else if (!root.visible) {
+            return false;
+        }
+
+        if (!root.enabled) return false;
+        return true;
+    }
 
     function ensureVisibleInFlickable() {
         let p = root.parent;
@@ -66,16 +149,18 @@ Rectangle {
     }
 
     function triggerHighlightAnimation() {
+        root.acquireRevealHolds();
         highlightAnimation.restart();
         root.ensureVisibleInFlickable();
+        ensureVisibleTimer.restart();
     }
 
     function checkHighlight() {
         let r = effectiveRootObj;
         if (!r) return;
-        if (!root.visible) return;
         if (r.highlightToken === root.handledHighlightToken) return;
         if (r.highlightedSettingId && (r.highlightedSettingId === root.effectiveSettingId || r.highlightedSettingId === root.settingId)) {
+            if (!root.isSettingAvailable()) return;
             root.handledHighlightToken = r.highlightToken;
             r.highlightedSettingId = "";
             highlightDelayTimer.restart();
@@ -91,9 +176,17 @@ Rectangle {
     }
 
     onVisibleChanged: {
+        searchRegTimer.restart();
         if (visible) {
             root.checkHighlight();
         }
+    }
+
+    Timer {
+        id: ensureVisibleTimer
+        interval: 320
+        repeat: false
+        onTriggered: root.ensureVisibleInFlickable()
     }
 
     Timer {
@@ -105,9 +198,12 @@ Rectangle {
 
     SequentialAnimation {
         id: highlightAnimation
+        PropertyAction { target: root; property: "highlightFlash"; value: 0.0 }
+        PauseAnimation { duration: root.highlightLeadInMs }
         NumberAnimation { target: root; property: "highlightFlash"; from: 0.0; to: 1.0; duration: 400; easing.type: Easing.OutCubic }
         PauseAnimation { duration: 1500 }
         NumberAnimation { target: root; property: "highlightFlash"; from: 1.0; to: 0.0; duration: 900; easing.type: Easing.InOutSine }
+        ScriptAction { script: root.releaseRevealHolds() }
     }
 
     function resolveTabInfo() {
@@ -149,7 +245,7 @@ Rectangle {
     function registerWithSearch() {
         let r = effectiveRootObj;
         if (!r || typeof r.registerSearchItem !== "function") return;
-        if (!root.searchable || !root.title || root.title === "") {
+        if (!root.isSettingAvailable()) {
             if (root.effectiveSettingId !== "") {
                 r.unregisterSearchItem(root.effectiveSettingId);
             }
@@ -166,7 +262,8 @@ Rectangle {
             subtab: info.subtab,
             icon: root.icon,
             keywords: root.searchKeywords,
-            target: root
+            target: root,
+            unavailable: root.hiddenByConfig
         });
     }
 
@@ -189,7 +286,10 @@ Rectangle {
         searchRegTimer.restart();
         checkHighlight();
     }
-    Component.onDestruction: unregisterFromSearch()
+    Component.onDestruction: {
+        releaseRevealHolds();
+        unregisterFromSearch();
+    }
 
     onTitleChanged: searchRegTimer.restart()
     onDescriptionChanged: searchRegTimer.restart()
@@ -198,6 +298,7 @@ Rectangle {
     onSearchTabChanged: searchRegTimer.restart()
     onSearchSubTabChanged: searchRegTimer.restart()
     onSettingIdChanged: searchRegTimer.restart()
+    onHiddenByConfigChanged: searchRegTimer.restart()
 
     property real cornerRadius: ThemeBackend.borderRadius
     property color baseColor: Qt.alpha(ThemeBackend.surface0, 0.4)
@@ -255,8 +356,10 @@ Rectangle {
     radius: root.cornerRadius
     color: {
         let base = (root.clickable && cardMa.containsMouse) ? root.hoverColor : root.baseColor;
+        if (root.dimmed) base = Qt.alpha(base, base.a * 0.5);
         if (root.highlightFlash > 0.001) {
-            return Qt.tint(base, Qt.rgba(ThemeBackend.mauve.r, ThemeBackend.mauve.g, ThemeBackend.mauve.b, root.highlightFlash * 0.12));
+            let k = root.dimmed ? 0.2 : 0.12;
+            return Qt.tint(base, Qt.rgba(ThemeBackend.mauve.r, ThemeBackend.mauve.g, ThemeBackend.mauve.b, root.highlightFlash * k));
         }
         return base;
     }
@@ -299,6 +402,9 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         spacing: root.innerSpacing
 
+        opacity: root.dimmed ? 0.4 : 1.0
+        Behavior on opacity { NumberAnimation { duration: 180 } }
+
         RowLayout {
             id: mainRow
             Layout.fillWidth: true
@@ -317,8 +423,8 @@ Rectangle {
                 iconFontSize: root.s(root.iconFontSize)
                 iconOffsetX: root.s(root.iconOffsetX)
                 iconOffsetY: root.s(root.iconOffsetY)
-                accentColor: root.iconAccentColor
-                textColor: root.iconTextColor
+                accentColor: root.dimmed ? ThemeBackend.surface1 : root.iconAccentColor
+                textColor: root.dimmed ? ThemeBackend.subtext0 : root.iconTextColor
                 onClicked: root.iconClicked()
             }
 
@@ -333,7 +439,7 @@ Rectangle {
 
             ColumnLayout {
                 id: textCol
-                visible: !leftCustomLoader.active && (root.title !== "" || root.description !== "" || titleBadgeLoader.active)
+                visible: !leftCustomLoader.active && (root.title !== "" || root.effectiveDescription !== "" || titleBadgeLoader.active)
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 Layout.alignment: Qt.AlignVCenter
@@ -350,7 +456,7 @@ Rectangle {
                         font.family: root.fontFamily
                         font.pixelSize: root.s(root.titlePixelSize)
                         font.bold: root.titleBold
-                        color: root.titleColor
+                        color: root.dimmed ? ThemeBackend.subtext0 : root.titleColor
                         elide: root.wrapText ? Text.ElideNone : Text.ElideRight
                         wrapMode: root.wrapText ? Text.WordWrap : Text.NoWrap
                         visible: text !== ""
@@ -372,10 +478,10 @@ Rectangle {
 
                 Text {
                     Layout.fillWidth: true
-                    text: root.description
+                    text: root.effectiveDescription
                     font.family: root.fontFamily
                     font.pixelSize: root.s(root.descriptionPixelSize)
-                    color: root.descriptionColor
+                    color: root.dimmed ? ThemeBackend.subtext0 : root.descriptionColor
                     elide: root.wrapText ? Text.ElideNone : Text.ElideRight
                     wrapMode: root.wrapText ? Text.WordWrap : Text.NoWrap
                     visible: text !== ""
@@ -389,6 +495,7 @@ Rectangle {
 
             RowLayout {
                 id: controlRow
+                enabled: !root.dimmed
                 Layout.fillWidth: root.fillControlWidth
                 Layout.alignment: root.fillControlWidth ? Qt.AlignVCenter : (Qt.AlignRight | Qt.AlignVCenter)
                 spacing: root.controlSpacing
@@ -405,9 +512,21 @@ Rectangle {
 
         ColumnLayout {
             id: bottomCol
+            enabled: !root.dimmed
             Layout.fillWidth: true
             spacing: root.bottomSpacing
             visible: children.length > 0
         }
+    }
+
+    MouseArea {
+        id: unavailableBlocker
+        anchors.fill: parent
+        z: 50
+        visible: root.dimmed
+        enabled: root.dimmed
+        hoverEnabled: true
+        acceptedButtons: Qt.AllButtons
+        cursorShape: Qt.ForbiddenCursor
     }
 }

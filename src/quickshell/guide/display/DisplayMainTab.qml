@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import "../../"
 import "../../reusables"
+import "../../reusables/guide"
 
 Item {
     id: displayTabRoot
@@ -683,15 +684,16 @@ Item {
                             }
                         }
 
-                        SettingsRow {
+                        SettingsGroup {
                             rootObj: displayTabRoot.rootObj
-                            baseColor: Qt.alpha(ThemeBackend.surface1, 0.35)
                             icon: "󰖔"
                             title: I18n.t("guide.display.bluelight.title")
                             description: I18n.t("guide.display.bluelight.desc")
+                            expanded: monDelegate.filterEnabled
 
                             Toggle {
                                 id: filterToggle
+                                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                                 checked: monDelegate.filterEnabled
                                 accentColor: ThemeBackend.mauve
                                 baseColor: ThemeBackend.surface1
@@ -709,27 +711,8 @@ Item {
                                     value: monDelegate.filterEnabled
                                 }
                             }
-                        }
 
-                        Item {
-                            id: bluelightSectionWrapper
-                            Layout.fillWidth: true
-                            property bool isOpen: monDelegate.filterEnabled
-                            clip: true
-                            visible: implicitHeight > 0
-                            opacity: isOpen ? 1.0 : 0.0
-                            implicitHeight: isOpen ? bluelightInnerCol.implicitHeight : 0
-
-                            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                            Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-
-                            ColumnLayout {
-                                id: bluelightInnerCol
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.top: parent.top
-                                spacing: rootObj.s(6)
-
+                            subSettings: [
                                 SettingsRow {
                                     rootObj: displayTabRoot.rootObj
                                     baseColor: Qt.alpha(ThemeBackend.surface1, 0.35)
@@ -739,6 +722,7 @@ Item {
 
                                     Toggle {
                                         id: autoToggle
+                                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                                         checked: monDelegate.filterAuto
                                         accentColor: ThemeBackend.mauve
                                         baseColor: ThemeBackend.surface1
@@ -756,7 +740,7 @@ Item {
                                             value: monDelegate.filterAuto
                                         }
                                     }
-                                }
+                                },
 
                                 Item {
                                     id: tempSectionWrapper
@@ -783,6 +767,7 @@ Item {
 
                                         Draggable {
                                             id: temperatureSlider
+                                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                                             Layout.rightMargin: rootObj.s(8)
                                             implicitWidth: rootObj.s(220)
                                             implicitHeight: rootObj.s(18)
@@ -810,7 +795,7 @@ Item {
                                         }
                                     }
                                 }
-                            }
+                            ]
                         }
 
                         SettingsRow {

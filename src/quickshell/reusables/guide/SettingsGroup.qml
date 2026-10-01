@@ -8,6 +8,8 @@ Item {
     id: root
     Layout.fillWidth: true
 
+    readonly property bool isSettingsGroup: true
+
     property var rootObj: null
 
     readonly property var effectiveRootObj: {
@@ -28,13 +30,23 @@ Item {
 
     property bool expanded: true
     property bool forceOpen: false
-    readonly property bool isOpen: expanded || forceOpen
+
+    property int openHolds: 0
+    readonly property bool isOpen: expanded || forceOpen || openHolds > 0
+
+    function holdOpen() {
+        openHolds++;
+    }
+
+    function releaseOpen() {
+        if (openHolds > 0) openHolds--;
+    }
 
     property string settingId: ""
     property string searchTab: ""
     property string searchSubTab: ""
     property string searchKeywords: ""
-    property bool searchable: true
+    property bool searchable: false
 
     property string icon: ""
     property int iconSize: 32
@@ -76,11 +88,11 @@ Item {
         anchors.right: parent.right
 
         rootObj: root.rootObj
-        settingId: root.settingId
-        searchTab: root.searchTab
-        searchSubTab: root.searchSubTab
-        searchKeywords: root.searchKeywords
-        searchable: root.searchable
+        settingId: ""
+        searchTab: ""
+        searchSubTab: ""
+        searchKeywords: ""
+        searchable: false
 
         icon: root.icon
         iconSize: root.iconSize
@@ -108,6 +120,9 @@ Item {
 
     Item {
         id: subItemsWrapper
+        readonly property bool isGroupSubWrapper: true
+        readonly property var ownerGroup: root
+
         anchors.top: headerRow.bottom
         anchors.left: parent.left
         anchors.right: parent.right
