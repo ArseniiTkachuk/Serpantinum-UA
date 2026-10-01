@@ -146,23 +146,24 @@
       },
       "dim": {
         "title": "Ekranı tutqunlaşdır",
-        "desc": "Ekran tutqunlaşana qədər keçən vaxt"
+        "desc": "Kilidləmədən əvvəl ekran parlaqlığını azaltmaq"
       },
       "dpms": {
         "title": "Ekranı söndür (DPMS)",
-        "desc": "Ekran tam sönənə qədər keçən vaxt"
+        "desc": "Monitorun ekran siqnalını söndürmək"
       },
       "lock": {
         "title": "Seansı kilidlə",
-        "desc": "Şifrə tələb olunana qədər keçən vaxt"
+        "desc": "Hərəkətsizlik müddətindən sonra sessiyanı kilidləmək"
       },
       "suspend": {
         "title": "Sistemi yuxu rejiminə keçir",
-        "desc": "Cihaz yuxu rejiminə keçənə qədər keçən vaxt"
+        "desc": "Sistemi yuxu rejiminə keçirmək"
       },
       "hooks": {
         "title": "Hadisə əmrləri (qabıq əmrləri)"
-      }
+      },
+      "custom_action_desc": "Xüsusi vaxt aşımı fəaliyyəti və əmri"
     },
     "welcome": {
       "by_author": "Müəllif: @{author}",

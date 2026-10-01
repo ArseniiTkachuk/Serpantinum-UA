@@ -148,23 +148,24 @@
       },
       "dim": {
         "title": "Làm mờ màn hình",
-        "desc": "Thời gian trước khi làm mờ màn hình"
+        "desc": "Giảm độ sáng màn hình trước khi khóa"
       },
       "dpms": {
         "title": "Tắt màn hình (DPMS)",
-        "desc": "Thời gian trước khi tắt hoàn toàn màn hình"
+        "desc": "Tắt tín hiệu màn hình hiển thị"
       },
       "lock": {
         "title": "Khóa phiên",
-        "desc": "Thời gian trước khi yêu cầu nhập mật khẩu"
+        "desc": "Khóa phiên làm việc sau một khoảng thời gian không hoạt động"
       },
       "suspend": {
         "title": "Ngủ đông hệ thống",
-        "desc": "Thời gian trước khi đưa máy vào chế độ ngủ"
+        "desc": "Đưa hệ thống vào chế độ ngủ"
       },
       "hooks": {
         "title": "Hook (lệnh shell)"
-      }
+      },
+      "custom_action_desc": "Hành động và lệnh hết thời gian tùy chỉnh"
     },
     "welcome": {
       "by_author": "bởi @{author}",

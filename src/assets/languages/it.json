@@ -148,23 +148,24 @@
       },
       "dim": {
         "title": "Oscura schermo",
-        "desc": "Tempo prima di ridurre la luminosità dello schermo"
+        "desc": "Riduci la luminosità dello schermo prima del blocco"
       },
       "dpms": {
         "title": "Spegnimento schermo (DPMS)",
-        "desc": "Tempo prima che lo schermo si spenga completamente"
+        "desc": "Spegni il segnale dello schermo del monitor"
       },
       "lock": {
         "title": "Blocca sessione",
-        "desc": "Tempo prima di richiedere la password"
+        "desc": "Blocca la sessione dopo un periodo di inattività"
       },
       "suspend": {
         "title": "Sospensione sistema",
-        "desc": "Tempo prima di sospendere il dispositivo"
+        "desc": "Sospendi il sistema in modalità sospensione"
       },
       "hooks": {
         "title": "Azioni automatiche (comandi shell)"
-      }
+      },
+      "custom_action_desc": "Azione e comando personalizzati per timeout"
     },
     "welcome": {
       "by_author": "fatto da @{author}",

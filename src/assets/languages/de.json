@@ -149,23 +149,24 @@
       },
       "dim": {
         "title": "Bildschirm abdunkeln",
-        "desc": "Zeit bis zum abdunkeln des bildschirms"
+        "desc": "Bildschirmhelligkeit vor dem Sperren reduzieren"
       },
       "dpms": {
         "title": "Bildschirm aus (DPMS)",
-        "desc": "Zeit bis zum vollständigen abschalten des bildschirms"
+        "desc": "Monitorsignal ausschalten"
       },
       "lock": {
         "title": "Sitzung sperren",
-        "desc": "Zeit bis zur passwortanforderung"
+        "desc": "Sitzung nach einer Phase der Inaktivität sperren"
       },
       "suspend": {
         "title": "System-bereitschaft",
-        "desc": "Zeit bis zum versetzen des systems in den energiesparmodus"
+        "desc": "System in den Bereitschaftsmodus versetzen"
       },
       "hooks": {
         "title": "Hooks (shell-befehle)"
-      }
+      },
+      "custom_action_desc": "Benutzerdefinierte Timeout-Aktion und Befehl"
     },
     "welcome": {
       "by_author": "von @{author}",

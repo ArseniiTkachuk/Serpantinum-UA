@@ -148,23 +148,24 @@
       },
       "dim": {
         "title": "Escurecer tela",
-        "desc": "Tempo antes de escurecer a saída"
+        "desc": "Reduzir o brilho da tela antes de bloquear"
       },
       "dpms": {
         "title": "Desligar tela (DPMS)",
-        "desc": "Tempo antes de apagar a tela por completo"
+        "desc": "Desligar o sinal de vídeo do monitor"
       },
       "lock": {
         "title": "Bloquear sessão",
-        "desc": "Tempo antes de exigir senha"
+        "desc": "Bloquear a sessão após um período de inatividade"
       },
       "suspend": {
         "title": "Suspender sistema",
-        "desc": "Tempo antes de colocar a máquina pra dormir"
+        "desc": "Suspender o sistema para o modo de suspensão"
       },
       "hooks": {
         "title": "Hooks (comandos shell)"
-      }
+      },
+      "custom_action_desc": "Ação e comando personalizados por tempo limite"
     },
     "welcome": {
       "by_author": "por @{author}",
