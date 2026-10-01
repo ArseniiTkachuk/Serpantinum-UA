@@ -647,6 +647,12 @@
     "lyrics_picker": {
       "title": "Chọn tệp lời bài hát",
       "no_lyrics_selected": "Chưa chọn tệp lời bài hát"
+    },
+    "settings": "Cài đặt",
+    "search": {
+      "placeholder": "Tìm kiếm cài đặt...",
+      "prompt": "Nhập để tìm kiếm cài đặt...",
+      "no_results": "Không tìm thấy cài đặt"
     }
   },
   "sysnotif": {

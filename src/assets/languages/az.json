@@ -641,6 +641,12 @@
     "lyrics_picker": {
       "title": "Mahnı mətni faylını seçin",
       "no_lyrics_selected": "Mahnı mətni seçilməyib"
+    },
+    "settings": "Tənzimləmələr",
+    "search": {
+      "placeholder": "Tənzimləmələri axtarın...",
+      "prompt": "Axtarmaq üçün yazın...",
+      "no_results": "Tənzimləmə tapılmadı"
     }
   },
   "sysnotif": {

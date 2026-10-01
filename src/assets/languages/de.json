@@ -691,6 +691,12 @@
     "lyrics_picker": {
       "title": "Songtext-Datei auswählen",
       "no_lyrics_selected": "Keine Songtext-Datei ausgewählt"
+    },
+    "settings": "Einstellungen",
+    "search": {
+      "placeholder": "Einstellungen suchen...",
+      "prompt": "Tippen, um Einstellungen zu suchen...",
+      "no_results": "Keine Einstellungen gefunden"
     }
   },
   "sysnotif": {

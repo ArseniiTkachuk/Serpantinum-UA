@@ -691,6 +691,12 @@
     "lyrics_picker": {
       "title": "Выбор файла текста песни",
       "no_lyrics_selected": "Файл текста не выбран"
+    },
+    "settings": "Настройки",
+    "search": {
+      "placeholder": "Поиск настроек...",
+      "prompt": "Введите запрос для поиска...",
+      "no_results": "Настройки не найдены"
     }
   },
   "sysnotif": {

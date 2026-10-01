@@ -647,6 +647,12 @@
     "lyrics_picker": {
       "title": "Selecionar arquivo de letras",
       "no_lyrics_selected": "Nenhum arquivo de letras selecionado"
+    },
+    "settings": "Configurações",
+    "search": {
+      "placeholder": "Pesquisar configurações...",
+      "prompt": "Digite para pesquisar configurações...",
+      "no_results": "Nenhuma configuração encontrada"
     }
   },
   "sysnotif": {
