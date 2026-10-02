@@ -22,6 +22,7 @@ Item {
 
     property var player: MprisController.activePlayer
     property bool isMediaActive: player !== null && player.playbackState !== MprisPlaybackState.Stopped && player.trackTitle !== ""
+    readonly property bool isPlaying: isMediaActive && (player ? (player.playbackState === MprisPlaybackState.Playing || player.isPlaying) : MprisController.isPlaying)
 
     property real colWidth: barWindow ? barWindow.s(isCompact ? 116 : 120) : (isCompact ? 116 : 120)
     property real innerSpacing: barWindow ? barWindow.s(isCompact ? 6 : 8) : (isCompact ? 6 : 8)
@@ -85,7 +86,7 @@ Item {
                         radius: barWindow ? barWindow.s(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10)
                         color: root.isCompact ? Qt.lighter(ThemeBackend.surface1, 1.1) : ThemeBackend.surface1
                         border.width: 1
-                        border.color: (isMediaActive && MprisController.isPlaying) ? ThemeBackend.mauve : (root.isCompact ? ThemeBackend.surface2 : ThemeBackend.surface1)
+                        border.color: root.isPlaying ? ThemeBackend.mauve : (root.isCompact ? ThemeBackend.surface2 : ThemeBackend.surface1)
                         clip: true
                         anchors.verticalCenter: parent.verticalCenter
 
@@ -148,22 +149,30 @@ Item {
                             clip: true
 
                             property int marqueeSpacing: barWindow ? barWindow.s(40) : 40
+                            property real scrollProgress: 0.0
+                            readonly property real scrollDistance: titleTextMain.implicitWidth + marqueeSpacing
+                            readonly property bool canMarquee: root.visible && (!barWindow || barWindow.visible) && (!module || module.moduleActive) && root.isPlaying && (titleTextMain.implicitWidth > width)
 
-                            onWidthChanged: {
-                                marqueeContainer.x = 0;
-                                if (titleTextMain.implicitWidth > width) {
+                            function resetMarquee() {
+                                scrollProgress = 0.0;
+                                if (canMarquee) {
                                     titleAnim.restart();
                                 } else {
                                     titleAnim.stop();
                                 }
                             }
 
+                            onCanMarqueeChanged: resetMarquee()
+                            onWidthChanged: resetMarquee()
+
                             Item {
                                 id: marqueeContainer
                                 height: parent.height
+                                x: titleClipRect.canMarquee ? -Math.round(titleClipRect.scrollProgress * titleClipRect.scrollDistance) : 0
 
                                 Row {
                                     spacing: titleClipRect.marqueeSpacing
+
                                     Text {
                                         id: titleTextMain
                                         text: isMediaActive ? (player ? player.trackTitle : "") : I18n.t("music.nothing_playing")
@@ -172,14 +181,7 @@ Item {
                                         font.pixelSize: barWindow ? barWindow.s(root.isCompact ? 11 : 12) : (root.isCompact ? 11 : 12)
                                         color: ThemeBackend.text
 
-                                        onTextChanged: {
-                                            marqueeContainer.x = 0;
-                                            if (implicitWidth > titleClipRect.width) {
-                                                titleAnim.restart();
-                                            } else {
-                                                titleAnim.stop();
-                                            }
-                                        }
+                                        onTextChanged: titleClipRect.resetMarquee()
                                     }
 
                                     Text {
@@ -189,29 +191,28 @@ Item {
                                         font.weight: Font.Black
                                         font.pixelSize: barWindow ? barWindow.s(root.isCompact ? 11 : 12) : (root.isCompact ? 11 : 12)
                                         color: ThemeBackend.text
-                                        visible: titleTextMain.implicitWidth > titleClipRect.width
+                                        visible: titleClipRect.canMarquee
                                     }
                                 }
+                            }
 
-                                SequentialAnimation on x {
-                                    id: titleAnim
-                                    loops: Animation.Infinite
-                                    running: titleTextMain.implicitWidth > titleClipRect.width
+                            SequentialAnimation {
+                                id: titleAnim
+                                loops: Animation.Infinite
+                                running: titleClipRect.canMarquee
 
-                                    onRunningChanged: {
-                                        if (!running) marqueeContainer.x = 0;
-                                    }
+                                PauseAnimation { duration: 3000 }
 
-                                    PauseAnimation { duration: isMediaActive ? 3000 : 6000 }
-
-                                    NumberAnimation {
-                                        from: 0
-                                        to: -(titleTextMain.implicitWidth + titleClipRect.marqueeSpacing)
-                                        duration: (titleTextMain.implicitWidth + titleClipRect.marqueeSpacing) * (isMediaActive ? 25 : 65)
-                                    }
-
-                                    PropertyAction { target: marqueeContainer; property: "x"; value: 0 }
+                                NumberAnimation {
+                                    target: titleClipRect
+                                    property: "scrollProgress"
+                                    from: 0.0
+                                    to: 1.0
+                                    duration: Math.max(1000, titleClipRect.scrollDistance * 30)
+                                    easing.type: Easing.Linear
                                 }
+
+                                PropertyAction { target: titleClipRect; property: "scrollProgress"; value: 0.0 }
                             }
                         }
 
@@ -252,7 +253,7 @@ Item {
                     height: barWindow ? barWindow.s(root.isCompact ? 28 : 30) : (root.isCompact ? 28 : 30)
                     width: barWindow ? barWindow.s(root.isCompact ? 28 : 30) : (root.isCompact ? 28 : 30)
                     cornerRadius: barWindow ? barWindow.s(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10)
-                    buttonIcon: (isMediaActive && MprisController.isPlaying) ? "󰏤" : "󰐊"
+                    buttonIcon: root.isPlaying ? "󰏤" : "󰐊"
                     iconFontSize: barWindow ? barWindow.s(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10)
                     accentColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
                     textColor: isHoveredOrHighlighted ? ThemeBackend.green : (root.isCompact ? Qt.lighter(ThemeBackend.text, 1.1) : ThemeBackend.text)
