@@ -30,7 +30,6 @@ Rectangle {
 
     readonly property alias faceItem: faceLoader.item
 
-    // Dynamic aliases for common pill elements to preserve full compatibility
     readonly property var helpButton: (faceLoader.item && faceLoader.item.helpButton) ? faceLoader.item.helpButton : null
     readonly property var volPill: (faceLoader.item && faceLoader.item.volPill) ? faceLoader.item.volPill : null
     readonly property var kbPill: (faceLoader.item && faceLoader.item.kbPill) ? faceLoader.item.kbPill : null
