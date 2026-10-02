@@ -387,6 +387,27 @@
           "title": "Estilo",
           "desc": "Elige el estilo visual para el reloj y la fecha"
         }
+      },
+      "vis": {
+        "bars": {
+          "title": "Cantidad de barras",
+          "desc": "Número de barras de frecuencia a mostrar"
+        },
+        "alignment": {
+          "title": "Alineación",
+          "desc": "Centrar el visualizador o alinearlo arriba o abajo"
+        },
+        "align": {
+          "center": "Centro",
+          "top": "Arriba",
+          "bottom": "Abajo",
+          "left": "Izquierda",
+          "right": "Derecha"
+        },
+        "continuous": {
+          "title": "Onda continua",
+          "desc": "Mostrar una onda fluida en lugar de barras discretas"
+        }
       }
     },
     "theme": {

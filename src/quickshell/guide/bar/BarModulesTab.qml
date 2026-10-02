@@ -67,6 +67,24 @@ Item {
         return "HH:mm:ss";
     }
 
+    property int visBarCount: {
+        let bs = Config.getSetting("bar", {});
+        if (bs && bs.visBarCount !== undefined) return bs.visBarCount;
+        return 16;
+    }
+
+    property string visAlignment: {
+        let bs = Config.getSetting("bar", {});
+        if (bs && bs.visAlignment) return bs.visAlignment;
+        return "center";
+    }
+
+    property bool visContinuous: {
+        let bs = Config.getSetting("bar", {});
+        if (bs && bs.visContinuous !== undefined) return Boolean(bs.visContinuous);
+        return false;
+    }
+
     readonly property var workspaceStyles: BarModuleRegistry.variantList("workspaces")
     readonly property var timeStyles: BarModuleRegistry.variantList("timedate")
 
@@ -95,6 +113,18 @@ Item {
         property string fullDateStr: (typeof DateTime !== "undefined" && DateTime.fullDate) ? DateTime.fullDate : "Fri, Sep 18"
         property string dateStr: (typeof DateTime !== "undefined" && DateTime.fullDate) ? DateTime.fullDate : "Fri, Sep 18"
         property var barWindow: ({ "startupCascadeFinished": true, "s": function(v) { return rootObj ? rootObj.s(v) : v; } })
+        property bool moduleActive: true
+    }
+
+    QtObject {
+        id: previewVisWidgetObj
+        function s(v) { return rootObj ? rootObj.s(v) : v; }
+        property bool isCompact: false
+        property int barCount: barModulesRoot.visBarCount
+        property string visAlignment: barModulesRoot.visAlignment
+        property bool visContinuous: barModulesRoot.visContinuous
+        property bool isPreview: true
+        property var barWindow: ({ "startupCascadeFinished": true, "isStartupReady": true, "s": function(v) { return rootObj ? rootObj.s(v) : v; } })
         property bool moduleActive: true
     }
 
@@ -146,6 +176,24 @@ Item {
         } else {
             barModulesRoot.timeFormat = "HH:mm:ss";
         }
+
+        if (bs && bs.visBarCount !== undefined) {
+            barModulesRoot.visBarCount = bs.visBarCount;
+        } else {
+            barModulesRoot.visBarCount = 16;
+        }
+
+        if (bs && bs.visAlignment) {
+            barModulesRoot.visAlignment = bs.visAlignment;
+        } else {
+            barModulesRoot.visAlignment = "center";
+        }
+
+        if (bs && bs.visContinuous !== undefined) {
+            barModulesRoot.visContinuous = Boolean(bs.visContinuous);
+        } else {
+            barModulesRoot.visContinuous = false;
+        }
     }
 
     function setWorkspacesStyle(styleName) {
@@ -196,6 +244,49 @@ Item {
         current.time.format = fmt;
         if (current.sideTime !== undefined) delete current.sideTime;
         Config.setSetting("bar", current);
+    }
+
+    function setVisBarCount(count) {
+        barModulesRoot.visBarCount = count;
+        let current = Config.getSetting("bar", {});
+        current.visBarCount = count;
+        Config.setSetting("bar", current);
+    }
+
+    function setVisAlignment(align) {
+        barModulesRoot.visAlignment = align;
+        let current = Config.getSetting("bar", {});
+        current.visAlignment = align;
+        Config.setSetting("bar", current);
+    }
+
+    function setVisContinuous(val) {
+        barModulesRoot.visContinuous = val;
+        let current = Config.getSetting("bar", {});
+        current.visContinuous = val;
+        Config.setSetting("bar", current);
+    }
+
+    onVisAlignmentChanged: {
+        let a = barModulesRoot.visAlignment;
+        if (visAlignSwitch) {
+            if (barModulesRoot.isSideBar) {
+                visAlignSwitch.currentIndex = (a === "left" || a === "top") ? 0 : ((a === "right" || a === "bottom") ? 2 : 1);
+            } else {
+                visAlignSwitch.currentIndex = (a === "top" || a === "left") ? 0 : ((a === "bottom" || a === "right") ? 2 : 1);
+            }
+        }
+    }
+
+    onIsSideBarChanged: {
+        let a = barModulesRoot.visAlignment;
+        if (visAlignSwitch) {
+            if (barModulesRoot.isSideBar) {
+                visAlignSwitch.currentIndex = (a === "left" || a === "top") ? 0 : ((a === "right" || a === "bottom") ? 2 : 1);
+            } else {
+                visAlignSwitch.currentIndex = (a === "top" || a === "left") ? 0 : ((a === "bottom" || a === "right") ? 2 : 1);
+            }
+        }
     }
 
     onVisibleChanged: {
@@ -860,6 +951,205 @@ Item {
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                id: visModuleBox
+                Layout.fillWidth: true
+                implicitHeight: visCardLayout.implicitHeight + rootObj.s(24)
+                radius: ThemeBackend.borderRadius
+                color: Qt.alpha(ThemeBackend.surface0, 0.4)
+                border.color: Qt.alpha(ThemeBackend.surface1, 0.4)
+                border.width: 1
+                clip: true
+
+                ColumnLayout {
+                    id: visCardLayout
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: rootObj.s(12)
+                    spacing: rootObj.s(6)
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: rootObj.s(6)
+                        Layout.leftMargin: rootObj.s(4)
+                        Layout.rightMargin: rootObj.s(4)
+                        spacing: rootObj.s(8)
+
+                        Text {
+                            text: I18n.t("guide.bar.modules.vis", "Visualizer")
+                            font.family: ThemeBackend.fontFamily
+                            font.pixelSize: rootObj.s(16)
+                            font.bold: true
+                            color: ThemeBackend.text
+                        }
+                    }
+
+                    Rectangle {
+                        id: visPreviewBox
+                        Layout.fillWidth: true
+                        implicitHeight: rootObj.s(barModulesRoot.isSideBar ? 120 : 72)
+                        radius: ThemeBackend.borderRadius
+                        color: Qt.darker(ThemeBackend.mantle, 1.1)
+                        border.color: Qt.alpha(ThemeBackend.surface2, 0.25)
+                        border.width: 1
+                        clip: true
+
+                        Item {
+                            anchors.fill: parent
+                            enabled: false
+
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: (visFacePreviewLoader.item ? visFacePreviewLoader.item.implicitWidth : 0) * visFacePreviewLoader.scale
+                                height: (visFacePreviewLoader.item ? visFacePreviewLoader.item.implicitHeight : rootObj.s(32)) * visFacePreviewLoader.scale
+                                radius: ThemeBackend.borderRadius
+                                color: Qt.alpha(ThemeBackend.surface0, 0.5)
+                                border.color: Qt.alpha(ThemeBackend.surface2, 0.4)
+                                border.width: 1
+                                visible: width > 0 && height > 0
+                            }
+
+                            Loader {
+                                id: visFacePreviewLoader
+                                anchors.centerIn: parent
+                                width: item ? item.implicitWidth : 0
+                                height: item ? item.implicitHeight : rootObj.s(32)
+                                scale: Math.min(1.0, Math.min((visPreviewBox.width - rootObj.s(16)) / Math.max(1, width), (visPreviewBox.height - rootObj.s(16)) / Math.max(1, height)))
+                                asynchronous: false
+                                source: barModulesRoot.isSideBar ? Qt.resolvedUrl("../../bar/faces/vis/SideVisFace.qml") : Qt.resolvedUrl("../../bar/faces/vis/VisFace.qml")
+
+                                onLoaded: {
+                                    if (item) {
+                                        item.widget = previewVisWidgetObj;
+                                        item.width = Qt.binding(function() { return item.implicitWidth; });
+                                        item.height = Qt.binding(function() { return item.implicitHeight; });
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    SettingsRow {
+                        rootObj: barModulesRoot.rootObj
+                        settingId: "bar_vis_bar_count"
+                        searchKeywords: "visualizer bars count amount cava"
+                        baseColor: Qt.alpha(ThemeBackend.surface1, 0.35)
+                        icon: "󰝚"
+                        title: I18n.t("guide.bar.vis.bars.title", "Amount of Bars")
+                        description: I18n.t("guide.bar.vis.bars.desc", "Number of frequency bars to display")
+
+                        NumberSelector {
+                            id: visBarCountSelector
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            implicitWidth: rootObj.s(140)
+                            implicitHeight: rootObj.s(32)
+                            from: 4
+                            to: 64
+                            stepSize: 1
+                            decimals: 0
+                            value: barModulesRoot.visBarCount
+                            baseColor: ThemeBackend.surface0
+                            accentColor: ThemeBackend.mauve
+                            buttonColor: ThemeBackend.surface1
+                            buttonTextColor: ThemeBackend.text
+                            textColor: ThemeBackend.text
+                            subTextColor: ThemeBackend.subtext0
+                            borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
+                            cornerRadius: ThemeBackend.borderRadius
+                            fontFamily: ThemeBackend.fontFamily
+                            fontPixelSize: rootObj.s(12)
+                            onValueChanged: {
+                                let rounded = Math.round(visBarCountSelector.value);
+                                if (barModulesRoot.visBarCount !== rounded) {
+                                    barModulesRoot.setVisBarCount(rounded);
+                                }
+                            }
+                            onTriggered: {
+                                barModulesRoot.setVisBarCount(Math.round(visBarCountSelector.value));
+                            }
+                        }
+                    }
+
+                    SettingsRow {
+                        rootObj: barModulesRoot.rootObj
+                        settingId: "bar_vis_alignment"
+                        searchKeywords: "visualizer alignment center top bottom align"
+                        baseColor: Qt.alpha(ThemeBackend.surface1, 0.35)
+                        icon: "󰆑"
+                        title: I18n.t("guide.bar.vis.alignment.title", "Alignment")
+                        description: I18n.t("guide.bar.vis.alignment.desc", "Center the visualizer or align to top or bottom")
+
+                        Switch {
+                            id: visAlignSwitch
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            implicitWidth: rootObj.s(220)
+                            implicitHeight: rootObj.s(32)
+                            cornerRadius: ThemeBackend.borderRadius
+                            fontPixelSize: rootObj.s(11)
+                            options: barModulesRoot.isSideBar
+                                ? [
+                                    I18n.t("guide.bar.vis.align.left", "Left"),
+                                    I18n.t("guide.bar.vis.align.center", "Center"),
+                                    I18n.t("guide.bar.vis.align.right", "Right")
+                                ]
+                                : [
+                                    I18n.t("guide.bar.vis.align.top", "Top"),
+                                    I18n.t("guide.bar.vis.align.center", "Center"),
+                                    I18n.t("guide.bar.vis.align.bottom", "Bottom")
+                                ]
+                            currentIndex: {
+                                let a = barModulesRoot.visAlignment;
+                                if (barModulesRoot.isSideBar) {
+                                    if (a === "left" || a === "top") return 0;
+                                    if (a === "right" || a === "bottom") return 2;
+                                    return 1;
+                                } else {
+                                    if (a === "top" || a === "left") return 0;
+                                    if (a === "bottom" || a === "right") return 2;
+                                    return 1;
+                                }
+                            }
+                            accentColor: ThemeBackend.mauve
+                            baseColor: ThemeBackend.surface0
+                            textColor: ThemeBackend.text
+                            activeTextColor: ThemeBackend.crust
+                            onValueChanged: function(index, value) {
+                                let align = "center";
+                                if (barModulesRoot.isSideBar) {
+                                    align = index === 0 ? "left" : (index === 2 ? "right" : "center");
+                                } else {
+                                    align = index === 0 ? "top" : (index === 2 ? "bottom" : "center");
+                                }
+                                barModulesRoot.setVisAlignment(align);
+                            }
+                        }
+                    }
+
+                    SettingsRow {
+                        rootObj: barModulesRoot.rootObj
+                        settingId: "bar_vis_continuous"
+                        searchKeywords: "visualizer continuous wave smooth fluid"
+                        baseColor: Qt.alpha(ThemeBackend.surface1, 0.35)
+                        icon: "󰓃"
+                        title: I18n.t("guide.bar.vis.continuous.title", "Continuous Wave")
+                        description: I18n.t("guide.bar.vis.continuous.desc", "Render a smooth fluid wave instead of discrete bars")
+
+                        Toggle {
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            checked: barModulesRoot.visContinuous
+                            accentColor: ThemeBackend.mauve
+                            baseColor: ThemeBackend.surface1
+                            handleColor: ThemeBackend.crust
+                            handleOffColor: ThemeBackend.text
+                            onToggled: function(c) {
+                                barModulesRoot.setVisContinuous(c);
                             }
                         }
                     }

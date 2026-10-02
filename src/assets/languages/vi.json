@@ -386,6 +386,27 @@
           "title": "Kiểu",
           "desc": "Chọn kiểu hiển thị cho đồng hồ và ngày"
         }
+      },
+      "vis": {
+        "bars": {
+          "title": "Số lượng thanh",
+          "desc": "Số lượng thanh tần số hiển thị"
+        },
+        "alignment": {
+          "title": "Căn chỉnh",
+          "desc": "Căn giữa bộ trực quan hoặc căn theo phía trên hoặc dưới"
+        },
+        "align": {
+          "center": "Giữa",
+          "top": "Trên",
+          "bottom": "Dưới",
+          "left": "Trái",
+          "right": "Phải"
+        },
+        "continuous": {
+          "title": "Sóng liên tục",
+          "desc": "Hiển thị dạng sóng mượt mà thay vì các thanh riêng biệt"
+        }
       }
     },
     "theme": {

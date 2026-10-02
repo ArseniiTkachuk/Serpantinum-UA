@@ -387,6 +387,27 @@
           "title": "Stil",
           "desc": "Wählen Sie das visuelle Design für die Uhrzeit- und Datumsanzeige"
         }
+      },
+      "vis": {
+        "bars": {
+          "title": "Anzahl der Balken",
+          "desc": "Anzahl der anzuzeigenden Frequenzbalken"
+        },
+        "alignment": {
+          "title": "Ausrichtung",
+          "desc": "Visualisierer zentrieren oder oben bzw. unten ausrichten"
+        },
+        "align": {
+          "center": "Zentriert",
+          "top": "Oben",
+          "bottom": "Unten",
+          "left": "Links",
+          "right": "Rechts"
+        },
+        "continuous": {
+          "title": "Kontinuierliche Welle",
+          "desc": "Eine fließende Welle anstelle einzelner Balken darstellen"
+        }
       }
     },
     "theme": {

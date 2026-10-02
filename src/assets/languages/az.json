@@ -384,6 +384,27 @@
           "title": "Stil",
           "desc": "Saat və tarix ekranının vizual stilini seçin"
         }
+      },
+      "vis": {
+        "bars": {
+          "title": "Zolaqların sayı",
+          "desc": "Göstəriləcək tezlik zolaqlarının sayı"
+        },
+        "alignment": {
+          "title": "Düzləndirmə",
+          "desc": "Vizualizatoru mərkəzə, yuxarı və ya aşağı düzləndirin"
+        },
+        "align": {
+          "center": "Mərkəz",
+          "top": "Yuxarı",
+          "bottom": "Aşağı",
+          "left": "Sol",
+          "right": "Sağ"
+        },
+        "continuous": {
+          "title": "Davamlı dalğa",
+          "desc": "Ayrı-ayrı zolaqlar əvəzinə hamar dalğa göstərin"
+        }
       }
     },
     "theme": {

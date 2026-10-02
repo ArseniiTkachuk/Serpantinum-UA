@@ -385,6 +385,27 @@
           "title": "Stile",
           "desc": "Scegli lo stile visivo per l'orologio e la data"
         }
+      },
+      "vis": {
+        "bars": {
+          "title": "Numero di barre",
+          "desc": "Numero di barre di frequenza da visualizzare"
+        },
+        "alignment": {
+          "title": "Allineamento",
+          "desc": "Centra il visualizzatore o allinealo in alto o in basso"
+        },
+        "align": {
+          "center": "Al centro",
+          "top": "In alto",
+          "bottom": "In basso",
+          "left": "A sinistra",
+          "right": "A destra"
+        },
+        "continuous": {
+          "title": "Onda continua",
+          "desc": "Mostra un onda fluida invece di barre discrete"
+        }
       }
     },
     "theme": {

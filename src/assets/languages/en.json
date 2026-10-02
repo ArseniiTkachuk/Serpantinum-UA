@@ -386,6 +386,27 @@
           "title": "Style",
           "desc": "Choose the visual style for the clock and date display"
         }
+      },
+      "vis": {
+        "bars": {
+          "title": "Amount of Bars",
+          "desc": "Number of frequency bars to display"
+        },
+        "alignment": {
+          "title": "Alignment",
+          "desc": "Center the visualizer or align to top or bottom"
+        },
+        "align": {
+          "center": "Center",
+          "top": "Top",
+          "bottom": "Bottom",
+          "left": "Left",
+          "right": "Right"
+        },
+        "continuous": {
+          "title": "Continuous Wave",
+          "desc": "Render a smooth fluid wave instead of discrete bars"
+        }
       }
     },
     "theme": {
