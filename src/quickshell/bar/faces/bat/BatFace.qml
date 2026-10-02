@@ -76,8 +76,8 @@ Item {
         return true;
     }
 
-    readonly property bool effectiveShowPercent: showPercent
-    readonly property bool effectiveShowIcon: showIcon
+    readonly property bool effectiveShowPercent: root.isDesktop ? false : showPercent
+    readonly property bool effectiveShowIcon: root.isDesktop ? true : showIcon
 
     property bool isDesktop: isPreview ? false : (UPower.displayDevice.ready ? !UPower.displayDevice.isLaptopBattery : SystemInfo.isDesktop)
     readonly property int batCap: isPreview ? 82 : (UPower.displayDevice.ready ? Math.round(UPower.displayDevice.percentage * 100) : 0)
@@ -163,7 +163,7 @@ Item {
             Text {
                 id: dummyIconMetrics
                 visible: false
-                text: (root.batStyle === "minimal" && root.isCharging) ? "󱐋" : (root.batIcon ? root.batIcon : "󰁹")
+                text: (!root.isDesktop && root.batStyle === "minimal" && root.isCharging) ? "󱐋" : (root.batIcon ? root.batIcon : "󰁹")
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: root.isDesktop ? s(root.isCompact ? 15 : 16) : s(root.isCompact ? 12 : 13.5)
             }
@@ -206,6 +206,7 @@ Item {
                 anchors.fill: parent
                 renderTarget: Canvas.FramebufferObject
                 renderStrategy: Canvas.Cooperative
+                visible: !root.isDesktop && batPill.fillRatio > 0
 
                 onWidthChanged: requestPaint()
                 onHeightChanged: requestPaint()
@@ -213,7 +214,7 @@ Item {
                 onPaint: {
                     var ctx = getContext("2d");
                     ctx.clearRect(0, 0, width, height);
-                    if (batPill.fillRatio <= 0) return;
+                    if (root.isDesktop || batPill.fillRatio <= 0) return;
 
                     ctx.save();
                     var r = Math.max(0, Math.min(batPill.radius, Math.min(width / 2, height / 2)));
@@ -250,7 +251,7 @@ Item {
 
                 Connections {
                     target: batPill
-                    enabled: root.showLayout && (!module || module.moduleActive)
+                    enabled: root.showLayout && (!module || module.moduleActive) && !root.isDesktop
                     function onRadiusChanged() { pillCanvas.requestPaint(); }
                     function onFillRatioChanged() { pillCanvas.requestPaint(); }
                     function onFillWidthChanged() { pillCanvas.requestPaint(); }
@@ -259,9 +260,10 @@ Item {
 
                 Connections {
                     target: root
-                    enabled: root.showLayout && (!module || module.moduleActive)
+                    enabled: root.showLayout && (!module || module.moduleActive) && !root.isDesktop
                     function onBatStyleChanged() { pillCanvas.requestPaint(); }
                     function onCalmBatFillColorChanged() { pillCanvas.requestPaint(); }
+                    function onIsDesktopChanged() { pillCanvas.requestPaint(); }
                 }
             }
 
@@ -273,7 +275,7 @@ Item {
                 Text {
                     id: batIconText
                     visible: root.effectiveShowIcon
-                    text: (root.batStyle === "minimal" && root.isCharging) ? "󱐋" : root.batIcon
+                    text: (!root.isDesktop && root.batStyle === "minimal" && root.isCharging) ? "󱐋" : root.batIcon
                     font.family: ThemeBackend.fontFamily
                     font.pixelSize: root.isDesktop ? s(root.isCompact ? 15 : 16) : s(root.isCompact ? 12 : 13.5)
                     color: root.isDesktop ? ThemeBackend.red : (root.isCompact ? ThemeBackend.text : ThemeBackend.subtext0)
@@ -299,7 +301,7 @@ Item {
                 anchors.bottom: parent.bottom
                 width: Math.min(parent.width, Math.max(0, batPill.fillWidth))
                 clip: true
-                visible: batPill.fillRatio > 0
+                visible: !root.isDesktop && batPill.fillRatio > 0
 
                 Row {
                     x: contentRow.x
@@ -339,7 +341,7 @@ Item {
 
         Item {
             id: batCapBox
-            visible: root.batStyle === "minimal"
+            visible: !root.isDesktop && root.batStyle === "minimal"
             width: visible ? s(root.isCompact ? 4 : 5) : 0
             height: sysLayout.pillHeight
 

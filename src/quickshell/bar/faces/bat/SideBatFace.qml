@@ -73,8 +73,8 @@ Item {
         return true;
     }
 
-    readonly property bool effectiveShowPercent: showPercent
-    readonly property bool effectiveShowIcon: showIcon
+    readonly property bool effectiveShowPercent: root.isDesktop ? false : showPercent
+    readonly property bool effectiveShowIcon: root.isDesktop ? true : showIcon
 
     property bool showLayout: (!barWindow || isPreview) ? true : false
     property alias batPill: batBtn
@@ -133,7 +133,7 @@ Item {
 
         Item {
             id: sideBatCapBox
-            visible: root.batStyle === "minimal"
+            visible: !root.isDesktop && root.batStyle === "minimal"
             width: batBtn.width
             height: visible ? s(root.isCompact ? 3 : 4) : 0
 
@@ -149,8 +149,11 @@ Item {
 
         Rectangle {
             id: batBtn
-            width: s(root.isCompact ? 26 : 28)
-            height: s(root.isCompact ? 36 : 40)
+            width: s(root.isCompact ? (root.isDesktop ? 28 : 26) : (root.isDesktop ? 30 : 28))
+            height: root.isDesktop ? width : s(root.isCompact ? 36 : 40)
+            Behavior on width { NumberAnimation { duration: 480; easing.type: Easing.OutQuint } }
+            Behavior on height { NumberAnimation { duration: 480; easing.type: Easing.OutQuint } }
+
             radius: Math.max(0, ThemeBackend.borderRadius - s(2))
             property color baseColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
             color: batMouseArea.pressed ? Qt.darker(baseColor, 1.15) : (batMouseArea.containsMouse ? Qt.lighter(baseColor, 1.08) : baseColor)
@@ -193,6 +196,7 @@ Item {
                 anchors.fill: parent
                 renderTarget: Canvas.FramebufferObject
                 renderStrategy: Canvas.Cooperative
+                visible: !root.isDesktop && batBtn.fillRatio > 0
 
                 onWidthChanged: requestPaint()
                 onHeightChanged: requestPaint()
@@ -200,7 +204,7 @@ Item {
                 onPaint: {
                     var ctx = getContext("2d");
                     ctx.clearRect(0, 0, width, height);
-                    if (batBtn.fillRatio <= 0) return;
+                    if (root.isDesktop || batBtn.fillRatio <= 0) return;
 
                     ctx.save();
                     var r = Math.max(0, Math.min(batBtn.radius, Math.min(width / 2, height / 2)));
@@ -237,7 +241,7 @@ Item {
 
                 Connections {
                     target: batBtn
-                    enabled: root.showLayout && (!module || module.moduleActive)
+                    enabled: root.showLayout && (!module || module.moduleActive) && !root.isDesktop
                     function onRadiusChanged() { sideBatCanvas.requestPaint(); }
                     function onFillRatioChanged() { sideBatCanvas.requestPaint(); }
                     function onFillYChanged() { sideBatCanvas.requestPaint(); }
@@ -246,9 +250,10 @@ Item {
 
                 Connections {
                     target: root
-                    enabled: root.showLayout && (!module || module.moduleActive)
+                    enabled: root.showLayout && (!module || module.moduleActive) && !root.isDesktop
                     function onBatStyleChanged() { sideBatCanvas.requestPaint(); }
                     function onCalmBatFillColorChanged() { sideBatCanvas.requestPaint(); }
+                    function onIsDesktopChanged() { sideBatCanvas.requestPaint(); }
                 }
             }
 
@@ -262,9 +267,9 @@ Item {
                 Text {
                     id: sideBatIconText
                     anchors.centerIn: parent
-                    text: (root.batStyle === "minimal" && root.isCharging) ? "󱐋" : root.batIcon
+                    text: (!root.isDesktop && root.batStyle === "minimal" && root.isCharging) ? "󱐋" : root.batIcon
                     font.family: ThemeBackend.fontFamily
-                    font.pixelSize: root.isDesktop ? s(root.isCompact ? 14 : 15) : s(root.isCompact ? 12 : 13)
+                    font.pixelSize: root.isDesktop ? s(root.isCompact ? 15 : 16) : s(root.isCompact ? 12 : 13)
                     color: root.isDesktop ? ThemeBackend.red : (root.isCompact ? ThemeBackend.text : ThemeBackend.subtext0)
                 }
             }
@@ -276,7 +281,7 @@ Item {
                 anchors.bottom: parent.bottom
                 height: Math.min(parent.height, Math.max(0, parent.height - batBtn.fillY))
                 clip: true
-                visible: root.effectiveShowIcon && batBtn.fillRatio > 0
+                visible: !root.isDesktop && root.effectiveShowIcon && batBtn.fillRatio > 0
 
                 Text {
                     x: sideContentBox.x

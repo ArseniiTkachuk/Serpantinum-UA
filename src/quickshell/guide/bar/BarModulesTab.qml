@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell
+import Quickshell.Services.UPower
 import "../../"
 import "../../bar"
 import "../../reusables"
@@ -23,6 +24,8 @@ Item {
     Behavior on opacity { NumberAnimation { duration: 250 } }
 
     property real cardRadius: ThemeBackend.clampedBorderRadius
+
+    property bool isDesktop: (typeof UPower !== "undefined" && UPower.displayDevice && UPower.displayDevice.ready) ? !UPower.displayDevice.isLaptopBattery : (typeof SystemInfo !== "undefined" ? SystemInfo.isDesktop : false)
 
     property string barPosition: {
         let bs = Config.getSetting("bar", {});
@@ -1510,8 +1513,9 @@ Item {
 
             Rectangle {
                 id: batteryModuleBox
+                visible: !barModulesRoot.isDesktop
                 Layout.fillWidth: true
-                implicitHeight: batteryCardLayout.implicitHeight + rootObj.s(24)
+                implicitHeight: visible ? (batteryCardLayout.implicitHeight + rootObj.s(24)) : 0
                 radius: ThemeBackend.borderRadius
                 color: Qt.alpha(ThemeBackend.surface0, 0.4)
                 border.color: Qt.alpha(ThemeBackend.surface1, 0.4)
@@ -1659,25 +1663,25 @@ Item {
                                     radius: ThemeBackend.borderRadius
                                     clip: true
 
-                                    color: batCardMouse.pressed
+                                    color: cardMouse.pressed
                                         ? Qt.darker(ThemeBackend.surface0, 1.15)
                                         : (isSelected
-                                            ? (batCardHover.hovered ? Qt.lighter(ThemeBackend.surface0, 1.30) : Qt.lighter(ThemeBackend.surface0, 1.24))
-                                            : (batCardHover.hovered ? Qt.lighter(ThemeBackend.surface0, 1.10) : ThemeBackend.surface0))
+                                            ? (cardHover.hovered ? Qt.lighter(ThemeBackend.surface0, 1.30) : Qt.lighter(ThemeBackend.surface0, 1.24))
+                                            : (cardHover.hovered ? Qt.lighter(ThemeBackend.surface0, 1.10) : ThemeBackend.surface0))
 
                                     border.width: 1
                                     border.color: isSelected
                                         ? Qt.alpha(ThemeBackend.surface2, 0.75)
-                                        : (batCardHover.hovered ? Qt.alpha(ThemeBackend.surface2, 0.5) : Qt.alpha(ThemeBackend.surface1, 0.4))
+                                        : (cardHover.hovered ? Qt.alpha(ThemeBackend.surface2, 0.5) : Qt.alpha(ThemeBackend.surface1, 0.4))
 
                                     Behavior on color { ColorAnimation { duration: 180 } }
                                     Behavior on border.color { ColorAnimation { duration: 180 } }
 
-                                    scale: (batCardMouse.pressed ? 0.985 : (batCardHover.hovered ? 1.015 : 1.0)) * batStyleCard.popScale
+                                    scale: (cardMouse.pressed ? 0.985 : (cardHover.hovered ? 1.015 : 1.0)) * batStyleCard.popScale
                                     Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
 
                                     HoverHandler {
-                                        id: batCardHover
+                                        id: cardHover
                                     }
 
                                     Rectangle {
@@ -1695,7 +1699,7 @@ Item {
                                     }
 
                                     MouseArea {
-                                        id: batCardMouse
+                                        id: cardMouse
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
@@ -1792,7 +1796,6 @@ Item {
                                 }
                             }
 
-                            // Spacer item ensuring the 2 options have identical width to 3-option selectors (time/workspaces)
                             Item {
                                 Layout.fillWidth: true
                                 Layout.preferredWidth: 1
