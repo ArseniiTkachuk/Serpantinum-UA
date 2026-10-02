@@ -2,8 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Services.UPower
-import "../../reusables"
-import "../../"
+import "../../../reusables"
+import "../../../"
 
 Item {
     id: root

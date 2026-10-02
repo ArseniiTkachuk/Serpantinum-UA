@@ -5,8 +5,8 @@ import QtQuick.Shapes
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
-import "../../reusables"
-import "../../"
+import "../../../reusables"
+import "../../../"
 
 Item {
     id: root

@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
-import "../../reusables"
-import "../../"
+import "../../../reusables"
+import "../../../"
 
 Item {
     id: root
