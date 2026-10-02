@@ -40,6 +40,7 @@ Item {
 
     readonly property real cy: height - handleSize * (height < 30 ? 0.65 : 0.7)
     property real pad: handleSize / 2
+    property real mouseAreaHeight: height < 30 ? height : Math.min(height, Math.max(handleSize * 1.4, bar.s(22)))
     property bool isDragging: mouseArea.pressed
     signal moved(real val)
 
@@ -385,7 +386,10 @@ Item {
 
     MouseArea {
         id: mouseArea
-        anchors.fill: parent
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: bar.mouseAreaHeight
+        y: Math.max(0, Math.min(bar.height - height, Math.round(bar.cy - height / 2)))
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
 

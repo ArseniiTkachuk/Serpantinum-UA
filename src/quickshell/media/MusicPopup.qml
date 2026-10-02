@@ -1216,6 +1216,7 @@ Item {
                         spacing: root.s(12)
 
                         ColumnLayout {
+                            z: 1
                             spacing: root.s(6)
                             opacity: root.introText
                             transform: Translate { x: root.s(25) * (1 - root.introText) }
