@@ -786,7 +786,9 @@
     "placeholder": "Mit > beginnen für befehle...",
     "tab_applications": "Anwendungen",
     "tab_files": "Dateien",
-    "placeholder_files": "Dateien suchen oder Pfad eingeben..."
+    "placeholder_files": "Dateien suchen oder Pfad eingeben...",
+    "tab_emojis": "Emojis",
+    "placeholder_emojis": "Emojis suchen oder Stichwort eingeben..."
   },
   "calendar": {
     "loading": "Laden...",

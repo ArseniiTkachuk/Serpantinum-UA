@@ -736,7 +736,9 @@
     "placeholder": "Əmr üçün > ilə başlayın...",
     "tab_applications": "Tətbiqlər",
     "tab_files": "Fayllar",
-    "placeholder_files": "Faylları axtarın və ya yol daxil edin..."
+    "placeholder_files": "Faylları axtarın və ya yol daxil edin...",
+    "tab_emojis": "Emojilər",
+    "placeholder_emojis": "Emojiləri axtarın və ya açar söz daxil edin..."
   },
   "calendar": {
     "loading": "Yüklənir...",

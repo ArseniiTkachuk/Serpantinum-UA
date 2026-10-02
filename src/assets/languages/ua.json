@@ -765,7 +765,9 @@
     "placeholder": "Почніть з > для команди...",
     "tab_applications": "Програми",
     "tab_files": "Файли",
-    "placeholder_files": "Пошук файлів або шлях..."
+    "placeholder_files": "Пошук файлів або шлях...",
+    "tab_emojis": "Емодзі",
+    "placeholder_emojis": "Пошук емодзі за назвою або словом..."
   },
   "calendar": {
     "loading": "Завантаження...",

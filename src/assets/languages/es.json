@@ -786,7 +786,9 @@
     "placeholder": "Empieza con > para un comando...",
     "tab_applications": "Aplicaciones",
     "tab_files": "Archivos",
-    "placeholder_files": "Buscar archivos o escribir ruta..."
+    "placeholder_files": "Buscar archivos o escribir ruta...",
+    "tab_emojis": "Emojis",
+    "placeholder_emojis": "Buscar emojis o escribir palabra clave..."
   },
   "calendar": {
     "loading": "Cargando...",

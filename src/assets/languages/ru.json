@@ -786,7 +786,9 @@
     "placeholder": "Начните с > для команды...",
     "tab_applications": "Приложения",
     "tab_files": "Файлы",
-    "placeholder_files": "Поиск файлов или путь..."
+    "placeholder_files": "Поиск файлов или путь...",
+    "tab_emojis": "Эмодзи",
+    "placeholder_emojis": "Поиск эмодзи по названию или слову..."
   },
   "calendar": {
     "loading": "Загрузка...",
