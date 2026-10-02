@@ -109,6 +109,25 @@ Item {
 
     readonly property var workspaceStyles: BarModuleRegistry.variantList("workspaces")
     readonly property var timeStyles: BarModuleRegistry.variantList("timedate")
+    readonly property var batStyles: BarModuleRegistry.variantList("bat")
+
+    property string batStyle: {
+        let bs = Config.getSetting("bar", {});
+        if (bs && bs.batStyle) return bs.batStyle;
+        return "classic";
+    }
+
+    property bool batShowPercent: {
+        let bs = Config.getSetting("bar", {});
+        if (bs && bs.batShowPercent !== undefined) return Boolean(bs.batShowPercent);
+        return true;
+    }
+
+    property bool batShowIcon: {
+        let bs = Config.getSetting("bar", {});
+        if (bs && bs.batShowIcon !== undefined) return Boolean(bs.batShowIcon);
+        return true;
+    }
 
     readonly property var previewWidget: ({
         "s": function(v) { return rootObj ? rootObj.s(v) : v; },
@@ -156,6 +175,18 @@ Item {
         property bool isCompact: false
         property string sysmonStyle: barModulesRoot.sysmonStyle
         property var sysmonStats: barModulesRoot.sysmonStats
+        property bool isPreview: true
+        property var barWindow: ({ "startupCascadeFinished": true, "isStartupReady": true, "isDataReady": true, "s": function(v) { return rootObj ? rootObj.s(v) : v; } })
+        property bool moduleActive: true
+    }
+
+    QtObject {
+        id: previewBatWidgetObj
+        function s(v) { return rootObj ? rootObj.s(v) : v; }
+        property bool isCompact: false
+        property string batStyle: barModulesRoot.batStyle
+        property bool batShowPercent: barModulesRoot.batShowPercent
+        property bool batShowIcon: barModulesRoot.batShowIcon
         property bool isPreview: true
         property var barWindow: ({ "startupCascadeFinished": true, "isStartupReady": true, "isDataReady": true, "s": function(v) { return rootObj ? rootObj.s(v) : v; } })
         property bool moduleActive: true
@@ -245,6 +276,24 @@ Item {
             barModulesRoot.sysmonStats = stats;
         } else {
             barModulesRoot.sysmonStats = ["cpu", "ram", "temp"];
+        }
+
+        if (bs && bs.batStyle) {
+            barModulesRoot.batStyle = bs.batStyle;
+        } else {
+            barModulesRoot.batStyle = "classic";
+        }
+
+        if (bs && bs.batShowPercent !== undefined) {
+            barModulesRoot.batShowPercent = Boolean(bs.batShowPercent);
+        } else {
+            barModulesRoot.batShowPercent = true;
+        }
+
+        if (bs && bs.batShowIcon !== undefined) {
+            barModulesRoot.batShowIcon = Boolean(bs.batShowIcon);
+        } else {
+            barModulesRoot.batShowIcon = true;
         }
     }
 
@@ -347,6 +396,27 @@ Item {
         barModulesRoot.sysmonStats = res;
         let current = Config.getSetting("bar", {});
         current.sysmonStats = res;
+        Config.setSetting("bar", current);
+    }
+
+    function setBatStyle(styleName) {
+        barModulesRoot.batStyle = styleName;
+        let current = Config.getSetting("bar", {});
+        current.batStyle = styleName;
+        Config.setSetting("bar", current);
+    }
+
+    function setBatShowPercent(val) {
+        barModulesRoot.batShowPercent = val;
+        let current = Config.getSetting("bar", {});
+        current.batShowPercent = val;
+        Config.setSetting("bar", current);
+    }
+
+    function setBatShowIcon(val) {
+        barModulesRoot.batShowIcon = val;
+        let current = Config.getSetting("bar", {});
+        current.batShowIcon = val;
         Config.setSetting("bar", current);
     }
 
@@ -1432,6 +1502,301 @@ Item {
                             handleOffColor: ThemeBackend.text
                             onToggled: function(c) {
                                 barModulesRoot.toggleSysmonStat("disk", c);
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                id: batteryModuleBox
+                Layout.fillWidth: true
+                implicitHeight: batteryCardLayout.implicitHeight + rootObj.s(24)
+                radius: ThemeBackend.borderRadius
+                color: Qt.alpha(ThemeBackend.surface0, 0.4)
+                border.color: Qt.alpha(ThemeBackend.surface1, 0.4)
+                border.width: 1
+                clip: true
+
+                ColumnLayout {
+                    id: batteryCardLayout
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: rootObj.s(12)
+                    spacing: rootObj.s(6)
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: rootObj.s(6)
+                        Layout.leftMargin: rootObj.s(4)
+                        Layout.rightMargin: rootObj.s(4)
+                        spacing: rootObj.s(8)
+
+                        Text {
+                            text: I18n.t("guide.bar.modules.battery", "Battery")
+                            font.family: ThemeBackend.fontFamily
+                            font.pixelSize: rootObj.s(16)
+                            font.bold: true
+                            color: ThemeBackend.text
+                        }
+                    }
+
+                    Rectangle {
+                        id: batPreviewBox
+                        Layout.fillWidth: true
+                        implicitHeight: rootObj.s(barModulesRoot.isSideBar ? 120 : 72)
+                        radius: ThemeBackend.borderRadius
+                        color: Qt.darker(ThemeBackend.mantle, 1.1)
+                        border.color: Qt.alpha(ThemeBackend.surface2, 0.25)
+                        border.width: 1
+                        clip: true
+
+                        Item {
+                            anchors.fill: parent
+                            enabled: false
+
+                            Loader {
+                                id: batFacePreviewLoader
+                                anchors.centerIn: parent
+                                width: item ? item.implicitWidth : 0
+                                height: item ? item.implicitHeight : 0
+                                scale: Math.min(1.0, Math.min((batPreviewBox.width - rootObj.s(16)) / Math.max(1, width), (batPreviewBox.height - rootObj.s(16)) / Math.max(1, height)))
+                                asynchronous: false
+                                source: barModulesRoot.isSideBar
+                                    ? Qt.resolvedUrl("../../bar/faces/bat/SideBatFace.qml")
+                                    : Qt.resolvedUrl("../../bar/faces/bat/BatFace.qml")
+
+                                onLoaded: {
+                                    if (item) {
+                                        item.widget = previewBatWidgetObj;
+                                        item.width = Qt.binding(function() { return item.implicitWidth; });
+                                        item.height = Qt.binding(function() { return item.implicitHeight; });
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    SettingsRow {
+                        rootObj: barModulesRoot.rootObj
+                        settingId: "bar_bat_show_percent"
+                        searchKeywords: "battery charge percentage percent number"
+                        baseColor: Qt.alpha(ThemeBackend.surface1, 0.35)
+                        icon: "󰚥"
+                        title: I18n.t("guide.bar.bat.show_percent.title", "Show Percentage")
+                        description: I18n.t("guide.bar.bat.show_percent.desc", "Display the numeric battery charge percentage")
+                        visible: !barModulesRoot.isSideBar
+                        searchable: !barModulesRoot.isSideBar
+                        hiddenByConfig: barModulesRoot.isSideBar
+
+                        Toggle {
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            checked: barModulesRoot.batShowPercent
+                            accentColor: ThemeBackend.mauve
+                            baseColor: ThemeBackend.surface1
+                            handleColor: ThemeBackend.crust
+                            handleOffColor: ThemeBackend.text
+                            onToggled: function(c) {
+                                barModulesRoot.setBatShowPercent(c);
+                            }
+                        }
+                    }
+
+                    SettingsRow {
+                        rootObj: barModulesRoot.rootObj
+                        settingId: "bar_bat_show_icon"
+                        searchKeywords: "battery icon symbol indicator"
+                        baseColor: Qt.alpha(ThemeBackend.surface1, 0.35)
+                        icon: "󰁹"
+                        title: I18n.t("guide.bar.bat.show_icon.title", "Show Icon")
+                        description: I18n.t("guide.bar.bat.show_icon.desc", "Display the battery icon or graphic indicator")
+
+                        Toggle {
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            checked: barModulesRoot.batShowIcon
+                            accentColor: ThemeBackend.mauve
+                            baseColor: ThemeBackend.surface1
+                            handleColor: ThemeBackend.crust
+                            handleOffColor: ThemeBackend.text
+                            onToggled: function(c) {
+                                barModulesRoot.setBatShowIcon(c);
+                            }
+                        }
+                    }
+
+                    SettingsRow {
+                        id: batStyleRow
+                        rootObj: barModulesRoot.rootObj
+                        settingId: "bar_bat_style"
+                        searchKeywords: "battery style look visual classic minimal ios android capsule"
+                        baseColor: Qt.alpha(ThemeBackend.surface1, 0.35)
+                        icon: "󰂄"
+                        title: I18n.t("guide.bar.bat.style.title", "Battery Style")
+                        description: I18n.t("guide.bar.bat.style.desc", "Choose the visual appearance of the battery indicator")
+
+                        bottomContent: GridLayout {
+                            id: batStylesGrid
+                            Layout.fillWidth: true
+                            columns: Math.max(1, Math.min(3, Math.floor(batteryCardLayout.width / rootObj.s(160))))
+                            rowSpacing: rootObj.s(10)
+                            columnSpacing: rootObj.s(10)
+
+                            Repeater {
+                                model: barModulesRoot.batStyles
+                                delegate: Rectangle {
+                                    id: batStyleCard
+                                    required property var modelData
+                                    required property int index
+
+                                    readonly property bool isSelected: barModulesRoot.batStyle === modelData.id
+                                    property real popScale: 1.0
+                                    property real flashOpacity: 0.0
+
+                                    Layout.fillWidth: true
+                                    Layout.preferredWidth: 1
+                                    implicitHeight: batStyleInnerCol.implicitHeight + rootObj.s(16)
+                                    radius: ThemeBackend.borderRadius
+                                    clip: true
+
+                                    color: batCardMouse.pressed
+                                        ? Qt.darker(ThemeBackend.surface0, 1.15)
+                                        : (isSelected
+                                            ? (batCardHover.hovered ? Qt.lighter(ThemeBackend.surface0, 1.30) : Qt.lighter(ThemeBackend.surface0, 1.24))
+                                            : (batCardHover.hovered ? Qt.lighter(ThemeBackend.surface0, 1.10) : ThemeBackend.surface0))
+
+                                    border.width: 1
+                                    border.color: isSelected
+                                        ? Qt.alpha(ThemeBackend.surface2, 0.75)
+                                        : (batCardHover.hovered ? Qt.alpha(ThemeBackend.surface2, 0.5) : Qt.alpha(ThemeBackend.surface1, 0.4))
+
+                                    Behavior on color { ColorAnimation { duration: 180 } }
+                                    Behavior on border.color { ColorAnimation { duration: 180 } }
+
+                                    scale: (batCardMouse.pressed ? 0.985 : (batCardHover.hovered ? 1.015 : 1.0)) * batStyleCard.popScale
+                                    Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+
+                                    HoverHandler {
+                                        id: batCardHover
+                                    }
+
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        radius: parent.radius
+                                        color: "#ffffff"
+                                        opacity: batStyleCard.flashOpacity
+                                        PropertyAnimation on opacity { id: batFlashAnim; to: 0; duration: 350; easing.type: Easing.OutExpo }
+                                    }
+
+                                    SequentialAnimation {
+                                        id: batPopAnim
+                                        NumberAnimation { target: batStyleCard; property: "popScale"; to: 1.02; duration: 100; easing.type: Easing.OutQuad }
+                                        NumberAnimation { target: batStyleCard; property: "popScale"; to: 1.0; duration: 350; easing.type: Easing.OutQuint }
+                                    }
+
+                                    MouseArea {
+                                        id: batCardMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            batPopAnim.start();
+                                            batStyleCard.flashOpacity = 0.15;
+                                            batFlashAnim.start();
+                                            if (typeof Sounds !== "undefined") {
+                                                Sounds.playSfx("reusables/clickbutton/click.wav");
+                                            }
+                                            barModulesRoot.setBatStyle(modelData.id);
+                                        }
+                                    }
+
+                                    ColumnLayout {
+                                        id: batStyleInnerCol
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.top: parent.top
+                                        anchors.margins: rootObj.s(8)
+                                        spacing: rootObj.s(8)
+
+                                        Rectangle {
+                                            id: batCardPreviewBox
+                                            Layout.fillWidth: true
+                                            implicitHeight: rootObj.s(barModulesRoot.isSideBar ? 140 : 72)
+                                            radius: ThemeBackend.borderRadius
+                                            color: Qt.darker(ThemeBackend.mantle, 1.1)
+                                            clip: true
+
+                                            Item {
+                                                anchors.fill: parent
+                                                enabled: false
+
+                                                QtObject {
+                                                    id: cardMockWidget
+                                                    function s(v) { return rootObj ? rootObj.s(v) : v; }
+                                                    property bool isCompact: false
+                                                    property string batStyle: modelData.id
+                                                    property bool batShowPercent: barModulesRoot.batShowPercent
+                                                    property bool batShowIcon: barModulesRoot.batShowIcon
+                                                    property bool isPreview: true
+                                                    property var barWindow: ({
+                                                        "startupCascadeFinished": true,
+                                                        "isStartupReady": true,
+                                                        "isDataReady": true,
+                                                        "s": function(v) { return rootObj ? rootObj.s(v) : v; }
+                                                    })
+                                                    property bool moduleActive: true
+                                                }
+
+                                                Loader {
+                                                    id: batCardFaceLoader
+                                                    anchors.centerIn: parent
+                                                    width: item ? item.implicitWidth : 0
+                                                    height: item ? item.implicitHeight : 0
+                                                    scale: Math.min(1.0, Math.min((batCardPreviewBox.width - rootObj.s(16)) / Math.max(1, width), (batCardPreviewBox.height - rootObj.s(16)) / Math.max(1, height)))
+                                                    asynchronous: false
+                                                    source: barModulesRoot.isSideBar
+                                                        ? Qt.resolvedUrl("../../bar/faces/bat/SideBatFace.qml")
+                                                        : Qt.resolvedUrl("../../bar/faces/bat/BatFace.qml")
+
+                                                    onLoaded: {
+                                                        if (item) {
+                                                            item.width = Qt.binding(function() { return item.implicitWidth; });
+                                                            item.height = Qt.binding(function() { return item.implicitHeight; });
+                                                            item.widget = cardMockWidget;
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                radius: parent.radius
+                                                color: "transparent"
+                                                border.width: 1
+                                                border.color: Qt.alpha(ThemeBackend.surface2, 0.25)
+                                            }
+                                        }
+
+                                        Text {
+                                            Layout.fillWidth: true
+                                            Layout.leftMargin: rootObj.s(2)
+                                            Layout.rightMargin: rootObj.s(2)
+                                            Layout.bottomMargin: rootObj.s(2)
+                                            text: modelData.name
+                                            font.family: ThemeBackend.fontFamily
+                                            font.pixelSize: rootObj.s(13)
+                                            font.weight: Font.Bold
+                                            color: ThemeBackend.text
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Spacer item ensuring the 2 options have identical width to 3-option selectors (time/workspaces)
+                            Item {
+                                Layout.fillWidth: true
+                                Layout.preferredWidth: 1
+                                visible: batStylesGrid.columns === 3
                             }
                         }
                     }

@@ -432,6 +432,26 @@
           "title": "Datenträgerauslastung",
           "desc": "Ring für Festplattennutzung anzeigen"
         }
+      },
+      "bat": {
+        "show_percent": {
+          "title": "Prozent anzeigen",
+          "desc": "Numerischen Batterieladestand in Prozent anzeigen"
+        },
+        "show_icon": {
+          "title": "Symbol anzeigen",
+          "desc": "Batteriesymbol oder grafischen Indikator anzeigen"
+        },
+        "style": {
+          "title": "Batteriestil",
+          "desc": "Wählen Sie das visuelle Design der Batterieanzeige",
+          "name": {
+            "classic": "Klassisch",
+            "minimal": "Minimal"
+          },
+          "classic": "Pille mit Farbverlaufswelle",
+          "minimal": "iOS/Android-Kapsel mit Kappe"
+        }
       }
     },
     "theme": {

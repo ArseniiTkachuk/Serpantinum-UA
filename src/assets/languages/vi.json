@@ -431,6 +431,26 @@
           "title": "Sử dụng ổ đĩa",
           "desc": "Hiển thị vòng mức sử dụng bộ nhớ lưu trữ"
         }
+      },
+      "bat": {
+        "show_percent": {
+          "title": "Hiển thị phần trăm",
+          "desc": "Hiển thị phần trăm pin dạng số"
+        },
+        "show_icon": {
+          "title": "Hiển thị biểu tượng",
+          "desc": "Hiển thị biểu tượng pin hoặc chỉ báo đồ họa"
+        },
+        "style": {
+          "title": "Kiểu pin",
+          "desc": "Chọn giao diện hiển thị của chỉ báo pin",
+          "name": {
+            "classic": "Cổ điển",
+            "minimal": "Tối giản"
+          },
+          "classic": "Dạng viên thuốc với sóng chuyển màu",
+          "minimal": "Dạng thỏi iOS/Android có nắp"
+        }
       }
     },
     "theme": {

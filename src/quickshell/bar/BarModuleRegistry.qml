@@ -178,9 +178,27 @@ QtObject {
         "bat": {
             name: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.battery", "Battery") : "Battery",
             icon: "󰁹",
-            defaultVariant: "default",
+            defaultVariant: "classic",
             horizontalFace: "faces/bat/BatFace.qml",
-            verticalFace: "faces/bat/SideBatFace.qml"
+            verticalFace: "faces/bat/SideBatFace.qml",
+            variants: {
+                "classic": {
+                    id: "classic",
+                    name: typeof I18n !== "undefined" ? I18n.t("guide.bar.bat.style.name.classic", "Classic") : "Classic",
+                    desc: typeof I18n !== "undefined" ? I18n.t("guide.bar.bat.style.classic", "Pill with gradient wave fill") : "Pill with gradient wave fill",
+                    icon: "󰁹",
+                    horizontalFace: "faces/bat/BatFace.qml",
+                    verticalFace: "faces/bat/SideBatFace.qml"
+                },
+                "minimal": {
+                    id: "minimal",
+                    name: typeof I18n !== "undefined" ? I18n.t("guide.bar.bat.style.name.minimal", "Minimal") : "Minimal",
+                    desc: typeof I18n !== "undefined" ? I18n.t("guide.bar.bat.style.minimal", "iOS/Android capsule with cap") : "iOS/Android capsule with cap",
+                    icon: "󰂄",
+                    horizontalFace: "faces/bat/BatFace.qml",
+                    verticalFace: "faces/bat/SideBatFace.qml"
+                }
+            }
         }
     })
 
@@ -199,6 +217,12 @@ QtObject {
             if (isSide && ss.timeStyle) return ss.timeStyle;
             if (isSide && bs.sideTimeStyle) return bs.sideTimeStyle;
             if (bs.timeStyle) return bs.timeStyle;
+            return "classic";
+        }
+        if (norm === "bat") {
+            if (isSide && ss.batStyle) return ss.batStyle;
+            if (isSide && bs.sideBatStyle) return bs.sideBatStyle;
+            if (bs.batStyle) return bs.batStyle;
             return "classic";
         }
 

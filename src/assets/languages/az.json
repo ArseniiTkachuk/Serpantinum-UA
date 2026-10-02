@@ -429,6 +429,26 @@
           "title": "Disk istifadəsi",
           "desc": "Yaddaş diski istifadəsi halqasını göstər"
         }
+      },
+      "bat": {
+        "show_percent": {
+          "title": "Faizi göstər",
+          "desc": "Batareya enerjisinin faizini rəqəmlə göstər"
+        },
+        "show_icon": {
+          "title": "İkonu göstər",
+          "desc": "Batareya ikonunu və ya qrafik göstəricini göstər"
+        },
+        "style": {
+          "title": "Batareya tərzi",
+          "desc": "Batareya göstəricisinin vizual görünüşünü seçin",
+          "name": {
+            "classic": "Klassik",
+            "minimal": "Minimal"
+          },
+          "classic": "Qradiyent dalğalı kapsul",
+          "minimal": "iOS/Android tərzində qapaqlı kapsul"
+        }
       }
     },
     "theme": {

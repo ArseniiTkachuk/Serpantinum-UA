@@ -431,6 +431,26 @@
           "title": "Disk Usage",
           "desc": "Display storage disk utilization ring"
         }
+      },
+      "bat": {
+        "show_percent": {
+          "title": "Show Percentage",
+          "desc": "Display the numeric battery charge percentage"
+        },
+        "show_icon": {
+          "title": "Show Icon",
+          "desc": "Display the battery icon or graphic indicator"
+        },
+        "style": {
+          "title": "Battery Style",
+          "desc": "Choose the visual appearance of the battery indicator",
+          "name": {
+            "classic": "Classic",
+            "minimal": "Minimal"
+          },
+          "classic": "Pill with gradient wave fill",
+          "minimal": "iOS/Android capsule with cap"
+        }
       }
     },
     "theme": {

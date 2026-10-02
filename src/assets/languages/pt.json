@@ -431,6 +431,26 @@
           "title": "Uso do disco",
           "desc": "Exibir o anel de utilização do disco"
         }
+      },
+      "bat": {
+        "show_percent": {
+          "title": "Mostrar porcentagem",
+          "desc": "Exibe a porcentagem numérica de carga da bateria"
+        },
+        "show_icon": {
+          "title": "Mostrar ícone",
+          "desc": "Exibe o ícone da bateria ou indicador gráfico"
+        },
+        "style": {
+          "title": "Estilo da bateria",
+          "desc": "Escolha a aparência visual do indicador de bateria",
+          "name": {
+            "classic": "Clássico",
+            "minimal": "Minimalista"
+          },
+          "classic": "Pílula com onda gradiente",
+          "minimal": "Cápsula estilo iOS/Android com tampa"
+        }
       }
     },
     "theme": {
