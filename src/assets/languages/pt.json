@@ -407,6 +407,30 @@
           "title": "Onda contínua",
           "desc": "Exibir uma onda suave em vez de barras discretas"
         }
+      },
+      "sysmon": {
+        "style": {
+          "title": "Estilo do círculo",
+          "desc": "Aparência visual dos anéis de progresso",
+          "wave": "Onda",
+          "circle": "Círculo"
+        },
+        "cpu": {
+          "title": "Uso da CPU",
+          "desc": "Exibir o anel de utilização do processador"
+        },
+        "ram": {
+          "title": "Uso de memória",
+          "desc": "Exibir o anel de utilização de memória (RAM)"
+        },
+        "temp": {
+          "title": "Temperatura",
+          "desc": "Exibir o anel de temperatura do sistema"
+        },
+        "disk": {
+          "title": "Uso do disco",
+          "desc": "Exibir o anel de utilização do disco"
+        }
       }
     },
     "theme": {

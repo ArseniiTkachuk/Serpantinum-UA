@@ -408,6 +408,30 @@
           "title": "Kontinuierliche Welle",
           "desc": "Eine fließende Welle anstelle einzelner Balken darstellen"
         }
+      },
+      "sysmon": {
+        "style": {
+          "title": "Kreis-Stil",
+          "desc": "Erscheinungsbild der Fortschrittsringe",
+          "wave": "Welle",
+          "circle": "Kreis"
+        },
+        "cpu": {
+          "title": "CPU-Auslastung",
+          "desc": "Ring für Prozessorauslastung anzeigen"
+        },
+        "ram": {
+          "title": "Speichernutzung",
+          "desc": "Ring für Arbeitsspeichernutzung anzeigen"
+        },
+        "temp": {
+          "title": "Temperatur",
+          "desc": "Ring für Systemtemperatur anzeigen"
+        },
+        "disk": {
+          "title": "Datenträgerauslastung",
+          "desc": "Ring für Festplattennutzung anzeigen"
+        }
       }
     },
     "theme": {

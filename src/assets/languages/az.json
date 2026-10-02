@@ -405,6 +405,30 @@
           "title": "Davamlı dalğa",
           "desc": "Ayrı-ayrı zolaqlar əvəzinə hamar dalğa göstərin"
         }
+      },
+      "sysmon": {
+        "style": {
+          "title": "Dairə tərzi",
+          "desc": "Gedişat dairələrinin görünüşü",
+          "wave": "Dalğa",
+          "circle": "Dairə"
+        },
+        "cpu": {
+          "title": "CPU istifadəsi",
+          "desc": "Prosessor istifadəsi halqasını göstər"
+        },
+        "ram": {
+          "title": "Yaddaş istifadəsi",
+          "desc": "Operativ yaddaş (RAM) halqasını göstər"
+        },
+        "temp": {
+          "title": "Temperatur",
+          "desc": "Sistem temperaturu halqasını göstər"
+        },
+        "disk": {
+          "title": "Disk istifadəsi",
+          "desc": "Yaddaş diski istifadəsi halqasını göstər"
+        }
       }
     },
     "theme": {
