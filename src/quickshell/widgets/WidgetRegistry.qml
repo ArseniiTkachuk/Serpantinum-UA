@@ -310,7 +310,7 @@ QtObject {
             name: I18n.t("widgets.types.clock"),
             icon: String.fromCodePoint(0xF0954),
             defaultWidth: 250,
-            iconOffsetX: -1,
+            iconOffsetX: 0,
             defaultHeight: 120,
             defaultVariant: "digital",
             variants: {

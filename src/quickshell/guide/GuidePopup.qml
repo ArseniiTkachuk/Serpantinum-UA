@@ -539,20 +539,20 @@ Item {
 
     property var tabsModel: [
         { id: "Welcome", key: "welcome", name: "Welcome", icon: "󰋜", file: "WelcomeTab.qml", iconOffsetX: -1 },
-        { id: "General", key: "general", name: "General", icon: "󰒓", file: "general/GeneralTab.qml", iconOffsetX: -1 },
+        { id: "General", key: "general", name: "General", icon: "󰒓", file: "general/GeneralTab.qml", iconOffsetX: 0 },
         { 
             id: "Display", 
             key: "display", 
             name: "Display", 
             icon: "󰃠", 
             file: "display/DisplayMainTab.qml", 
-            iconOffsetX: -2,
+            iconOffsetX: 0,
             subtabs: [
-                { id: "DisplayGeneral", key: "display_general", name: "Display", icon: "󰃠", file: "display/DisplayMainTab.qml", iconOffsetX: -2 },
+                { id: "DisplayGeneral", key: "display_general", name: "Display", icon: "󰃠", file: "display/DisplayMainTab.qml", iconOffsetX: 1 },
                 { id: "DisplayWidgets", key: "display_widgets", name: "Widgets", icon: "󰕰", file: "display/DisplayWidgetsTab.qml", iconOffsetX: 0 }
             ]
         },
-        { id: "Theme", key: "theme", name: "Theme", icon: "✦", file: "theme/ThemeTab.qml", iconOffsetX: 0 },
+        { id: "Theme", key: "theme", name: "Theme", icon: "󰏘", file: "theme/ThemeTab.qml", iconOffsetX: 0 },
         { 
             id: "Bar", 
             key: "bar", 
@@ -561,8 +561,8 @@ Item {
             file: "bar/BarGeneralTab.qml", 
             iconOffsetX: -2,
             subtabs: [
-                { id: "BarGeneral", key: "bar_general", name: "General", icon: "󰒓", file: "bar/BarGeneralTab.qml", iconOffsetX: -1 },
-                { id: "BarModules", key: "bar_modules", name: "Modules", icon: "󰮯", file: "bar/BarModulesTab.qml", iconOffsetX: -1 }
+                { id: "BarGeneral", key: "bar_general", name: "General", icon: "󰒓", file: "bar/BarGeneralTab.qml", iconOffsetX: 1 },
+                { id: "BarModules", key: "bar_modules", name: "Modules", icon: "󰮯", file: "bar/BarModulesTab.qml", iconOffsetX: 0 }
             ]
         },
         { id: "Launcher", key: "launcher", name: "Launcher", icon: "󰵆", file: "LauncherTab.qml", iconOffsetX: 0 },
@@ -570,8 +570,8 @@ Item {
         { id: "On-Screen Display", key: "osd", name: "On-Screen Display", icon: "󰕾", file: "OnScreenDisplayTab.qml", iconOffsetX: 0 },
         { id: "Notifications", key: "notifications", name: "Notifications", icon: "󰂚", file: "notifications/NotificationsTab.qml", iconOffsetX: 0 },
         { id: "Wellbeing", key: "wellbeing", name: "Wellbeing", icon: "󰄉", file: "wellbeing/DigitalWellbeingTab.qml", iconOffsetX: 0 },        
-        { id: "Idle", key: "idle", name: "Idle", icon: "󰒲", file: "IdleTab.qml", iconOffsetX: -2 },
-        { id: "About", key: "about", name: "About", icon: "", file: "AboutTab.qml", iconOffsetX: 0 }
+        { id: "Idle", key: "idle", name: "Idle", icon: "󰒲", file: "IdleTab.qml", iconOffsetX: 0 },
+        { id: "About", key: "about", name: "About", icon: "󰋽", file: "AboutTab.qml", iconOffsetX: 0 }
     ]
 
     StackView.onStatusChanged: {
@@ -1932,7 +1932,7 @@ Item {
 
                                             Text {
                                                 text: "󰅀"
-                                                font.family: ThemeBackend.fontFamily
+                                                font.family: ThemeBackend.iconFont
                                                 font.pixelSize: root.s(14)
                                                 color: tabHeaderDisplay.isDirectActive 
                                                     ? ThemeBackend.crust 
@@ -2164,7 +2164,7 @@ Item {
                                             Layout.preferredHeight: root.s(32)
                                             Layout.alignment: Qt.AlignVCenter
                                             cornerRadius: ThemeBackend.borderRadius
-                                            buttonIcon: "✦"
+                                            buttonIcon: "󰏘"
                                             iconOffsetX: root.tabsModel[3].iconOffsetX ?? 0
                                             iconFontSize: root.s(16)
                                             accentColor: ThemeBackend.surface0
@@ -2268,7 +2268,7 @@ Item {
 
                                             Text {
                                                 text: "󰅀"
-                                                font.family: ThemeBackend.fontFamily
+                                                font.family: ThemeBackend.iconFont
                                                 font.pixelSize: root.s(14)
                                                 color: tabHeaderBar.isDirectActive 
                                                     ? ThemeBackend.crust 
@@ -2914,7 +2914,7 @@ Item {
                                             Layout.preferredHeight: root.s(32)
                                             Layout.alignment: Qt.AlignVCenter
                                             cornerRadius: ThemeBackend.borderRadius
-                                            buttonIcon: ""
+                                            buttonIcon: "󰋽"
                                             iconOffsetX: root.tabsModel[11].iconOffsetX ?? 0
                                             iconFontSize: root.s(16)
                                             accentColor: ThemeBackend.surface0

@@ -172,10 +172,14 @@ Rectangle {
                     : (barWindow ? barWindow.s(sysMonWidgetRoot.isCompact ? 9 : 11) : (sysMonWidgetRoot.isCompact ? 9 : 11));
 
                 var fontFam = (ThemeBackend.fontFamily !== undefined && ThemeBackend.fontFamily !== "") ? ThemeBackend.fontFamily : "sans-serif";
-                var fontStr = (circleRoot.showText ? "bold " : "normal ") + Math.round(fontSize) + "px \"" + fontFam + "\", \"Iosevka Nerd Font\", \"JetBrainsMono Nerd Font\", sans-serif";
+                if (circleRoot.showText) {
+                    ctx.font = "bold " + Math.round(fontSize) + "px \"" + fontFam + "\", sans-serif";
+                } else {
+                    ctx.font = "normal " + Math.round(fontSize) + "px \"" + ThemeBackend.iconFont + "\"";
+                }
+
                 var baseTextColor = (ThemeBackend.text !== undefined && ThemeBackend.text !== "") ? ThemeBackend.text : "#ffffff";
 
-                ctx.font = fontStr;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillStyle = baseTextColor;
@@ -203,6 +207,12 @@ Rectangle {
                 enabled: sysMonWidgetRoot.isSysVisible
                 function onBasePrimaryChanged() { circleCanvas.requestPaint(); }
             }
+
+            Connections {
+                target: ThemeBackend
+                enabled: sysMonWidgetRoot.isSysVisible
+                function onIconFontChanged() { circleCanvas.requestPaint(); }
+            }
         }
     }
 
@@ -214,20 +224,20 @@ Rectangle {
 
         SysMonCircle {
             value: isNaN(SysData.cpu) ? 0 : SysData.cpu / 100.0
-            icon: "󰍛"
+            icon: String.fromCodePoint(0xF035B)
             accentColor: Qt.tint(sysMonWidgetRoot.basePrimary, Qt.rgba(1.0, 0.22, 0.22, 0.25))
         }
 
         SysMonCircle {
             value: isNaN(SysData.ramPercent) ? 0 : SysData.ramPercent / 100.0
-            icon: "\uF2DB"
+            icon: String.fromCodePoint(0xF035C)
             accentColor: Qt.lighter(sysMonWidgetRoot.basePrimary, 1.15)
         }
 
         SysMonCircle {
             value: isNaN(SysData.temp) ? 0 : Math.max(0, Math.min(1, SysData.temp / 100.0))
             textVal: isNaN(SysData.temp) ? "0" : Math.round(SysData.temp).toString()
-            icon: "\uF2C9"
+            icon: String.fromCodePoint(0xF050F)
             accentColor: Qt.darker(sysMonWidgetRoot.basePrimary, 1.15)
         }
     }

@@ -66,7 +66,7 @@ Rectangle {
             height: leftLayout.pillHeight
             width: barWindow ? barWindow.s(leftWidgetRoot.isCompact ? 30 : 32) : (leftWidgetRoot.isCompact ? 30 : 32)
             visible: true
-            iconOffsetX: -2
+            iconOffsetX: 0
 
             cornerRadius: Math.max(0, ThemeBackend.borderRadius - (barWindow ? barWindow.s(2) : 2))
             buttonIcon: "󰒓"

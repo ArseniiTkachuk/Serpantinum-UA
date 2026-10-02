@@ -212,7 +212,7 @@ Rectangle {
                 height: barWindow ? barWindow.s(sideMediaRoot.isCompact ? 24 : 26) : (sideMediaRoot.isCompact ? 24 : 26)
                 cornerRadius: barWindow ? barWindow.s(sideMediaRoot.isCompact ? 7 : 8) : (sideMediaRoot.isCompact ? 7 : 8)
                 buttonIcon: "󰒮"
-                iconFontSize: barWindow ? barWindow.s(sideMediaRoot.isCompact ? 12 : 13) : (sideMediaRoot.isCompact ? 12 : 13)
+                iconFontSize: barWindow ? barWindow.s(sideMediaRoot.isCompact ? 6 : 7) : (sideMediaRoot.isCompact ? 6 : 7)
                 accentColor: sideMediaRoot.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
                 textColor: isHoveredOrHighlighted ? ThemeBackend.text : (sideMediaRoot.isCompact ? ThemeBackend.subtext0 : ThemeBackend.overlay2)
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -224,7 +224,7 @@ Rectangle {
                 height: barWindow ? barWindow.s(sideMediaRoot.isCompact ? 26 : 28) : (sideMediaRoot.isCompact ? 26 : 28)
                 cornerRadius: barWindow ? barWindow.s(sideMediaRoot.isCompact ? 7 : 8) : (sideMediaRoot.isCompact ? 7 : 8)
                 buttonIcon: (isMediaActive && isPlaying) ? "󰏤" : "󰐊"
-                iconFontSize: barWindow ? barWindow.s(sideMediaRoot.isCompact ? 14 : 15) : (sideMediaRoot.isCompact ? 14 : 15)
+                iconFontSize: barWindow ? barWindow.s(sideMediaRoot.isCompact ? 8 : 9) : (sideMediaRoot.isCompact ? 8 : 9)
                 accentColor: sideMediaRoot.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
                 textColor: isHoveredOrHighlighted ? ThemeBackend.green : (sideMediaRoot.isCompact ? Qt.lighter(ThemeBackend.text, 1.1) : ThemeBackend.text)
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -236,7 +236,7 @@ Rectangle {
                 height: barWindow ? barWindow.s(sideMediaRoot.isCompact ? 24 : 26) : (sideMediaRoot.isCompact ? 24 : 26)
                 cornerRadius: barWindow ? barWindow.s(sideMediaRoot.isCompact ? 7 : 8) : (sideMediaRoot.isCompact ? 7 : 8)
                 buttonIcon: "󰒭"
-                iconFontSize: barWindow ? barWindow.s(sideMediaRoot.isCompact ? 12 : 13) : (sideMediaRoot.isCompact ? 12 : 13)
+                iconFontSize: barWindow ? barWindow.s(sideMediaRoot.isCompact ? 6 : 7) : (sideMediaRoot.isCompact ? 6 : 7)
                 accentColor: sideMediaRoot.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
                 textColor: isHoveredOrHighlighted ? ThemeBackend.text : (sideMediaRoot.isCompact ? ThemeBackend.subtext0 : ThemeBackend.overlay2)
                 anchors.horizontalCenter: parent.horizontalCenter

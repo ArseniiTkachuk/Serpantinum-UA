@@ -23,7 +23,7 @@ Item {
     property real dynMargin: Math.max(6, Math.min(24, root.height * 0.12))
     property real dynSpacing: Math.max(4, Math.min(20, root.height * 0.08))
     property real btnSize: Math.max(18, Math.min(56, root.height * 0.24))
-    property real iconSize: btnSize * 0.5
+    property real iconSize: Math.round(btnSize * 0.3)
     property real titleSize: Math.max(10, Math.min(24, root.height * 0.14))
     property real subSize: Math.max(8, Math.min(16, root.height * 0.1))
 
