@@ -341,11 +341,11 @@ PanelWindow {
     property real targetLauncherHeight: {
         let headerH = s(36) + s(28) + s(8) + s(28);
         if (currentTabIndex === 2) {
-            let rowCount = Math.ceil(Math.min(emojiModel.count, 25) / 5);
-            if (rowCount <= 0) {
+            let totalRows = Math.ceil(emojiModel.count / 5);
+            if (totalRows <= 0) {
                 return headerH;
             }
-            return headerH + s(8) + (Math.min(rowCount, customItemCount) * s(60));
+            return headerH + s(8) + (Math.min(totalRows, customItemCount) * s(60));
         }
         let count = Math.min(appModel.count, customItemCount);
         if (count <= 0) {
