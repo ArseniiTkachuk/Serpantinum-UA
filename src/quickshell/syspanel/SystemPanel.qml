@@ -324,7 +324,7 @@ Item {
             spacing: root.s(16)
 
             Text {
-                font.family: "Iosevka Nerd Font"
+                font.family: ThemeBackend.iconFont
                 font.pixelSize: root.s(32)
                 color: bRoot.iconColor
                 text: root.isCharging ? "󰂄" : (root.batCapacity > 20 ? "󰁹" : "󰂃")
@@ -409,8 +409,8 @@ Item {
 
         Text {
             anchors.centerIn: parent
-            font.family: qaBtn.customFontFamily !== "" ? qaBtn.customFontFamily : "Iosevka Nerd Font"
-            font.pixelSize: qaBtn.customFontSize > 0 ? qaBtn.customFontSize : root.s(22)
+            font.family: qaBtn.customFontFamily !== "" ? qaBtn.customFontFamily : ThemeBackend.iconFont
+            font.pixelSize: qaBtn.customFontSize > 0 ? qaBtn.customFontSize : root.s(18)
             font.weight: qaBtn.customFontSize > 0 ? Font.Bold : Font.Normal
             color: qaBtn.isActive ? ThemeBackend.crust : (qaMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)
             text: qaBtn.iconText
@@ -489,7 +489,7 @@ Item {
                             Text {
                                 anchors.centerIn: parent
                                 text: ""
-                                font.family: "Iosevka Nerd Font"
+                                font.family: ThemeBackend.iconFont
                                 font.pixelSize: root.s(18)
                                 color: ThemeBackend.text
                                 visible: SystemInfo.avatarPath === ""
@@ -573,7 +573,6 @@ Item {
                             IconButton {
                                 Layout.alignment: Qt.AlignVCenter
                                 size: root.s(26)
-                                iconOffsetX: -1
                                 cornerRadius: root.s(8)
                                 buttonIcon: root.sysMuted || root.sysVolume === 0 ? "󰖁" : (root.sysVolume > 50 ? "󰕾" : "󰖀")
                                 iconFontSize: root.s(15)
@@ -664,7 +663,6 @@ Item {
                                 Layout.alignment: Qt.AlignVCenter
                                 size: root.s(26)
                                 cornerRadius: root.s(8)
-                                iconOffsetX: -3
                                 buttonIcon: root.sysBrightness > 66 ? "󰃠" : (root.sysBrightness > 33 ? "󰃟" : "󰃞")
                                 iconFontSize: root.s(15)
                                 accentColor: ThemeBackend.surface1
@@ -1245,8 +1243,8 @@ Item {
 
                             Text {
                                 anchors.centerIn: parent
-                                font.family: "Iosevka Nerd Font"
-                                font.pixelSize: root.s(24)
+                                font.family: ThemeBackend.iconFont
+                                font.pixelSize: root.s(19)
                                 color: isDisabled ? ThemeBackend.surface2 : (actionMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)
                                 text: icon
                                 Behavior on color {
@@ -1263,8 +1261,8 @@ Item {
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     y: (actionCapsule.height / 2) - (height / 2) - (actionCapsule.height - parent.height)
-                                    font.family: "Iosevka Nerd Font"
-                                    font.pixelSize: root.s(24)
+                                    font.family: ThemeBackend.iconFont
+                                    font.pixelSize: root.s(19)
                                     color: ThemeBackend.crust
                                     text: icon
                                 }
