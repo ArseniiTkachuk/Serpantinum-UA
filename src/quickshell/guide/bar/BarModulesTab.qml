@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell
 import "../../"
+import "../../bar"
 import "../../reusables"
 import "../../reusables/guide"
 
@@ -66,53 +67,8 @@ Item {
         return "HH:mm:ss";
     }
 
-    readonly property var workspaceStyles: [
-        {
-            "id": "pills",
-            "name": I18n.t("guide.bar.modules.workspaces.style.name.pills", "Pills"),
-            "desc": I18n.t("guide.bar.modules.workspaces.style.pills", "Minimal pill indicators"),
-            "icon": "󰮯",
-            "faceFile": isSideBar ? "workspaces/faces/SidePillsFace.qml" : "workspaces/faces/PillsFace.qml"
-        },
-        {
-            "id": "numbers",
-            "name": I18n.t("guide.bar.modules.workspaces.style.name.numbers", "Numbers"),
-            "desc": I18n.t("guide.bar.modules.workspaces.style.numbers", "Numbered indices"),
-            "icon": "󰎦",
-            "faceFile": isSideBar ? "workspaces/faces/SideNumbersFace.qml" : "workspaces/faces/NumbersFace.qml"
-        },
-        {
-            "id": "pacman",
-            "name": I18n.t("guide.bar.modules.workspaces.style.name.pacman", "Pacman"),
-            "desc": I18n.t("guide.bar.modules.workspaces.style.pacman", "Animated arcade dots"),
-            "icon": "󰮯",
-            "faceFile": isSideBar ? "workspaces/faces/SidePacmanFace.qml" : "workspaces/faces/PacmanFace.qml"
-        }
-    ]
-
-    readonly property var timeStyles: [
-        {
-            "id": "classic",
-            "name": I18n.t("guide.bar.modules.timedate.style.name.classic", "Classic"),
-            "desc": I18n.t("guide.bar.modules.timedate.style.classic", "Clean stacked time and date"),
-            "icon": "󰥔",
-            "faceFile": isSideBar ? "timedate/faces/SideClassicFace.qml" : "timedate/faces/ClassicFace.qml"
-        },
-        {
-            "id": "material",
-            "name": I18n.t("guide.bar.modules.timedate.style.name.material", "Material"),
-            "desc": I18n.t("guide.bar.modules.timedate.style.material", "Diagonal bold accent numbers"),
-            "icon": "󰸗",
-            "faceFile": isSideBar ? "timedate/faces/SideMaterialFace.qml" : "timedate/faces/MaterialFace.qml"
-        },
-        {
-            "id": "badge",
-            "name": I18n.t("guide.bar.modules.timedate.style.name.badge", "Badge"),
-            "desc": I18n.t("guide.bar.modules.timedate.style.badge", "Pill-capsule segmented cards"),
-            "icon": "󰃰",
-            "faceFile": isSideBar ? "timedate/faces/SideBadgeFace.qml" : "timedate/faces/BadgeFace.qml"
-        }
-    ]
+    readonly property var workspaceStyles: BarModuleRegistry.variantList("workspaces")
+    readonly property var timeStyles: BarModuleRegistry.variantList("timedate")
 
     readonly property var previewWidget: ({
         "s": function(v) { return rootObj ? rootObj.s(v) : v; },
@@ -142,11 +98,11 @@ Item {
         property bool moduleActive: true
     }
 
-    function getFaceUrl(file) {
-        if (!file) return "";
-        let base = isSideBar ? "../../bar/sidemodules/" : "../../bar/modules/";
-        let path = file.indexOf("/") !== -1 ? file : ("workspaces/faces/" + file);
-        return Qt.resolvedUrl(base + path);
+    function getFaceUrl(moduleId, variantId) {
+        if (!moduleId) return "";
+        let modId = (variantId !== undefined) ? moduleId : "workspaces";
+        let vId = (variantId !== undefined) ? variantId : moduleId;
+        return BarModuleRegistry.variantFaceFile(modId, vId, barModulesRoot.isSideBar);
     }
 
     function syncSettings() {
@@ -491,7 +447,7 @@ Item {
                                                     height: item ? item.implicitHeight : 0
                                                     scale: Math.min(1.0, Math.min((previewBox.width - rootObj.s(16)) / Math.max(1, width), (previewBox.height - rootObj.s(16)) / Math.max(1, height)))
                                                     asynchronous: false
-                                                    source: barModulesRoot.getFaceUrl(modelData.faceFile)
+                                                    source: barModulesRoot.getFaceUrl("workspaces", modelData.id)
 
                                                     onLoaded: {
                                                         if (item) {
@@ -806,7 +762,7 @@ Item {
                                                     height: item ? item.implicitHeight : 0
                                                     scale: Math.min(1.0, Math.min((timePreviewBox.width - rootObj.s(16)) / Math.max(1, width), (timePreviewBox.height - rootObj.s(16)) / Math.max(1, height)))
                                                     asynchronous: false
-                                                    source: barModulesRoot.getFaceUrl(modelData.faceFile)
+                                                    source: barModulesRoot.getFaceUrl("timedate", modelData.id)
 
                                                     onLoaded: {
                                                         if (item) {
