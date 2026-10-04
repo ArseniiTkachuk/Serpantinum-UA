@@ -113,7 +113,7 @@ get_active_window_sway() {
         title="Desktop"
         return
     fi
-    raw=$(jq -r '.. | select(.focused? == true) | "\(.id // "")|\(.app_id // .window_properties?.class // "Unknown")|\(.name // "Unknown")"' <<< "$data" 2>/dev/null)
+    raw=$(jq -r '.. | select(.focused? == true and (.type? == "con" or .type? == "floating_con")) | "\(.id // "")|\(.app_id // .window_properties?.class // "Unknown")|\(.name // "Unknown")"' <<< "$data" 2>/dev/null)
     if [ -z "$raw" ]; then
         active_sway_id=""
         cls="Desktop"
@@ -187,7 +187,7 @@ listen_events() {
     if [ "$COMPOSITOR" = "niri" ]; then
         niri msg --json event-stream 2>/dev/null
     elif [ "$COMPOSITOR" = "sway" ]; then
-        swaymsg -t subscribe -m '["window"]' 2>/dev/null
+        swaymsg -t subscribe -m '["window", "workspace"]' 2>/dev/null
     else
         local sock="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
         if [ ! -S "$sock" ]; then
@@ -256,8 +256,51 @@ while true; do
                 ;;
             sway)
                 case "$line" in
-                    *'"change":"focus"'*|*'"change":"close"'*|*'"change":"title"'*)
-                        while read -t 0.02 -r extra_line; do :; done
+                    *'"change"'*)
+                        target_id=""
+                        has_focus_event=false
+                        is_window_changed=false
+                        closed=false
+                        is_workspace=false
+
+                        _parse_sway_line() {
+                            local l="$1"
+                            if [[ "$l" =~ \"change\":\ *\"close\" ]]; then
+                                closed=true
+                            elif [[ "$l" =~ \"change\":\ *\"focus\" ]] && [[ "$l" =~ \"current\": ]]; then
+                                is_workspace=true
+                            elif [[ "$l" =~ \"change\":\ *\"focus\" ]] && [[ "$l" =~ \"container\": ]]; then
+                                if [[ "$l" =~ \"container\":\{[^{}]*\"id\":\ *([0-9]+) ]] || [[ "$l" =~ \"id\":\ *([0-9]+) ]]; then
+                                    target_id="${BASH_REMATCH[1]}"
+                                fi
+                                has_focus_event=true
+                            elif [[ "$l" =~ \"change\":\ *\"title\" ]]; then
+                                if [[ "$l" =~ \"focused\":\ *true ]]; then
+                                    if [[ "$l" =~ \"container\":\{[^{}]*\"id\":\ *([0-9]+) ]] || [[ "$l" =~ \"id\":\ *([0-9]+) ]]; then
+                                        target_id="${BASH_REMATCH[1]}"
+                                    fi
+                                    has_focus_event=true
+                                    is_window_changed=true
+                                fi
+                            fi
+                        }
+
+                        _parse_sway_line "$line"
+                        while read -t 0.02 -r extra_line; do
+                            _parse_sway_line "$extra_line"
+                        done
+
+                        # If it was an unfocused title/window event with no other relevant events, ignore
+                        if [ "$closed" = false ] && [ "$has_focus_event" = false ] && [ "$is_workspace" = false ]; then
+                            continue
+                        fi
+
+                        # If it was a pure focus event to the currently active window, skip
+                        if [ "$closed" = false ] && [ "$has_focus_event" = true ] && [ "$is_window_changed" = false ]; then
+                            if [ -n "$target_id" ] && [ "$target_id" = "$active_sway_id" ]; then
+                                continue
+                            fi
+                        fi
                         get_active_window
                         emit_state "$cls" "$title"
                         ;;
