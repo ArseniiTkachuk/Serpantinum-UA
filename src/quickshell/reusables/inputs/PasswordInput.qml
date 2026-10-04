@@ -34,7 +34,14 @@ FocusScope {
     property int maximumLength: -1
     property var validator: null
 
-    property bool isRevealed: false
+    Settings {
+        id: persistentSettings
+        location: Caching.getStateDir("inputs") + "/settings.conf"
+        category: "PasswordInput"
+        property bool isRevealed: false
+    }
+
+    property alias isRevealed: persistentSettings.isRevealed
     property real revealProgress: isRevealed ? 1.0 : 0.0
     Behavior on revealProgress {
         NumberAnimation {
