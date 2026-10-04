@@ -227,11 +227,6 @@ Scope {
         }
     }
 
-    QtObject {
-        id: lockSettings
-        property bool hidePassword: false
-        property int revealDuration: 300
-    }
 
     QtObject {
         id: lockUI
@@ -798,8 +793,8 @@ Scope {
 
                     Connections {
                         target: surface
-                        function onActiveChanged() {
-                            if (surface.active && rootLock.locked && !screenRoot.isUnlocking) {
+                        function onVisibleChanged() {
+                            if (surface.visible && rootLock.locked && !screenRoot.isUnlocking) {
                                 screenRoot.restoreFocus();
                             }
                         }
@@ -1290,7 +1285,12 @@ Scope {
                                 opacity: mainDashboardShell.opacity
                                 scale: mainDashboardShell.scale
                                 visible: mainDashboardShell.visible
-                                transform: mainDashboardShell.transform
+                                transform: Scale {
+                                    origin.x: mainDashboardShell.width / 2
+                                    origin.y: mainDashboardShell.height / 2
+                                    xScale: screenRoot.isUnlocking ? screenRoot.foldScaleX : 1.0
+                                    yScale: screenRoot.isUnlocking ? screenRoot.foldScaleY : 1.0
+                                }
                             }
 
                             Rectangle {
@@ -1439,7 +1439,6 @@ Scope {
                                                 hasError: lockUI.failed
                                                 isBusy: lockUI.authenticating
                                                 isWidgetVisible: rootLock.locked && screenRoot.inputActive
-                                                isRevealed: !lockSettings.hidePassword
 
                                                 onActiveFocusChanged: {
                                                     if (!activeFocus && rootLock.locked && !screenRoot.isUnlocking && screenRoot.inputActive) {
