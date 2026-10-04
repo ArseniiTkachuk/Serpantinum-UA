@@ -147,29 +147,46 @@ while true; do
         case "$COMPOSITOR" in
             niri)
                 case "$line" in
-                    *'"WindowFocusChanged"'*|*'"WindowClosed"'*|*'"WorkspaceActivated"'*)
+                    *'"WindowFocusChanged"'*|*'"WindowClosed"'*|*'"WorkspaceActivated"'*|*'"WindowOpenedOrChanged"'*)
                         target_id=""
                         has_focus_event=false
+                        is_window_changed=false
                         closed=false
-                        [[ "$line" == *'"WindowClosed"'* ]] && closed=true
-                        if [[ "$line" =~ \"WindowFocusChanged\":\{\"id\":([0-9]+)\} ]]; then
-                            target_id="${BASH_REMATCH[1]}"
-                            has_focus_event=true
-                        elif [[ "$line" == *'"WindowFocusChanged":{"id":null}'* ]]; then
-                            target_id="null"
-                            has_focus_event=true
-                        fi
-                        while read -t 0.05 -r extra_line; do
-                            [[ "$extra_line" == *'"WindowClosed"'* ]] && closed=true
-                            if [[ "$extra_line" =~ \"WindowFocusChanged\":\{\"id\":([0-9]+)\} ]]; then
+                        is_workspace=false
+
+                        _parse_niri_line() {
+                            local l="$1"
+                            [[ "$l" == *'"WindowClosed"'* ]] && closed=true
+                            [[ "$l" == *'"WorkspaceActivated"'* ]] && is_workspace=true
+                            if [[ "$l" =~ \"WindowFocusChanged\":\{\"id\":([0-9]+)\} ]]; then
                                 target_id="${BASH_REMATCH[1]}"
                                 has_focus_event=true
-                            elif [[ "$extra_line" == *'"WindowFocusChanged":{"id":null}'* ]]; then
+                            elif [[ "$l" == *'"WindowFocusChanged":{"id":null}'* ]]; then
                                 target_id="null"
                                 has_focus_event=true
+                            elif [[ "$l" == *'"WindowOpenedOrChanged"'* ]]; then
+                                if [[ "$l" =~ \"is_focused\":\ *true ]]; then
+                                    if [[ "$l" =~ \"window\":\{\"id\":([0-9]+) ]] || [[ "$l" =~ \"id\":([0-9]+) ]]; then
+                                        target_id="${BASH_REMATCH[1]}"
+                                        has_focus_event=true
+                                        is_window_changed=true
+                                    fi
+                                fi
                             fi
+                        }
+
+                        _parse_niri_line "$line"
+                        while read -t 0.05 -r extra_line; do
+                            _parse_niri_line "$extra_line"
                         done
-                        if [ "$closed" = false ] && [ "$has_focus_event" = true ]; then
+
+                        # If it was an unfocused WindowOpenedOrChanged with no other relevant events, ignore
+                        if [ "$closed" = false ] && [ "$has_focus_event" = false ] && [ "$is_workspace" = false ]; then
+                            continue
+                        fi
+
+                        # If it was a pure focus event to the currently active window, skip
+                        if [ "$closed" = false ] && [ "$has_focus_event" = true ] && [ "$is_window_changed" = false ]; then
                             if [ "$target_id" = "$active_niri_id" ] || { [ "$target_id" = "null" ] && [ -z "$active_niri_id" ]; }; then
                                 continue
                             fi
