@@ -54,6 +54,11 @@ Scope {
         SystemInfo.fetch();
         root.updateDeInfo();
         root.updateScreenCount();
+        Quickshell.execDetached(["rm", "-f", Caching.getRunDir("lock") + "/locked"]);
+    }
+
+    Component.onDestruction: {
+        Quickshell.execDetached(["rm", "-f", Caching.getRunDir("lock") + "/locked"]);
     }
 
     Connections {
@@ -208,6 +213,7 @@ Scope {
         root.isUnlocking = false;
         kbWaiter.running = false;
         kbPoller.running = false;
+        Quickshell.execDetached(["rm", "-f", Caching.getRunDir("lock") + "/locked"]);
         if (root.freezeTimestamp !== "") {
             Quickshell.execDetached(["bash", "-c", "rm -f " + Caching.getRunDir("screenshot") + "/lock_freeze_*_" + root.freezeTimestamp + ".png"]);
             root.freezeTimestamp = "";
@@ -288,6 +294,14 @@ Scope {
     WlSessionLock {
         id: rootLock
         locked: false
+        onLockedChanged: {
+            let lockFile = Caching.getRunDir("lock") + "/locked";
+            if (locked) {
+                Quickshell.execDetached(["touch", lockFile]);
+            } else {
+                Quickshell.execDetached(["rm", "-f", lockFile]);
+            }
+        }
 
         surface: Component {
             WlSessionLockSurface {
