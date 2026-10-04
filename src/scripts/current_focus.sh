@@ -10,6 +10,12 @@ STATE_FILE="$RUN_DIR/focus_state.json"
 : >> "$LOG_FILE"
 : >> "$STATE_FILE"
 
+# Prevent tmpfs unbounded memory growth by trimming existing log file to last 200 lines
+if [ -f "$LOG_FILE" ]; then
+    tail -n 200 "$LOG_FILE" > "$LOG_FILE.tmp" 2>/dev/null && mv "$LOG_FILE.tmp" "$LOG_FILE"
+fi
+log_append_count=0
+
 for pid in $(pgrep -f "${0##*/}"); do
     if [ "$pid" != "$$" ] && [ "$pid" != "$PPID" ]; then
         kill -9 "$pid" 2>/dev/null
@@ -33,16 +39,19 @@ fi
 
 cls=""
 title=""
+active_addr=""
+active_niri_id=""
 
 get_active_window_hyprland() {
     local data cls_lower title_lower
     data=$(timeout 2 hyprctl activewindow -j 2>/dev/null)
     if [ -z "$data" ] || [ "$data" = "{}" ]; then
+        active_addr=""
         cls="Desktop"
         title="Desktop"
         return
     fi
-    IFS='|' read -r cls title < <(jq -r '(.initialClass // .class // "Unknown") as $c | "\($c)|\(.initialTitle // .title // $c)"' <<< "$data")
+    IFS='|' read -r active_addr cls title < <(jq -r '(.initialClass // .class // "Unknown") as $c | "\(.address // "")|\($c)|\(.initialTitle // .title // $c)"' <<< "$data")
     cls="${cls:-Desktop}"
     title="${title:-Desktop}"
     cls_lower="${cls,,}"
@@ -57,11 +66,12 @@ get_active_window_niri() {
     local data cls_lower title_lower
     data=$(timeout 2 niri msg -j focused-window 2>/dev/null)
     if [ -z "$data" ] || [ "$data" = "null" ] || [ "$data" = "{}" ]; then
+        active_niri_id=""
         cls="Desktop"
         title="Desktop"
         return
     fi
-    IFS='|' read -r cls title < <(jq -r '(.app_id // "Unknown") as $c | "\($c)|\(.title // $c)"' <<< "$data")
+    IFS='|' read -r active_niri_id cls title < <(jq -r '(.app_id // "Unknown") as $c | "\(.id // "")|\($c)|\(.title // $c)"' <<< "$data")
     cls="${cls:-Desktop}"
     title="${title:-Desktop}"
     cls_lower="${cls,,}"
@@ -111,6 +121,14 @@ emit_state() {
     echo "$json_payload" >> "$LOG_FILE"
     echo "$json_payload" > "$STATE_FILE.tmp"
     mv "$STATE_FILE.tmp" "$STATE_FILE"
+
+    log_append_count=$((log_append_count + 1))
+    if [ "$log_append_count" -ge 100 ]; then
+        log_append_count=0
+        if [ -f "$LOG_FILE" ]; then
+            tail -n 200 "$LOG_FILE" > "$LOG_FILE.tmp" 2>/dev/null && mv "$LOG_FILE.tmp" "$LOG_FILE"
+        fi
+    fi
 }
 
 listen_events() {
@@ -129,10 +147,33 @@ while true; do
         case "$COMPOSITOR" in
             niri)
                 case "$line" in
-                    *'"WindowFocusChanged"'*|*'"WindowOpenedOrChanged"'*|*'"WindowClosed"'*|*'"WorkspaceActivated"'*)
+                    *'"WindowFocusChanged"'*|*'"WindowClosed"'*|*'"WorkspaceActivated"'*)
+                        target_id=""
+                        has_focus_event=false
+                        closed=false
+                        [[ "$line" == *'"WindowClosed"'* ]] && closed=true
+                        if [[ "$line" =~ \"WindowFocusChanged\":\{\"id\":([0-9]+)\} ]]; then
+                            target_id="${BASH_REMATCH[1]}"
+                            has_focus_event=true
+                        elif [[ "$line" == *'"WindowFocusChanged":{"id":null}'* ]]; then
+                            target_id="null"
+                            has_focus_event=true
+                        fi
                         while read -t 0.05 -r extra_line; do
-                            continue
+                            [[ "$extra_line" == *'"WindowClosed"'* ]] && closed=true
+                            if [[ "$extra_line" =~ \"WindowFocusChanged\":\{\"id\":([0-9]+)\} ]]; then
+                                target_id="${BASH_REMATCH[1]}"
+                                has_focus_event=true
+                            elif [[ "$extra_line" == *'"WindowFocusChanged":{"id":null}'* ]]; then
+                                target_id="null"
+                                has_focus_event=true
+                            fi
                         done
+                        if [ "$closed" = false ] && [ "$has_focus_event" = true ]; then
+                            if [ "$target_id" = "$active_niri_id" ] || { [ "$target_id" = "null" ] && [ -z "$active_niri_id" ]; }; then
+                                continue
+                            fi
+                        fi
                         get_active_window
                         emit_state "$cls" "$title"
                         ;;
@@ -140,10 +181,19 @@ while true; do
                 ;;
             *)
                 case "$line" in
-                    activewindow*|closewindow*)
+                    activewindowv2*|closewindow*)
+                        target="$line"
+                        closed=false
+                        [[ "$line" == closewindow* ]] && closed=true
                         while read -t 0.05 -r extra_line; do
-                            continue
+                            case "$extra_line" in
+                                activewindowv2*) target="$extra_line" ;;
+                                closewindow*) closed=true ;;
+                            esac
                         done
+                        if [ "$closed" = false ] && [ "${target#activewindowv2>>}" = "${active_addr#0x}" ]; then
+                            continue
+                        fi
                         get_active_window
                         emit_state "$cls" "$title"
                         ;;
