@@ -16,8 +16,9 @@ Item {
     readonly property var activeTarget: widget || module
     readonly property bool isCompact: activeTarget ? activeTarget.isCompact : false
     readonly property var barWindow: activeTarget ? activeTarget.barWindow : null
+    readonly property bool isPreview: activeTarget ? !!activeTarget.isPreview : (!barWindow)
 
-    property bool showLayout: !barWindow || barWindow.isStartupReady
+    property bool showLayout: isPreview || !barWindow || barWindow.isStartupReady
     property bool isVisVisible: (activeTarget ? activeTarget.moduleActive : true) && showLayout
     property bool isFaceVisible: showLayout
     property bool isSubscribed: false
@@ -82,7 +83,7 @@ Item {
     }
 
     Connections {
-        target: barWindow ? barWindow : null
+        target: (!isPreview && barWindow) ? barWindow : null
         function onIsStartupReadyChanged() {
             if (barWindow && barWindow.isStartupReady) {
                 root.showLayout = true;
