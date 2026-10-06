@@ -46,6 +46,7 @@ SUPPORTED_DISTROS=(
 )
 
 REQUIRED_PKGS=(
+<<<<<<< HEAD
   "kitty" "cava" "zbar" "pavucontrol" "alsa-utils"
   "wl-clipboard" "fd" "qt6-multimedia" "qt6-5compat" "ripgrep"
   "cliphist" "jq" "socat" "inotify-tools" "pamixer" "brightnessctl" "ddcutil" "acpi" "iw"
@@ -58,6 +59,17 @@ REQUIRED_PKGS=(
   "qt5-quickcontrols2" "qt5-graphicaleffects" "qt6-wayland"
   "qt5ct" "qt6ct" "gpu-screen-recorder" "wf-recorder" "adw-gtk-theme" "wl-gammarelay-rs"
   "xdg-desktop-portal-wlr" "neovim" "nano"
+=======
+    "kitty" "cava" "zbar" "pavucontrol" "alsa-utils"
+    "wl-clipboard" "fd" "qt6-multimedia" "qt6-5compat" "ripgrep"
+    "cliphist" "jq" "socat" "inotify-tools" "pamixer" "brightnessctl" "ddcutil" "acpi" "iw"
+    "bluez" "bluez-utils" "libnotify" "networkmanager" "lm_sensors" "bc" "matugen"
+    "pipewire" "wireplumber" "pipewire-pulse" "pipewire-alsa" "libpulse" "python"
+    "imagemagick" "wget" "file" "git" "psmisc"
+    "ffmpeg" "fastfetch" "quickshell" "unzip" "python-websockets" "qt6-websockets"
+    "grim" "playerctl" "satty" "xdg-desktop-portal-gtk" "slurp" "wmctrl" "power-profiles-daemon" "easyeffects" "lsp-plugins-lv2" "nautilus" "qt5-wayland" "qt5-quickcontrols" "qt5-quickcontrols2" "qt5-graphicaleffects" "qt6-wayland"
+    "qt5ct" "qt6ct" "gpu-screen-recorder" "wf-recorder" "adw-gtk-theme" "wl-gammarelay-rs"
+>>>>>>> upstream/master
 )
 
 FAILED_PKGS=()
